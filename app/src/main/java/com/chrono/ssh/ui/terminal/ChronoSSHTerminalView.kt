@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.SystemClock
 import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -43,6 +44,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var scrollRemainder = 0f
     private var directionalSwipeSequence: String? = null
     private var directionalSwipeRepeat: Runnable? = null
+    private var directionalSwipeLastMoveAtMillis = 0L
     private var composingText = ""
     private var inputArmed = false
     private var inputGeneration = 0
@@ -251,6 +253,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     fun setDirectionalSwipeEnabled(enabled: Boolean) {
         directionalSwipeEnabled = enabled
         scrollRemainder = 0f
+        if (!enabled) stopDirectionalSwipeRepeat()
     }
 
     private fun rebuildRenderer() {
@@ -548,7 +551,10 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     private fun sendDirectionalSwipe(start: MotionEvent?, current: MotionEvent): Boolean {
-        if (directionalSwipeSequence != null) return true
+        if (directionalSwipeSequence != null) {
+            directionalSwipeLastMoveAtMillis = SystemClock.uptimeMillis()
+            return true
+        }
         val origin = start ?: current
         val deltaX = current.x - origin.x
         val deltaY = current.y - origin.y
@@ -565,6 +571,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
             else -> "\u001B[B"
         }
         directionalSwipeSequence = sequence
+        directionalSwipeLastMoveAtMillis = SystemClock.uptimeMillis()
         sendDirectionalSwipeSequence(sequence)
         startDirectionalSwipeRepeat(sequence)
         return true
@@ -579,18 +586,24 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val repeat = object : Runnable {
             override fun run() {
                 if (directionalSwipeSequence != sequence) return
+                val waitForHold = DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS - (SystemClock.uptimeMillis() - directionalSwipeLastMoveAtMillis)
+                if (waitForHold > 0L) {
+                    postDelayed(this, waitForHold.coerceAtMost(DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS))
+                    return
+                }
                 sendDirectionalSwipeSequence(sequence)
                 postDelayed(this, DIRECTIONAL_SWIPE_REPEAT_INTERVAL_MS)
             }
         }
         directionalSwipeRepeat = repeat
-        postDelayed(repeat, DIRECTIONAL_SWIPE_INITIAL_REPEAT_DELAY_MS)
+        postDelayed(repeat, DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS)
     }
 
     private fun stopDirectionalSwipeRepeat() {
         directionalSwipeRepeat?.let(::removeCallbacks)
         directionalSwipeRepeat = null
         directionalSwipeSequence = null
+        directionalSwipeLastMoveAtMillis = 0L
     }
 
     private fun showKeyboard() {
@@ -654,7 +667,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private companion object {
         const val DEFAULT_TEXT_SIZE_PX = 26
         const val MIN_TERMINAL_COLUMNS = 80
-        const val DIRECTIONAL_SWIPE_INITIAL_REPEAT_DELAY_MS = 650L
+        const val DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS = 650L
         const val DIRECTIONAL_SWIPE_REPEAT_INTERVAL_MS = 140L
     }
 }

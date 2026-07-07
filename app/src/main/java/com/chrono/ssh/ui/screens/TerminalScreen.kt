@@ -299,7 +299,9 @@ internal fun terminalTopStripSessions(
     activeSessions: List<Pair<String, ServerProfile>>
 ): List<Pair<String, ServerProfile>> {
     val active = activeSessions.distinctBy { it.first }
-    if (active.any { it.first == selectedWorkspaceKey }) return active
+    active.firstOrNull { it.first == selectedWorkspaceKey }?.let { selected ->
+        return listOf(selected) + active.filterNot { it.first == selectedWorkspaceKey }
+    }
     return if (active.none { it.second.id == selectedServer.id }) {
         active.ifEmpty { listOf(selectedWorkspaceKey to selectedServer) }
     } else {
@@ -1439,7 +1441,7 @@ fun TerminalScreen(
                                 modifierLatch.shift = false
                                 shiftLatched = false
                             }
-                            val outgoing = result.output
+                            val outgoing = terminalAccessoryApplyScrollStep(result.output, scrollStep)
                             if (outgoing.isNotEmpty()) workspace.engine.sendInput(outgoing)
                             rearmTerminalInput()
                             workspace.lastAction = "Sent ${keyLabel(sequence)}"
@@ -2764,6 +2766,25 @@ internal fun terminalAccessorySendResult(
         consumeCtrl = routed.consumeCtrl || ctrl,
         consumeAlt = routed.consumeAlt || alt,
         consumeShift = routed.consumeShift || shift
+    )
+}
+
+internal fun terminalAccessoryApplyScrollStep(output: String, scrollStep: Int): String {
+    val step = scrollStep.coerceIn(1, 8)
+    if (step == 1 || !terminalAccessoryScrollStepApplies(output)) return output
+    return output.repeat(step)
+}
+
+private fun terminalAccessoryScrollStepApplies(output: String): Boolean {
+    return output in setOf(
+        "\u001B[A",
+        "\u001B[B",
+        "\u001B[D",
+        "\u001B[C",
+        "\u001B[5~",
+        "\u001B[6~",
+        "\u001B[H",
+        "\u001B[F"
     )
 }
 

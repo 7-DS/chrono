@@ -522,16 +522,16 @@ class TerminalScreenTest {
             keyRows = listOf(TerminalKeyRow("custom", listOf(TerminalKey("Esc", "\u001B"), TerminalKey("F12", "\u001B[24~"))))
         )
 
-        assertEquals(listOf("Esc", "F12"), terminalActionRowLabels(profile, expanded = false))
-        assertTrue(terminalActionRowLabels(profile, expanded = true).take(2) == listOf("Esc", "F12"))
+        assertEquals(listOf("Pointer", "Tmux", "Scroll", "Esc", "F12"), terminalActionRowLabels(profile, expanded = false))
+        assertTrue(terminalActionRowLabels(profile, expanded = true).take(5) == listOf("Pointer", "Tmux", "Scroll", "Esc", "F12"))
     }
 
     @Test
     fun terminalExpandedKeysIncludeUtilityKeys() {
         val labels = terminalActionRowLabels(terminalProfile(), expanded = true)
 
-        assertTrue(labels.containsAll(listOf("Swipe", "AltGr", "Ins", "Del", "F5", "F12")))
-        assertEquals(1, labels.count { it == "Swipe" })
+        assertTrue(labels.containsAll(listOf("Pointer", "AltGr", "Ins", "Del", "F5", "F12")))
+        assertEquals(1, labels.count { it == "Pointer" })
         assertEquals("<altgr>", defaultTerminalAccessorySequence("AltGr"))
         assertEquals("\u001B[2~", defaultTerminalAccessorySequence("Ins"))
         assertEquals("\u001B[3~", defaultTerminalAccessorySequence("Del"))
@@ -550,11 +550,11 @@ class TerminalScreenTest {
     }
 
     @Test
-    fun terminalDefaultCollapsedKeysExposeSwipePad() {
+    fun terminalDefaultCollapsedKeysExposePointerPad() {
         val labels = terminalActionRowLabels(terminalProfile(), expanded = false)
 
-        assertEquals("Swipe", labels.first())
-        assertEquals(1, labels.count { it == "Swipe" })
+        assertEquals("Pointer", labels.first())
+        assertEquals(1, labels.count { it == "Pointer" })
     }
 
     @Test
@@ -620,6 +620,14 @@ class TerminalScreenTest {
         assertEquals("\u001C", terminalAccessorySendResult("\\", ctrl = true, alt = false, shift = false).output)
         assertEquals("\u001E", terminalAccessorySendResult("^", ctrl = true, alt = false, shift = false).output)
         assertEquals("\u001F", terminalAccessorySendResult("_", ctrl = true, alt = false, shift = false).output)
+    }
+
+    @Test
+    fun terminalScrollStepRepeatsOnlyNavigationSequences() {
+        assertEquals("\u001B[A\u001B[A\u001B[A\u001B[A", terminalAccessoryApplyScrollStep("\u001B[A", 4))
+        assertEquals("\u001B[5~\u001B[5~", terminalAccessoryApplyScrollStep("\u001B[5~", 2))
+        assertEquals("/", terminalAccessoryApplyScrollStep("/", 8))
+        assertEquals("\u001B[1;3A", terminalAccessoryApplyScrollStep("\u001B[1;3A", 8))
     }
 
     @Test
