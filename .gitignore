@@ -1,0 +1,37 @@
+# Local build state
+.gradle/
+.gradle-local/
+.gradle-dist/
+**/build/
+**/.cxx/
+**/.kotlin/
+
+# Local machine config
+local.properties
+
+# Release/build artifacts
+APK/
+LatestAPK/
+*.apk
+*.aab
+
+# Native generated files
+*.ninja
+.ninja_*
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+
+# IDE/system files
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Internal working notes
+BUILD_RUNBOOK.md
+IMPLEMENTATION_NOTES.md
+NEXT_THREAD_HANDOFF.md
+validate-chronossh.ps1
+package-debug.ps1
+package-debug.bat
