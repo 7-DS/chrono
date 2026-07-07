@@ -115,6 +115,7 @@ import com.chrono.ssh.core.model.ServerStatus
 import com.chrono.ssh.core.model.Snippet
 import com.chrono.ssh.core.model.TerminalProfile
 import com.chrono.ssh.core.model.TerminalSessionRecord
+import com.chrono.ssh.core.service.BuildEditionPolicy
 import com.chrono.ssh.core.service.EtCapableTransport
 import com.chrono.ssh.core.service.HostKeyDecision
 import com.chrono.ssh.core.service.HostKeyPrompt
@@ -774,6 +775,10 @@ fun TerminalScreen(
 
     fun connectShell(decision: HostKeyDecision, privateKeyPassphrase: String? = null, reconnectAttempt: Int = 0) {
         if (workspace.session != null && decision != HostKeyDecision.TrustAndRemember) return
+        if (!BuildEditionPolicy.supports(selectedServer.protocol)) {
+            workspace.status = "${selectedServer.protocol.name} is not available in this build."
+            return
+        }
         val localShell = selectedServer.protocol == ConnectionProtocol.LocalProot
         val moshShell = selectedServer.protocol == ConnectionProtocol.Mosh
         val etShell = selectedServer.protocol == ConnectionProtocol.EternalTerminal

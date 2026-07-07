@@ -104,6 +104,7 @@ import com.chrono.ssh.core.model.ServerProfile
 import com.chrono.ssh.core.model.TerminalSessionRecord
 import com.chrono.ssh.core.model.CrashLogEntry
 import com.chrono.ssh.core.service.AppLockCrashRecoveryPolicy
+import com.chrono.ssh.core.service.BuildEditionPolicy
 import com.chrono.ssh.core.service.ConnectionLaunchPolicy
 import com.chrono.ssh.core.service.ConnectionLaunchSurface
 import com.chrono.ssh.core.service.HostShareLinkCodec
@@ -875,6 +876,7 @@ fun ChronoSSHApp(
     }
 
     fun launchConnection(server: ServerProfile) {
+        if (!BuildEditionPolicy.supports(server.protocol)) return
         when (ConnectionLaunchPolicy.surface(server.protocol)) {
             ConnectionLaunchSurface.DesktopViewer -> {
                 selectedServerId = null

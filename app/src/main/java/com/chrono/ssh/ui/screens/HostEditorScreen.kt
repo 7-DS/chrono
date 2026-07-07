@@ -77,6 +77,7 @@ import com.chrono.ssh.core.rclone.RcloneConfigParseResult
 import com.chrono.ssh.core.rclone.RcloneConfigParser
 import com.chrono.ssh.core.service.CredentialDraftValidator
 import com.chrono.ssh.core.service.CredentialUniquenessPolicy
+import com.chrono.ssh.core.service.BuildEditionPolicy
 import com.chrono.ssh.core.service.HostCommandSafety
 import com.chrono.ssh.core.service.HostEndpointValidator
 import com.chrono.ssh.core.service.HostEnvironmentPolicy
@@ -855,7 +856,7 @@ fun HostEditorScreen(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
             ) {
-                hostEditorConnectionPresets().forEach { preset ->
+                hostEditorConnectionPresets().filter { BuildEditionPolicy.supports(it.protocol) }.forEach { preset ->
                     SoftPill(preset.label, selected = false, color = DeckColors.Purple) {
                         username = preset.username
                         port = preset.port.toString()
@@ -877,7 +878,7 @@ fun HostEditorScreen(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
             ) {
-                ConnectionProtocol.entries.forEach { option ->
+                ConnectionProtocol.entries.filter(BuildEditionPolicy::supports).forEach { option ->
                     SoftPill(option.label(), selected = protocol == option, color = option.color()) {
                         protocol = option
                         port = option.defaultPort().toString()

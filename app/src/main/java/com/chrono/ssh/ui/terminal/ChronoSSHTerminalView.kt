@@ -22,6 +22,7 @@ import com.chrono.ssh.core.service.TerminalClipboardPolicy
 import com.termux.terminal.TerminalEmulator
 import com.termux.view.TerminalRenderer
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 class ChronoSSHTerminalView(context: Context) : View(context) {
     private var engine: ChronoSSHTerminalEngine? = null
@@ -34,6 +35,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var onTextSizeChanged: (Int) -> Unit = {}
     private var keyboardRequested = false
     private var textSizePx = DEFAULT_TEXT_SIZE_PX
+    private var terminalZoom = 1f
     private var terminalTypeface = Typeface.MONOSPACE
     private var terminalBackground = Color.rgb(7, 10, 18)
     private var contentLeftPaddingPx = 0
@@ -83,9 +85,10 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
                 }
                 if (current.withTerminalState { it.isAlternateBufferActive }) return false
                 scrollRemainder += distanceY
-                val rows = (scrollRemainder / renderer.fontLineSpacing.coerceAtLeast(1)).toInt()
+                val lineSpacing = scaledCellHeightPx()
+                val rows = (scrollRemainder / lineSpacing).toInt()
                 if (rows == 0) return true
-                scrollRemainder -= rows * renderer.fontLineSpacing
+                scrollRemainder -= rows * lineSpacing
                 val minTop = -current.withTerminalState { it.screen.activeTranscriptRows }
                 topRow = (topRow + rows).coerceIn(minTop, 0)
                 postInvalidateOnAnimation()
@@ -98,8 +101,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         context,
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                setTerminalTextSizePx((textSizePx * detector.scaleFactor).toInt())
-                onTextSizeChanged(textSizePx)
+                setTerminalZoom(terminalZoom * detector.scaleFactor)
                 return true
             }
         }
@@ -200,8 +202,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     fun scrollToTranscriptOffset(offset: Int) {
         val current = engine ?: return
-        val cellWidthPx = max(1, renderer.fontWidth.toInt())
-        val cellHeightPx = max(1, renderer.fontLineSpacing)
+        val cellWidthPx = scaledCellWidthPx()
+        val cellHeightPx = scaledCellHeightPx()
         val columns = max(MIN_TERMINAL_COLUMNS, width / cellWidthPx)
         val visibleRows = max(4, height / cellHeightPx)
         topRow = terminalSearchTopRowForOffset(
@@ -219,6 +221,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val safeSize = size.coerceIn(16, 54)
         if (safeSize == textSizePx) return
         textSizePx = safeSize
+        terminalZoom = 1f
+        onTextSizeChanged(textSizePx)
         rebuildRenderer()
     }
 
@@ -262,6 +266,14 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         postInvalidateOnAnimation()
     }
 
+    private fun setTerminalZoom(zoom: Float) {
+        val safeZoom = zoom.coerceIn(MIN_TERMINAL_ZOOM, MAX_TERMINAL_ZOOM)
+        if (kotlin.math.abs(safeZoom - terminalZoom) < 0.01f) return
+        terminalZoom = safeZoom
+        updateTerminalSize()
+        postInvalidateOnAnimation()
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         updateTerminalSize()
@@ -297,6 +309,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
                 val checkpoint = canvas.save()
                 try {
                     canvas.translate(contentLeftPaddingPx.toFloat(), 0f)
+                    canvas.scale(terminalZoom, terminalZoom)
                     renderer.render(emulator, canvas, topRow, -1, -1, -1, -1)
                 } finally {
                     canvas.restoreToCount(checkpoint)
@@ -313,6 +326,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val scaleHandled = scaleDetector.onTouchEvent(event)
+        if (scaleDetector.isInProgress) return true
         if (directionalSwipeEnabled && !scaleDetector.isInProgress) {
             return handleDirectionalSwipeTouch(event) || scaleHandled
         }
@@ -488,8 +502,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private fun updateTerminalSize() {
         val current = engine ?: return
         if (width <= 0 || height <= 0) return
-        val cellWidthPx = max(1, renderer.fontWidth.toInt())
-        val cellHeightPx = max(1, renderer.fontLineSpacing)
+        val cellWidthPx = scaledCellWidthPx()
+        val cellHeightPx = scaledCellHeightPx()
         val contentWidth = (width - contentLeftPaddingPx - contentRightPaddingPx).coerceAtLeast(cellWidthPx)
         current.resize(max(MIN_TERMINAL_COLUMNS, contentWidth / cellWidthPx), max(4, height / cellHeightPx), cellWidthPx, cellHeightPx)
         clampTopRow()
@@ -506,8 +520,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     private fun tappedUrl(event: MotionEvent): String? {
         val current = engine ?: return null
-        val cellWidthPx = max(1, renderer.fontWidth.toInt())
-        val cellHeightPx = max(1, renderer.fontLineSpacing)
+        val cellWidthPx = scaledCellWidthPx()
+        val cellHeightPx = scaledCellHeightPx()
         val (column, row) = terminalViewportCellForPoint(
             x = event.x,
             y = event.y,
@@ -534,8 +548,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val (column, row) = terminalViewportCellForPoint(
             x = event.x,
             y = event.y,
-            cellWidthPx = max(1, renderer.fontWidth.toInt()),
-            cellHeightPx = max(1, renderer.fontLineSpacing),
+            cellWidthPx = scaledCellWidthPx(),
+            cellHeightPx = scaledCellHeightPx(),
             leftPaddingPx = contentLeftPaddingPx
         )
         current.withTerminalState { emulator ->
@@ -550,6 +564,14 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
             )
         }
         return true
+    }
+
+    private fun scaledCellWidthPx(): Int {
+        return max(1, (renderer.fontWidth * terminalZoom).roundToInt())
+    }
+
+    private fun scaledCellHeightPx(): Int {
+        return max(1, (renderer.fontLineSpacing * terminalZoom).roundToInt())
     }
 
     private fun handleDirectionalSwipeTouch(event: MotionEvent): Boolean {
@@ -579,7 +601,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val deltaY = currentY - directionalSwipeStartY
         val absX = kotlin.math.abs(deltaX)
         val absY = kotlin.math.abs(deltaY)
-        val threshold = (renderer.fontLineSpacing * 2.5f).coerceAtLeast(72f)
+        val threshold = (scaledCellHeightPx() * 2.5f).coerceAtLeast(72f)
         if (absX < threshold && absY < threshold) return true
         val horizontal = absX > absY
         if (if (horizontal) absX < absY * 1.25f else absY < absX * 1.25f) return true
@@ -687,6 +709,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private companion object {
         const val DEFAULT_TEXT_SIZE_PX = 26
         const val MIN_TERMINAL_COLUMNS = 80
+        const val MIN_TERMINAL_ZOOM = 0.7f
+        const val MAX_TERMINAL_ZOOM = 2.4f
         const val DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS = 650L
         const val DIRECTIONAL_SWIPE_REPEAT_INTERVAL_MS = 140L
     }
