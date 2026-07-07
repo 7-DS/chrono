@@ -116,10 +116,10 @@ app/build/outputs/apk/debug/app-debug.apk
 
 ## Credits
 
-- Server and host-management features were informed by ServerBox (`lollipopkit/flutter_server_box`).
-- UI direction was inspired in part by SwiftServer for iOS and macOS.
-- `third_party/et-transport/` is based on Eternal Terminal and extracted from Haven's Android SSH client work.
-- `third_party/ssp-transport/` is based on the Mosh SSP protocol and extracted from Haven's Android SSH client work.
+- Server and host-management features were informed by [ServerBox](https://github.com/lollipopkit/flutter_server_box).
+- UI direction was inspired in part by [SwiftServer](https://swiftserver.app/) for iOS and macOS.
+- `third_party/et-transport/` is based on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal) and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
+- `third_party/ssp-transport/` is based on the [Mosh](https://github.com/mobile-shell/mosh) SSP protocol and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
 
 ## Security Notes
 
