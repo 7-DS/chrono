@@ -343,6 +343,19 @@ class TerminalScreenTest {
     }
 
     @Test
+    fun terminalTopStripSessionsDoesNotCreateStaleSelectedTabWhenSessionsRemain() {
+        val server = server()
+        val other = server.copy(id = "server-2", name = "Other")
+        val sessions = terminalTopStripSessions(
+            selectedWorkspaceKey = "server-closed",
+            selectedServer = server,
+            activeSessions = listOf("server-2" to other)
+        )
+
+        assertEquals(listOf("server-2"), sessions.map { it.first })
+    }
+
+    @Test
     fun terminalUserFacingErrorHidesSocketDetails() {
         assertEquals(
             "Connection interrupted. Reconnect to continue.",

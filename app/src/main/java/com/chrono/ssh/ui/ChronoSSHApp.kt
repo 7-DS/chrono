@@ -1050,15 +1050,18 @@ fun ChronoSSHApp(
         }
         workspace?.disposeEngineIfInitialized()
         terminalWorkspaces.remove(workspaceKey)
-        if (selectedConnectionServerId == workspaceKey) {
-            selectedConnectionServerId = terminalWorkspaces.entries.firstOrNull { it.value.connected }?.key
-                ?: terminalWorkspaces.keys.firstOrNull()
-        }
-        if (terminalWorkspaces.values.none { it.connected }) {
+        selectedConnectionServerId = nextTerminalWorkspaceAfterClose(
+            closedKey = workspaceKey,
+            selectedKey = selectedConnectionServerId,
+            remainingKeys = terminalWorkspaces.keys.toList()
+        )
+        if (selectedConnectionServerId == null) {
             autoConnectRequestId = null
             terminalVisible = false
             if (returnToServersWhenEmpty) restoreReturnTarget(transientReturnTarget ?: ReturnTarget.Root(AppTab.Servers)) else selectedTab = AppTab.Connections
             transientReturnTarget = null
+        } else {
+            terminalVisible = true
         }
     }
 
@@ -2439,6 +2442,15 @@ internal fun nextSftpWorkspaceAfterClose(
     remainingKeys: List<String>
 ): String? {
     if (selectedKey != closedKey) return selectedKey?.takeIf { it in remainingKeys }
+    return remainingKeys.firstOrNull()
+}
+
+internal fun nextTerminalWorkspaceAfterClose(
+    closedKey: String,
+    selectedKey: String?,
+    remainingKeys: List<String>
+): String? {
+    if (selectedKey != closedKey) return selectedKey?.takeIf { it in remainingKeys } ?: remainingKeys.firstOrNull()
     return remainingKeys.firstOrNull()
 }
 

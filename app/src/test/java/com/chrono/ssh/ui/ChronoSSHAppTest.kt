@@ -560,6 +560,53 @@ class ChronoSSHAppTest {
     }
 
     @Test
+    fun nextTerminalWorkspaceAfterCloseKeepsUnclosedSelection() {
+        assertEquals(
+            "server:b",
+            nextTerminalWorkspaceAfterClose(
+                closedKey = "server:a",
+                selectedKey = "server:b",
+                remainingKeys = listOf("server:b", "server:c")
+            )
+        )
+    }
+
+    @Test
+    fun nextTerminalWorkspaceAfterCloseSelectsRemainingTabWhenClosingActive() {
+        assertEquals(
+            "server:b",
+            nextTerminalWorkspaceAfterClose(
+                closedKey = "server:a",
+                selectedKey = "server:a",
+                remainingKeys = listOf("server:b", "server:c")
+            )
+        )
+    }
+
+    @Test
+    fun nextTerminalWorkspaceAfterCloseRecoversFromStaleSelection() {
+        assertEquals(
+            "server:b",
+            nextTerminalWorkspaceAfterClose(
+                closedKey = "server:a",
+                selectedKey = "server:stale",
+                remainingKeys = listOf("server:b", "server:c")
+            )
+        )
+    }
+
+    @Test
+    fun nextTerminalWorkspaceAfterCloseClearsSelectionWhenNoTabsRemain() {
+        assertNull(
+            nextTerminalWorkspaceAfterClose(
+                closedKey = "server:a",
+                selectedKey = "server:a",
+                remainingKeys = emptyList()
+            )
+        )
+    }
+
+    @Test
     fun sftpWorkspaceKeysForServerReturnsOnlyDeletedHostTabs() {
         assertEquals(
             listOf("sftp:a", "sftp:c"),
