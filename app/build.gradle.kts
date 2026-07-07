@@ -11,8 +11,8 @@ android {
         applicationId = "com.chrono.ssh"
         minSdk = 26
         targetSdk = 35
-        versionCode = 20260706
-        versionName = "0.1.1-dev.20260706"
+        versionCode = 20260707
+        versionName = "0.1.2-dev.20260707"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

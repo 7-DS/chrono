@@ -1,6 +1,10 @@
 <h1 align="center">chrono</h1>
 
 <p align="center">
+  <img src="docs/assets/chronossh.png" width="120" alt="chronoSSH logo" />
+</p>
+
+<p align="center">
   Android server management for SSH operations, terminal work, file transfers, tunnels, and live host monitoring.
 </p>
 
