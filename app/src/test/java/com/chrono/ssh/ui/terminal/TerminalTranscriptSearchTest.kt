@@ -178,6 +178,12 @@ class TerminalTranscriptSearchTest {
     }
 
     @Test
+    fun terminalZoomScalesRendererTextSizeWithoutChangingSavedSize() {
+        assertEquals(39, terminalZoomedTextSizePx(textSizePx = 26, zoom = 1.5f))
+        assertEquals(12, terminalZoomedTextSizePx(textSizePx = 16, zoom = 0.7f))
+    }
+
+    @Test
     fun viewportPointMapsToClampedTerminalCell() {
         assertEquals(2 to 3, terminalViewportCellForPoint(x = 21f, y = 31f, cellWidthPx = 10, cellHeightPx = 10))
         assertEquals(1 to 3, terminalViewportCellForPoint(x = 21f, y = 31f, cellWidthPx = 10, cellHeightPx = 10, leftPaddingPx = 8))

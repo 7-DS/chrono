@@ -36,12 +36,13 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var keyboardRequested = false
     private var textSizePx = DEFAULT_TEXT_SIZE_PX
     private var terminalZoom = 1f
+    private var rendererTextSizePx = terminalZoomedTextSizePx(textSizePx, terminalZoom)
     private var terminalTypeface = Typeface.MONOSPACE
     private var terminalBackground = Color.rgb(7, 10, 18)
     private var contentLeftPaddingPx = 0
     private var contentRightPaddingPx = 0
     private var directionalSwipeEnabled = false
-    private var renderer = terminalRendererOrFallback(textSizePx, terminalTypeface)
+    private var renderer = terminalRendererOrFallback(rendererTextSizePx, terminalTypeface)
     private var topRow = 0
     private var scrollRemainder = 0f
     private var directionalSwipeStartX = 0f
@@ -261,7 +262,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     private fun rebuildRenderer() {
         resetInputState()
-        renderer = terminalRendererOrFallback(textSizePx, terminalTypeface)
+        rendererTextSizePx = terminalZoomedTextSizePx(textSizePx, terminalZoom)
+        renderer = terminalRendererOrFallback(rendererTextSizePx, terminalTypeface)
         updateTerminalSize()
         postInvalidateOnAnimation()
     }
@@ -270,8 +272,13 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val safeZoom = zoom.coerceIn(MIN_TERMINAL_ZOOM, MAX_TERMINAL_ZOOM)
         if (kotlin.math.abs(safeZoom - terminalZoom) < 0.01f) return
         terminalZoom = safeZoom
-        updateTerminalSize()
-        postInvalidateOnAnimation()
+        val nextTextSizePx = terminalZoomedTextSizePx(textSizePx, terminalZoom)
+        if (nextTextSizePx != rendererTextSizePx) {
+            rebuildRenderer()
+        } else {
+            updateTerminalSize()
+            postInvalidateOnAnimation()
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -309,7 +316,6 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
                 val checkpoint = canvas.save()
                 try {
                     canvas.translate(contentLeftPaddingPx.toFloat(), 0f)
-                    canvas.scale(terminalZoom, terminalZoom)
                     renderer.render(emulator, canvas, topRow, -1, -1, -1, -1)
                 } finally {
                     canvas.restoreToCount(checkpoint)
@@ -318,7 +324,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         }.onFailure {
             if (terminalTypeface != Typeface.MONOSPACE) {
                 terminalTypeface = Typeface.MONOSPACE
-                renderer = terminalRendererOrFallback(textSizePx, terminalTypeface)
+                renderer = terminalRendererOrFallback(rendererTextSizePx, terminalTypeface)
                 postInvalidateOnAnimation()
             }
         }
@@ -567,11 +573,11 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     private fun scaledCellWidthPx(): Int {
-        return max(1, (renderer.fontWidth * terminalZoom).roundToInt())
+        return max(1, renderer.fontWidth.roundToInt())
     }
 
     private fun scaledCellHeightPx(): Int {
-        return max(1, (renderer.fontLineSpacing * terminalZoom).roundToInt())
+        return max(1, renderer.fontLineSpacing)
     }
 
     private fun handleDirectionalSwipeTouch(event: MotionEvent): Boolean {
@@ -726,6 +732,10 @@ internal fun terminalInputGenerationAccepted(currentGeneration: Int, capturedGen
 }
 
 internal fun terminalPasteKeepsInputGeneration(): Boolean = true
+
+internal fun terminalZoomedTextSizePx(textSizePx: Int, zoom: Float): Int {
+    return (textSizePx * zoom).roundToInt().coerceIn(12, 130)
+}
 
 internal fun terminalViewportCellForPoint(
     x: Float,
