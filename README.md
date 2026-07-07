@@ -1,4 +1,4 @@
-<h1 align="center">chrono</h1>
+<h1 align="center" aria-label="chrono">𝖈𝖍𝖗𝖔𝖓𝖔</h1>
 
 <p align="center">
   <img src="docs/assets/chronossh.png" width="120" alt="chronoSSH logo" />
