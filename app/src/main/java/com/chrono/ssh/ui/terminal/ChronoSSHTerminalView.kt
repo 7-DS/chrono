@@ -42,6 +42,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var renderer = terminalRendererOrFallback(textSizePx, terminalTypeface)
     private var topRow = 0
     private var scrollRemainder = 0f
+    private var directionalSwipeStartX = 0f
+    private var directionalSwipeStartY = 0f
     private var directionalSwipeSequence: String? = null
     private var directionalSwipeRepeat: Runnable? = null
     private var directionalSwipeLastMoveAtMillis = 0L
@@ -71,9 +73,6 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
             override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
                 val current = engine ?: return false
-                if (directionalSwipeEnabled && !scaleDetector.isInProgress) {
-                    return sendDirectionalSwipe(e1, e2)
-                }
                 val mouseButton = when {
                     distanceY > 0f -> TerminalEmulator.MOUSE_WHEELDOWN_BUTTON
                     distanceY < 0f -> TerminalEmulator.MOUSE_WHEELUP_BUTTON
@@ -314,6 +313,9 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val scaleHandled = scaleDetector.onTouchEvent(event)
+        if (directionalSwipeEnabled && !scaleDetector.isInProgress) {
+            return handleDirectionalSwipeTouch(event) || scaleHandled
+        }
         val gestureHandled = gestureDetector.onTouchEvent(event)
         if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
             scrollRemainder = 0f
@@ -550,14 +552,31 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         return true
     }
 
-    private fun sendDirectionalSwipe(start: MotionEvent?, current: MotionEvent): Boolean {
+    private fun handleDirectionalSwipeTouch(event: MotionEvent): Boolean {
+        return when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                directionalSwipeStartX = event.x
+                directionalSwipeStartY = event.y
+                stopDirectionalSwipeRepeat()
+                true
+            }
+            MotionEvent.ACTION_MOVE -> sendDirectionalSwipe(event.x, event.y)
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL -> {
+                stopDirectionalSwipeRepeat()
+                true
+            }
+            else -> true
+        }
+    }
+
+    private fun sendDirectionalSwipe(currentX: Float, currentY: Float): Boolean {
         if (directionalSwipeSequence != null) {
             directionalSwipeLastMoveAtMillis = SystemClock.uptimeMillis()
             return true
         }
-        val origin = start ?: current
-        val deltaX = current.x - origin.x
-        val deltaY = current.y - origin.y
+        val deltaX = currentX - directionalSwipeStartX
+        val deltaY = currentY - directionalSwipeStartY
         val absX = kotlin.math.abs(deltaX)
         val absY = kotlin.math.abs(deltaY)
         val threshold = (renderer.fontLineSpacing * 2.5f).coerceAtLeast(72f)
@@ -582,7 +601,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     private fun startDirectionalSwipeRepeat(sequence: String) {
-        stopDirectionalSwipeRepeat()
+        directionalSwipeRepeat?.let(::removeCallbacks)
+        directionalSwipeRepeat = null
         val repeat = object : Runnable {
             override fun run() {
                 if (directionalSwipeSequence != sequence) return
