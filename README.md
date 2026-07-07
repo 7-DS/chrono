@@ -1,20 +1,46 @@
-# chrono
+<h1 align="center">chrono</h1>
 
-chrono is an Android server-management client for SSH operations, terminal work, file transfers, tunnels, and live host monitoring.
+<p align="center">
+  Android server management for SSH operations, terminal work, file transfers, tunnels, and live host monitoring.
+</p>
 
-It is designed as a mobile server cockpit rather than a simple SSH launcher: one host profile can include credentials, notes, tags, Wake-on-LAN, monitoring preferences, proxy-jump routing, terminal behavior, file-browser defaults, reconnect rules, and protocol-specific settings.
+<p align="center">
+  <a href="https://github.com/7-DS/chrono/releases/latest"><img src="https://img.shields.io/github/v/release/7-DS/chrono?style=flat-square&label=release&sort=date" alt="Latest release" /></a>
+  <a href="https://github.com/7-DS/chrono/releases"><img src="https://img.shields.io/github/downloads/7-DS/chrono/total?style=flat-square&label=downloads" alt="Release downloads" /></a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
+  <img src="https://img.shields.io/badge/Jetpack-Compose-4285f4?style=flat-square" alt="Jetpack Compose" />
+</p>
 
-## Highlights
+<p align="center">
+  <a href="https://github.com/7-DS/chrono/releases/latest">Download</a>
+  &bull;
+  <a href="#features">Features</a>
+  &bull;
+  <a href="#build-from-source">Build</a>
+  &bull;
+  <a href="#credits">Credits</a>
+</p>
 
-- Multi-protocol profiles: SSH, Mosh, Eternal Terminal, VNC, RDP, SMB, rclone, and local PRoot.
-- Live server dashboard with reachability, latency, uptime, CPU, RAM, disk, network, process, systemd, container, GPU, SMART, sensor, battery, and Proxmox-oriented views.
-- Terminal workspaces with themes, fonts, cursor styles, bracketed paste, custom accessory keys, scrollback, haptics, and foreground-session handling.
-- File workflows across SFTP, SCP policy paths, SMB shares, and rclone remotes, including transfer history and rclone.conf import.
-- Vault-backed password/private-key identities, known-host trust review, SSH key generation, public-key export, and duplicate identity guards.
-- Port-forward management for local, remote, and dynamic SOCKS tunnels.
-- Backup, share-link, QR, app-lock, and crash/diagnostic flows built into the app.
+chrono is designed as a mobile server cockpit rather than a simple SSH launcher. A single host profile can include credentials, notes, tags, Wake-on-LAN, monitoring preferences, proxy-jump routing, terminal behavior, file-browser defaults, reconnect rules, and protocol-specific settings.
 
-## Feature Overview
+## At a Glance
+
+| Area | Included |
+| --- | --- |
+| Connections | SSH, Mosh, Eternal Terminal, VNC, RDP, SMB, rclone, and local PRoot profiles |
+| Monitoring | Reachability, latency, uptime, CPU, RAM, disk, network, process, systemd, containers, GPU, SMART, sensors, battery, and Proxmox-oriented views |
+| Terminal | Workspaces, themes, fonts, cursor styles, bracketed paste, accessory keys, scrollback, haptics, and foreground-session handling |
+| Files | SFTP, SCP policy paths, SMB shares, rclone remotes, transfer history, and rclone.conf import |
+| Security | Android-backed vault storage, known-host review, SSH key generation, duplicate identity guards, PIN lock, and optional biometric unlock |
+| Operations | Local, remote, and dynamic SOCKS tunnels, guarded runtime actions, Wake-on-LAN, backups, share links, and QR flows |
+
+## Download
+
+| Channel | Package |
+| --- | --- |
+| [GitHub Releases](https://github.com/7-DS/chrono/releases/latest) | APK builds published for review and testing |
+
+## Features
 
 ### Host Management
 
@@ -53,7 +79,7 @@ It is designed as a mobile server cockpit rather than a simple SSH launcher: one
 ### Vault And Trust
 
 - Android-backed secret storage for password and private-key identities.
-- Duplicate key/credential label prevention.
+- Duplicate key and credential label prevention.
 - Private-key inspection, passphrase handling, and in-app SSH key generation.
 - Known-host capture, trust review, changed-key detection, and rejected-host handling.
 - Public-key export/copy support without exposing private key payloads by default.
@@ -75,14 +101,17 @@ It is designed as a mobile server cockpit rather than a simple SSH launcher: one
 - OS and distribution visual treatment for Linux, BSD, Windows, Proxmox-style hosts, and common distributions.
 - Compose-based mobile UI with status-bar and keyboard-aware screens.
 
-## Requirements
+## Build From Source
 
-- Android Studio or command-line Android SDK.
-- JDK 17.
-- Android SDK Platform 35.
-- Android Gradle Plugin 8.13.2.
-- Android NDK/CMake for native terminal support.
-- Git LFS for bundled native runtime libraries.
+### Requirements
+
+| Tool | Version |
+| --- | --- |
+| JDK | 17 |
+| Android SDK Platform | 35 |
+| Android Gradle Plugin | 8.13.2 |
+| Android NDK/CMake | Required for native terminal support |
+| Git LFS | Required for bundled native runtime libraries |
 
 When building outside Android Studio, create `local.properties` with your SDK path:
 
@@ -90,7 +119,7 @@ When building outside Android Studio, create `local.properties` with your SDK pa
 sdk.dir=/path/to/android-sdk
 ```
 
-## Build
+Build and test:
 
 ```bash
 ./gradlew testDebugUnitTest assembleDebug
@@ -102,21 +131,15 @@ The debug APK is written to:
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Releases
-
-Debug builds are published from GitHub Releases when available:
-
-https://github.com/7-DS/chrono/releases
-
 ## Repository Layout
 
-```text
-app/                         Android application source
-app/libs/                    Prebuilt Java bridge libraries required by the app
-app/src/main/jniLibs/        Native runtime libraries bundled with the app
-third_party/et-transport/    Vendored Eternal Terminal transport source
-third_party/ssp-transport/   Vendored SSP/Mosh transport source
-```
+| Path | Purpose |
+| --- | --- |
+| `app/` | Android application source |
+| `app/libs/` | Prebuilt Java bridge libraries required by the app |
+| `app/src/main/jniLibs/` | Native runtime libraries bundled with the app |
+| `third_party/et-transport/` | Vendored Eternal Terminal transport source |
+| `third_party/ssp-transport/` | Vendored SSP/Mosh transport source |
 
 ## Security Notes
 
@@ -126,8 +149,8 @@ chrono stores credential payloads through Android-backed secret storage. Export 
 
 - Server and host-management features were informed by [ServerBox](https://github.com/lollipopkit/flutter_server_box).
 - UI direction was inspired in part by [SwiftServer](https://swiftserver.app/) for iOS and macOS.
-- `third_party/et-transport/` is based on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal) and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
-- `third_party/ssp-transport/` is based on the [Mosh](https://github.com/mobile-shell/mosh) SSP protocol and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
+- `third_party/et-transport/` is based on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal) and extracted from [Haven](https://github.com/GlassHaven/Haven)'s Android SSH client work.
+- `third_party/ssp-transport/` is based on the [Mosh](https://github.com/mobile-shell/mosh) SSP protocol and extracted from [Haven](https://github.com/GlassHaven/Haven)'s Android SSH client work.
 
 ## License
 
