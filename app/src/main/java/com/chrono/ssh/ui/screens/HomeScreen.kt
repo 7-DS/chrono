@@ -197,7 +197,7 @@ fun HomeScreen(
             visible = showCompactTopBar,
             enter = slideInVertically(tween(220, easing = FastOutSlowInEasing)) { -it / 2 } + fadeIn(tween(180, easing = FastOutSlowInEasing)),
             exit = slideOutVertically(tween(160, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(120, easing = FastOutSlowInEasing)),
-            modifier = Modifier.align(Alignment.TopCenter)
+            modifier = Modifier.align(Alignment.TopEnd)
         ) {
             HomeCompactTopBar(onAddServer = onAddServer)
         }
