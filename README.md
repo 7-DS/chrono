@@ -1,94 +1,90 @@
 # chrono
 
-chrono is an Android SSH operations client for managing hosts, terminals, file transfers, tunnels, and server health from one mobile workspace.
+chrono is an Android server-management client for SSH operations, terminal work, file transfers, tunnels, and live host monitoring.
 
-## What Makes chrono Different
+It is designed as a mobile server cockpit rather than a simple SSH launcher: one host profile can include credentials, notes, tags, Wake-on-LAN, monitoring preferences, proxy-jump routing, terminal behavior, file-browser defaults, reconnect rules, and protocol-specific settings.
 
-chrono is built as a mobile server cockpit, not just an SSH launcher. A single host profile can carry connection details, credentials, notes, tags, Wake-on-LAN settings, monitoring preferences, proxy-jump routing, terminal behavior, file-browser defaults, reconnect rules, and protocol-specific options.
+## Highlights
 
-## Features
+- Multi-protocol profiles: SSH, Mosh, Eternal Terminal, VNC, RDP, SMB, rclone, and local PRoot.
+- Live server dashboard with reachability, latency, uptime, CPU, RAM, disk, network, process, systemd, container, GPU, SMART, sensor, battery, and Proxmox-oriented views.
+- Terminal workspaces with themes, fonts, cursor styles, bracketed paste, custom accessory keys, scrollback, haptics, and foreground-session handling.
+- File workflows across SFTP, SCP policy paths, SMB shares, and rclone remotes, including transfer history and rclone.conf import.
+- Vault-backed password/private-key identities, known-host trust review, SSH key generation, public-key export, and duplicate identity guards.
+- Port-forward management for local, remote, and dynamic SOCKS tunnels.
+- Backup, share-link, QR, app-lock, and crash/diagnostic flows built into the app.
 
-### Host Profiles
+## Feature Overview
 
-- SSH, Mosh, Eternal Terminal, VNC, RDP, SMB, rclone, and local PRoot profile types.
-- Per-host groups, tags, favorites, OS metadata, accent colors, notes, startup commands, start directories, environment variables, custom logos, connect timeout, compression, and reconnect policy.
-- Connection presets for Linux SSH, Mosh, Eternal Terminal, desktop VNC/RDP, SMB shares, rclone remotes, and local PRoot shells.
-- Duplicate-host protection using normalized protocol, host, port, and username.
-- OpenSSH config import support and host share links/QR payloads that avoid exporting private credential material.
+### Host Management
 
-### Server Dashboard
+- Host groups, tags, favorites, OS metadata, accent colors, custom logos, notes, startup commands, start directories, environment variables, connect timeout, compression, and reconnect policy.
+- Presets for Linux SSH, Mosh, Eternal Terminal, desktop VNC/RDP, SMB shares, rclone remotes, and local PRoot shells.
+- Duplicate-host prevention based on normalized protocol, host, port, and username.
+- OpenSSH config import support.
+- Host share links and QR payloads that avoid exporting private credential material.
 
-- Home dashboard for live reachability, latency, uptime, CPU, RAM, disk, and network summaries.
-- Compact top navigation reveal for long host lists.
-- Server detail pages for uptime, CPU usage/load, system info, failed services, resources, filesystems, processes, systemd, network, containers, GPUs, Proxmox, battery, SMART disks, and sensors.
-- Configurable detail-card ordering and hidden cards.
-- Per-card metric color presets with separate network and disk display modes.
-- Connection activity timeline and crash/diagnostic event retention.
+### Monitoring And Operations
 
-### Remote Operations
-
-- Process list with guarded runtime actions.
-- Systemd service list with status/start/stop/restart style actions guarded by confirmation.
-- Docker and Podman container/image inventory, stats, logs/inspect output, and guarded container actions.
-- Host info collection with Linux metric parsers for filesystems, vnStat traffic history, sensors, SMART disks, NVIDIA GPUs, package updates, Proxmox resources, battery state, services, processes, and containers.
-- Wake-on-LAN support with MAC, broadcast address, and SecureOn validation.
+- Home dashboard for live host status, top-level resource summaries, and long-list navigation.
+- Server detail cards for uptime, CPU usage/load, system info, failed services, resources, filesystems, processes, systemd, network, containers, GPUs, Proxmox, battery, SMART disks, and sensors.
+- Configurable metric-card order, hidden cards, ring color presets, disk display modes, and network total/rate display modes.
+- Guarded runtime actions for processes, systemd services, and Docker/Podman containers.
+- Linux metric collection for filesystems, vnStat traffic history, sensors, SMART disks, NVIDIA GPUs, package updates, Proxmox resources, battery state, services, processes, and containers.
+- Wake-on-LAN support with MAC, broadcast, and SecureOn validation.
 
 ### Terminal
 
-- Multiple terminal workspaces backed by a foreground service for active sessions.
-- SSH terminal support plus Mosh UDP roaming and Eternal Terminal persistence via SSH bootstrap.
-- Terminal theme catalog, custom fonts, cursor styles, bracketed paste, scrollback sizing, keep-screen-on, haptics, and left/right terminal margins.
-- Configurable accessory key strip with presets for compact, navigation, TUI, shell, control, and function-key workflows.
-- Snippet rendering and command helpers for common server workflows.
+- SSH terminal sessions plus Mosh UDP roaming and Eternal Terminal persistence through SSH bootstrap.
+- Multiple workspaces backed by an Android foreground service for active connections.
+- Terminal theme and font catalogs, custom cursor style, bracketed paste, scrollback sizing, keep-screen-on, haptics, and terminal margins.
+- Accessory key presets for compact, navigation, TUI, shell, control, and function-key workflows.
+- Snippet rendering and command helpers for common server tasks.
 
 ### Files And Transfers
 
-- SFTP browser for SSH hosts with bookmarks, sorting, hidden-file defaults, directory navigation, text-file editing, chmod, mkdir/rename/delete, upload/download, and transfer history.
+- SFTP browser with bookmarks, sorting, hidden-file defaults, directory navigation, text editing, chmod, mkdir, rename, delete, upload, download, and transfer history.
 - Host-to-host transfer planning for compatible saved hosts.
-- SCP transfer policy support for path-based uploads/downloads.
+- SCP path policy support for direct upload and download flows.
 - SMB file browsing for password-backed SMB profiles.
-- Embedded rclone profile support with rclone.conf import, encrypted config unlock flow, remote picker, root-path handling, transfer progress, and advanced rclone file actions.
-- Transfer persistence for queued, running, complete, failed, and cancelled records.
+- Embedded rclone profile support with rclone.conf import, encrypted config unlock, remote picker, root-path handling, transfer progress, and advanced rclone actions.
+- Transfer state persistence for queued, running, complete, failed, and cancelled records.
 
-### Vault, Keys, And Trust
+### Vault And Trust
 
-- Vault-backed password and private-key identities stored through Android-backed secret storage.
-- Duplicate credential/key label protection.
-- Private-key inspection, passphrase policy, and in-app SSH key generation.
+- Android-backed secret storage for password and private-key identities.
+- Duplicate key/credential label prevention.
+- Private-key inspection, passphrase handling, and in-app SSH key generation.
 - Known-host capture, trust review, changed-key detection, and rejected-host handling.
 - Public-key export/copy support without exposing private key payloads by default.
-- Explicit confirmation policies for copying, exporting, or sharing secret material.
+- Explicit confirmation before copying, exporting, or sharing secret material.
 
-### Tunnels And Connections
+### Tunnels, Backup, And Security
 
 - Local, remote, and dynamic SOCKS port-forward rules.
-- Tunnel dashboard with active/stopped/failed state, favorites, grouping, route labels, user-facing error cleanup, and one-tap start/stop.
+- Tunnel dashboard with active/stopped/failed state, favorites, grouping, route labels, cleaned-up user-facing errors, and one-tap start/stop.
 - ProxyJump validation for chained SSH access.
-- Connection launch policy that selects the right terminal, desktop, file, or local runtime path for each host protocol.
-
-### Backup, Share, And App Lock
-
-- Backup export/inspect/merge flows for hosts, credential metadata, known hosts, snippets, tunnels, SFTP bookmarks, and settings.
+- Backup export, inspect, and merge flows for hosts, credential metadata, known hosts, snippets, tunnels, SFTP bookmarks, and settings.
 - Encrypted backup codec for protected exports.
-- Host and snippet share links plus QR payload generation.
 - PIN app lock with optional biometric unlock and crash-recovery handling.
 
-### Interface And Customization
+### Customization
 
-- App theme families with light/dark/system modes.
+- App theme families with light, dark, and system modes.
 - Per-section heading font imports for Home, Connections, Files, Vault, and Settings.
-- OS/distro visual treatment for Linux, BSD, Windows, Proxmox-style hosts, and common distributions.
-- Smooth Compose motion and status/IME-aware screens for mobile use.
+- OS and distribution visual treatment for Linux, BSD, Windows, Proxmox-style hosts, and common distributions.
+- Compose-based mobile UI with status-bar and keyboard-aware screens.
 
 ## Requirements
 
 - Android Studio or command-line Android SDK.
 - JDK 17.
-- Android SDK Platform 35 and Android Gradle Plugin 8.13.2.
+- Android SDK Platform 35.
+- Android Gradle Plugin 8.13.2.
 - Android NDK/CMake for native terminal support.
 - Git LFS for bundled native runtime libraries.
 
-Create a local `local.properties` file with your SDK path when building outside Android Studio:
+When building outside Android Studio, create `local.properties` with your SDK path:
 
 ```properties
 sdk.dir=/path/to/android-sdk
@@ -100,19 +96,31 @@ sdk.dir=/path/to/android-sdk
 ./gradlew testDebugUnitTest assembleDebug
 ```
 
-The debug APK is generated at:
+The debug APK is written to:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## Releases
+
+Debug builds are published from GitHub Releases when available:
+
+https://github.com/7-DS/chrono/releases
+
 ## Repository Layout
 
-- `app/` - Android application source.
-- `app/libs/` - prebuilt Java bridge libraries required by the app.
-- `app/src/main/jniLibs/` - native runtime libraries bundled with the app.
-- `third_party/et-transport/` - vendored Eternal Terminal transport source.
-- `third_party/ssp-transport/` - vendored SSP/Mosh transport source.
+```text
+app/                         Android application source
+app/libs/                    Prebuilt Java bridge libraries required by the app
+app/src/main/jniLibs/        Native runtime libraries bundled with the app
+third_party/et-transport/    Vendored Eternal Terminal transport source
+third_party/ssp-transport/   Vendored SSP/Mosh transport source
+```
+
+## Security Notes
+
+chrono stores credential payloads through Android-backed secret storage. Export and share flows intentionally avoid exporting private credential material unless the user explicitly requests a secret action inside the app.
 
 ## Credits
 
@@ -120,10 +128,6 @@ app/build/outputs/apk/debug/app-debug.apk
 - UI direction was inspired in part by [SwiftServer](https://swiftserver.app/) for iOS and macOS.
 - `third_party/et-transport/` is based on [Eternal Terminal](https://github.com/MisterTea/EternalTerminal) and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
 - `third_party/ssp-transport/` is based on the [Mosh](https://github.com/mobile-shell/mosh) SSP protocol and extracted from [Haven](https://github.com/GlassOnTin/Haven)'s Android SSH client work.
-
-## Security Notes
-
-chrono stores credential payloads through Android-backed secret storage. Export/share flows intentionally avoid exporting private credential material unless a user explicitly requests a secret action inside the app.
 
 ## License
 
