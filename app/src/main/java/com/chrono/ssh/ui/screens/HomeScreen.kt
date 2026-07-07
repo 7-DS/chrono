@@ -49,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -140,8 +141,14 @@ fun HomeScreen(
         if (selectedFilter !in filters) selectedFilter = "All"
     }
     val listState = rememberLazyListState()
-    val showCompactTopBar by remember {
-        derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 8 }
+    var showCompactTopBar by remember { mutableStateOf(false) }
+    LaunchedEffect(listState) {
+        var previousScroll = 0
+        snapshotFlow { listState.firstVisibleItemIndex * 100_000 + listState.firstVisibleItemScrollOffset }
+            .collect { scroll ->
+                showCompactTopBar = compactAddHostVisibility(showCompactTopBar, previousScroll, scroll)
+                previousScroll = scroll
+            }
     }
 
     Box {
@@ -192,7 +199,7 @@ fun HomeScreen(
             exit = slideOutVertically(tween(160, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(120, easing = FastOutSlowInEasing)),
             modifier = Modifier.align(Alignment.TopCenter)
         ) {
-            HomeCompactTopBar(onUptimeClick = onUptimeClick, onAddServer = onAddServer)
+            HomeCompactTopBar(onAddServer = onAddServer)
         }
     }
 
@@ -240,33 +247,18 @@ private fun HomeTitleRow(
 
 @Composable
 private fun HomeCompactTopBar(
-    onUptimeClick: () -> Unit,
     onAddServer: () -> Unit
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .statusBarsPadding()
-            .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 8.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(22.dp))
             .background(DeckColors.Surface.copy(alpha = 0.96f))
-            .border(1.dp, DeckColors.CardStroke.copy(alpha = 0.64f), androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .border(1.dp, DeckColors.CardStroke.copy(alpha = 0.64f), androidx.compose.foundation.shape.RoundedCornerShape(22.dp))
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "chronoSSH",
-            color = DeckColors.PrimaryText,
-            fontSize = 20.sp,
-            lineHeight = 22.sp,
-            fontWeight = FontWeight.Black,
-            fontFamily = LocalHeadingFontFamilies.current.forTarget(HeadingFontTarget.Home),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onUptimeClick)
-        )
         QuickAction("host-add", null, DeckColors.BrandAlt, onAddServer, modifier = Modifier.size(40.dp))
     }
 }
@@ -982,6 +974,15 @@ internal fun homeServerRows(
 ): List<Pair<ServerProfile, MetricSnapshot?>> {
     return filterServersByHomeFilter(servers, selectedFilter).map { server ->
         server to snapshots[server.id]
+    }
+}
+
+internal fun compactAddHostVisibility(currentlyVisible: Boolean, previousScroll: Int, currentScroll: Int): Boolean {
+    val delta = currentScroll - previousScroll
+    return when {
+        delta > 8 -> true
+        delta < -8 -> false
+        else -> currentlyVisible
     }
 }
 

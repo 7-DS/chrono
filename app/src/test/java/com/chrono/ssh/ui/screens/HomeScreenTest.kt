@@ -52,6 +52,18 @@ class HomeScreenTest {
     }
 
     @Test
+    fun compactAddHostVisibilityShowsOnlyWhenScrollingDown() {
+        assertEquals(true, compactAddHostVisibility(false, previousScroll = 20, currentScroll = 40))
+        assertEquals(false, compactAddHostVisibility(false, previousScroll = 40, currentScroll = 44))
+    }
+
+    @Test
+    fun compactAddHostVisibilityHidesWhenScrollingUp() {
+        assertEquals(false, compactAddHostVisibility(true, previousScroll = 40, currentScroll = 20))
+        assertEquals(true, compactAddHostVisibility(true, previousScroll = 40, currentScroll = 36))
+    }
+
+    @Test
     fun diskUsageLabelShowsUsedAndTotalCapacity() {
         assertEquals(
             "32.00 G / 64.00 G",
