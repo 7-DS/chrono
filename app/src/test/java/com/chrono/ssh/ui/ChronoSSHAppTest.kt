@@ -65,6 +65,15 @@ class ChronoSSHAppTest {
     }
 
     @Test
+    fun hostSaveReusesSelectedCredentialWhenNoReplacementSecretWasEntered() {
+        assertTrue(hostSaveShouldReuseSelectedCredential("identity-1", "", ""))
+        assertTrue(hostSaveShouldReuseSelectedCredential("identity-1", "   ", "  "))
+        assertFalse(hostSaveShouldReuseSelectedCredential(null, "", ""))
+        assertFalse(hostSaveShouldReuseSelectedCredential("identity-1", "new-secret", ""))
+        assertFalse(hostSaveShouldReuseSelectedCredential("identity-1", "", "new-passphrase"))
+    }
+
+    @Test
     fun backgroundUsagePromptShowsProactivelyWhenNotAllowed() {
         assertFalse(backgroundUsagePromptVisible(activeConnectionCount = 0, backgroundUsageAllowed = true))
         assertFalse(backgroundUsagePromptVisible(activeConnectionCount = 0, backgroundUsageAllowed = false))

@@ -1849,14 +1849,18 @@ fun ChronoSSHApp(
                                     hostEditorError = null
                                     scope.launch {
                                         try {
-                                            val savedCredential = repository.upsertCredentialDraft(
-                                                existingId = credentialId,
-                                                label = credentialLabel,
-                                                type = credentialType,
-                                                secret = credentialSecret,
-                                                passphrase = credentialPassphrase,
-                                                savePassphrase = savePassphrase
-                                            )
+                                            val savedCredential = if (hostSaveShouldReuseSelectedCredential(credentialId, credentialSecret, credentialPassphrase)) {
+                                                null
+                                            } else {
+                                                repository.upsertCredentialDraft(
+                                                    existingId = credentialId,
+                                                    label = credentialLabel,
+                                                    type = credentialType,
+                                                    secret = credentialSecret,
+                                                    passphrase = credentialPassphrase,
+                                                    savePassphrase = savePassphrase
+                                                )
+                                            }
                                             val profile = repository.profileFromDraft(
                                                 existing = editingServer,
                                                 name = name,
@@ -2438,6 +2442,14 @@ internal fun nextSftpWorkspaceAfterClose(
 
 internal fun sftpWorkspaceKeysForServer(workspaces: Map<String, String>, serverId: String): List<String> {
     return workspaces.filterValues { it == serverId }.keys.toList()
+}
+
+internal fun hostSaveShouldReuseSelectedCredential(
+    credentialId: String?,
+    credentialSecret: String,
+    credentialPassphrase: String
+): Boolean {
+    return credentialId != null && credentialSecret.isBlank() && credentialPassphrase.isBlank()
 }
 
 private fun AppSettings.sftpDefaultSortMode(): SftpSortMode {

@@ -4019,16 +4019,11 @@ private fun CredentialsSection(
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
-    val visibleCredentials = remember(credentials) {
-        credentials.filter { it.type == CredentialType.Password || it.type == CredentialType.PrivateKey }
-            .sortedWith(compareByDescending<Credential> { it.favorite }
-                .thenBy { it.group.trim().lowercase() }
-                .thenByDescending { it.secretBacked }
-                .thenByDescending { it.lastUsedEpochMillis }
-                .thenBy { it.label.lowercase() })
-    }
-    var selectedCredential by remember(preselectedCredentialId, visibleCredentials) {
-        mutableStateOf(preselectedCredentialId?.let { id -> visibleCredentials.firstOrNull { it.id == id } })
+    var vaultFilter by remember { mutableStateOf(CredentialVaultFilter.All) }
+    val allCredentials = remember(credentials) { visibleCredentialsForVault(credentials, CredentialVaultFilter.All) }
+    val visibleCredentials = remember(credentials, vaultFilter) { visibleCredentialsForVault(credentials, vaultFilter) }
+    var selectedCredential by remember(preselectedCredentialId, allCredentials) {
+        mutableStateOf(preselectedCredentialId?.let { id -> allCredentials.firstOrNull { it.id == id } })
     }
     var revealedPayload by remember { mutableStateOf<String?>(null) }
     var payloadError by remember { mutableStateOf<String?>(null) }
@@ -4089,7 +4084,7 @@ private fun CredentialsSection(
         }
     }
 
-    if (visibleCredentials.isEmpty()) {
+    if (allCredentials.isEmpty()) {
         EmptyState("No identities", "Add a private key here, or save a password/private key from a host editor.")
         Spacer(Modifier.height(10.dp))
         FlowRow(
@@ -4119,11 +4114,30 @@ private fun CredentialsSection(
         HostAction("Add key") { addingPrivateKey = true }
         HostAction("Import link") { onImportCredentialLink() }
     }
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(10.dp))
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        CredentialVaultFilter.entries.forEach { filter ->
+            SoftPill(filter.label, selected = vaultFilter == filter, color = filter.color()) {
+                vaultFilter = filter
+                expandedCredentialId = null
+                revealedPayload = null
+                payloadError = null
+            }
+        }
+    }
+    Spacer(Modifier.height(10.dp))
+    if (visibleCredentials.isEmpty()) {
+        EmptyState("No matching identities", "Adjust the vault filter to show more saved credentials.")
+        Spacer(Modifier.height(12.dp))
+    }
     visibleCredentials.forEach { credential ->
         var confirmDelete by remember(credential.id) { mutableStateOf(false) }
         val expanded = expandedCredentialId == credential.id
-        DeckCard(modifier = Modifier.fillMaxWidth(), radius = 28.dp, padding = PaddingValues(18.dp)) {
+        DeckCard(modifier = Modifier.fillMaxWidth(), radius = 20.dp, padding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -4139,15 +4153,15 @@ private fun CredentialsSection(
                         .weight(1f)
                         .padding(start = 2.dp)
                 ) {
-                    Text(credential.label, color = DeckColors.PrimaryText, fontSize = 21.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(credential.type.label(), color = DeckColors.SecondaryText, fontSize = 14.sp)
+                    Text(credential.label, color = DeckColors.PrimaryText, fontSize = 18.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(credential.type.label(), color = DeckColors.SecondaryText, fontSize = 12.sp)
                 }
                 SftpToolbarGlyph(if (expanded) "chevron-up" else "chevron-down", DeckColors.SecondaryText, Modifier.size(18.dp))
             }
             if (expanded) {
-                Spacer(Modifier.height(12.dp))
-                Text(credential.publicKeyPreview ?: "Saved credential", color = DeckColors.SecondaryText, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(10.dp))
+                Text(credential.publicKeyPreview ?: "Saved credential", color = DeckColors.SecondaryText, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(10.dp))
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -5979,6 +5993,48 @@ private fun CredentialType.label(): String {
         CredentialType.PrivateKey -> "Private Key"
         CredentialType.HardwareKey -> "Hardware Key"
     }
+}
+
+internal enum class CredentialVaultFilter(val label: String) {
+    All("All"),
+    Keys("Keys"),
+    Passwords("Passwords"),
+    Hardware("Hardware"),
+    Passphrases("Passphrases"),
+    NeedsSecret("Needs secret");
+
+    fun color(): Color {
+        return when (this) {
+            All -> DeckColors.Cyan
+            Keys -> DeckColors.Purple
+            Passwords -> DeckColors.Green
+            Hardware -> DeckColors.Orange
+            Passphrases -> DeckColors.Green
+            NeedsSecret -> DeckColors.Orange
+        }
+    }
+}
+
+internal fun visibleCredentialsForVault(
+    credentials: List<Credential>,
+    filter: CredentialVaultFilter
+): List<Credential> {
+    return credentials
+        .filter { credential ->
+            when (filter) {
+                CredentialVaultFilter.All -> true
+                CredentialVaultFilter.Keys -> credential.type == CredentialType.PrivateKey
+                CredentialVaultFilter.Passwords -> credential.type == CredentialType.Password
+                CredentialVaultFilter.Hardware -> credential.type == CredentialType.HardwareKey
+                CredentialVaultFilter.Passphrases -> credential.passphraseRef != null
+                CredentialVaultFilter.NeedsSecret -> !credential.secretBacked
+            }
+        }
+        .sortedWith(compareByDescending<Credential> { it.favorite }
+            .thenBy { it.group.trim().lowercase() }
+            .thenByDescending { it.secretBacked }
+            .thenByDescending { it.lastUsedEpochMillis }
+            .thenBy { it.label.lowercase() })
 }
 
 internal fun Credential.withMetadata(

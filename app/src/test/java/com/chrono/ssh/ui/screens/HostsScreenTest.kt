@@ -466,6 +466,21 @@ class HostsScreenTest {
         assertEquals("Private Key / needs key material", hostEditorIdentityDetail(pendingKey))
     }
 
+    @Test
+    fun visibleCredentialsForVaultFiltersByCredentialKindAndState() {
+        val password = Credential("password-1", "Root password", CredentialType.Password, null, "secret-password", 1L)
+        val key = Credential("key-1", "Deploy key", CredentialType.PrivateKey, null, "secret-key", 1L, passphraseRef = "secret-passphrase")
+        val hardware = Credential("hardware-1", "Security key", CredentialType.HardwareKey, null, "secret-hardware", 1L)
+        val pending = Credential("key-2", "Imported key", CredentialType.PrivateKey, null, "pending", 1L)
+        val credentials = listOf(password, key, hardware, pending)
+
+        assertEquals(listOf(key, pending), visibleCredentialsForVault(credentials, CredentialVaultFilter.Keys))
+        assertEquals(listOf(password), visibleCredentialsForVault(credentials, CredentialVaultFilter.Passwords))
+        assertEquals(listOf(hardware), visibleCredentialsForVault(credentials, CredentialVaultFilter.Hardware))
+        assertEquals(listOf(key), visibleCredentialsForVault(credentials, CredentialVaultFilter.Passphrases))
+        assertEquals(listOf(pending), visibleCredentialsForVault(credentials, CredentialVaultFilter.NeedsSecret))
+    }
+
     private fun forward(serverId: String, type: PortForwardType): PortForwardRule {
         return PortForwardRule(
             id = "$serverId-$type",
