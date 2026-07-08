@@ -4036,6 +4036,16 @@ private fun CredentialsSection(
     var addingPrivateKey by remember { mutableStateOf(false) }
     var pendingSecretAction by remember { mutableStateOf<PendingVaultSecretAction?>(null) }
     var expandedCredentialId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(allCredentials) {
+        val ids = allCredentials.map { it.id }.toSet()
+        if (selectedCredential?.id !in ids) selectedCredential = null
+        if (expandedCredentialId !in ids) expandedCredentialId = null
+        if (pendingDeleteCredential?.id !in ids) pendingDeleteCredential = null
+        if (pendingRenameCredential?.id !in ids) pendingRenameCredential = null
+        if (pendingMetadataCredential?.id !in ids) pendingMetadataCredential = null
+        if (pendingUnlinkCredential?.id !in ids) pendingUnlinkCredential = null
+        if (pendingReplaceCredential?.id !in ids) pendingReplaceCredential = null
+    }
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         val export = pendingExportPayload
         pendingExportPayload = null

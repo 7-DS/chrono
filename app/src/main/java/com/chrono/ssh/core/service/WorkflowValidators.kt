@@ -2129,6 +2129,13 @@ data class CredentialHostUnlinkResult(
     val unlinkedCount: Int
 )
 
+data class CredentialDeleteResult(
+    val credentials: List<Credential>,
+    val servers: List<ServerProfile>,
+    val deleted: Boolean,
+    val unlinkedCount: Int
+)
+
 object CredentialHostLinkPolicy {
     fun unlink(servers: List<ServerProfile>, credentialId: String): CredentialHostUnlinkResult {
         var changed = 0
@@ -2141,6 +2148,19 @@ object CredentialHostLinkPolicy {
             }
         }
         return CredentialHostUnlinkResult(next, changed)
+    }
+}
+
+object CredentialDeletePolicy {
+    fun delete(credentials: List<Credential>, servers: List<ServerProfile>, credentialId: String): CredentialDeleteResult {
+        val nextCredentials = credentials.filterNot { it.id == credentialId }
+        val unlink = CredentialHostLinkPolicy.unlink(servers, credentialId)
+        return CredentialDeleteResult(
+            credentials = nextCredentials,
+            servers = unlink.servers,
+            deleted = nextCredentials.size != credentials.size,
+            unlinkedCount = unlink.unlinkedCount
+        )
     }
 }
 
@@ -2223,10 +2243,21 @@ object HostUniquenessPolicy {
 
 object CredentialUniquenessPolicy {
     const val DuplicateLabelMessage = "An identity with this name already exists."
+    const val DuplicatePrivateKeyMessage = "This private key is already saved."
 
     fun hasDuplicateLabel(existing: List<Credential>, label: String, credentialId: String? = null): Boolean {
         val normalized = label.trim().lowercase()
         return normalized.isNotBlank() && existing.any { it.id != credentialId && it.label.trim().lowercase() == normalized }
+    }
+
+    fun hasDuplicatePrivateKey(existing: List<Credential>, publicKeyPreview: String?, credentialId: String? = null): Boolean {
+        val normalized = publicKeyPreview?.trim().orEmpty()
+        if (normalized.isBlank()) return false
+        return existing.any { credential ->
+            credential.id != credentialId &&
+                credential.type == CredentialType.PrivateKey &&
+                credential.publicKeyPreview?.trim() == normalized
+        }
     }
 }
 

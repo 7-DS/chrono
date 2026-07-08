@@ -1317,6 +1317,7 @@ fun TerminalScreen(
                 }
             )
         }
+    }
         if (workspace.session != null && snippetsOpen) {
             Column {
                 TerminalSnippetRow(
@@ -1369,7 +1370,6 @@ fun TerminalScreen(
                 }
             }
         }
-    }
         if (workspace.session != null) {
             ClickableTerminalActionRow(
                 terminalProfile = terminalProfile,

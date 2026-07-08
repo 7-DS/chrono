@@ -53,6 +53,7 @@ import com.chrono.ssh.core.model.TransferRecordState
 import com.chrono.ssh.core.model.VncProfileConfig
 import com.chrono.ssh.core.model.WakeOnLanConfig
 import com.chrono.ssh.core.service.CredentialPassphraseAction
+import com.chrono.ssh.core.service.CredentialDeletePolicy
 import com.chrono.ssh.core.service.CredentialHostLinkPolicy
 import com.chrono.ssh.core.service.CredentialPassphrasePolicy
 import com.chrono.ssh.core.service.CredentialPersistencePolicy
@@ -1035,12 +1036,14 @@ class ChronoSSHRepository(private val context: Context) {
             favorite = existing?.favorite ?: false,
             importedAtEpochMillis = existing?.importedAtEpochMillis ?: 0L
         )
+        requireUniqueCredentialMaterial(credential)
         upsertCredential(credential)
         return credential
     }
 
     fun upsertCredential(credential: Credential) {
         requireUniqueCredentialLabel(credential.label, credential.id)
+        requireUniqueCredentialMaterial(credential)
         val index = credentials.indexOfFirst { it.id == credential.id }
         if (index >= 0) {
             credentials[index] = credential
@@ -1066,6 +1069,13 @@ class ChronoSSHRepository(private val context: Context) {
         require(!CredentialUniquenessPolicy.hasDuplicateLabel(credentials, normalized, credentialId)) { CredentialUniquenessPolicy.DuplicateLabelMessage }
     }
 
+    private fun requireUniqueCredentialMaterial(credential: Credential) {
+        if (credential.type != CredentialType.PrivateKey) return
+        require(!CredentialUniquenessPolicy.hasDuplicatePrivateKey(credentials, credential.publicKeyPreview, credential.id)) {
+            CredentialUniquenessPolicy.DuplicatePrivateKeyMessage
+        }
+    }
+
     fun unlinkCredentialFromHosts(credentialId: String): Int {
         require(credentials.any { it.id == credentialId }) { "Identity no longer exists." }
         val result = CredentialHostLinkPolicy.unlink(servers, credentialId)
@@ -1087,13 +1097,14 @@ class ChronoSSHRepository(private val context: Context) {
                 }
             }
         credential?.passphraseRef?.deleteSecretQuietly()
-        credentials.removeAll { it.id == credentialId }
-        servers.indices.forEach { index ->
-            val server = servers[index]
-            if (server.credentialId == credentialId) servers[index] = server.copy(credentialId = null)
+        val result = CredentialDeletePolicy.delete(credentials, servers, credentialId)
+        credentials.clear()
+        credentials.addAll(result.credentials)
+        result.servers.forEachIndexed { index, server ->
+            if (servers[index] !== server) servers[index] = server
         }
-        saveCredentials()
-        saveServers()
+        if (result.deleted) saveCredentials()
+        if (result.unlinkedCount > 0) saveServers()
     }
 
     fun credentialFor(server: ServerProfile): Credential? {

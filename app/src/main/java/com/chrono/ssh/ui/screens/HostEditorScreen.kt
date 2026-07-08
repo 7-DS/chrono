@@ -31,7 +31,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -213,6 +218,8 @@ fun HostEditorScreen(
     var credentialType by remember(server?.id) { mutableStateOf(startingCredential?.type ?: CredentialType.Password) }
     var credentialSecret by remember(server?.id) { mutableStateOf("") }
     var credentialPassphrase by remember(server?.id) { mutableStateOf("") }
+    var credentialSecretVisible by remember(server?.id) { mutableStateOf(false) }
+    var credentialPassphraseVisible by remember(server?.id) { mutableStateOf(false) }
     var savePassphrase by remember(server?.id) { mutableStateOf(startingCredential?.passphraseRef != null) }
     var keyImportSummary by remember(server?.id) { mutableStateOf(startingCredential?.publicKeyPreview.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -448,6 +455,16 @@ fun HostEditorScreen(
             effectiveCredentialLabel,
             selectedCredentialId
         )
+        val replacementPrivateKeyPreview = if (credentialType == CredentialType.PrivateKey && credentialSecret.isNotBlank()) {
+            KeyMaterialInspector.publicPreviewForSecret(credentialType.name, credentialSecret)
+        } else {
+            null
+        }
+        val duplicatePrivateKey = CredentialUniquenessPolicy.hasDuplicatePrivateKey(
+            credentials,
+            replacementPrivateKeyPreview,
+            selectedCredentialId
+        )
         when {
             HostEndpointValidator.errorFor(host) != null -> error = HostEndpointValidator.errorFor(host)
             duplicateHost -> error = HostUniquenessPolicy.DuplicateMessage
@@ -484,6 +501,7 @@ fun HostEditorScreen(
                 label = effectiveCredentialLabel
             ).message
             duplicateCredentialLabel -> error = CredentialUniquenessPolicy.DuplicateLabelMessage
+            duplicatePrivateKey -> error = CredentialUniquenessPolicy.DuplicatePrivateKeyMessage
             else -> {
                 val savePort = parsedPort!!
                 val saveMoshColors = parsedMoshColors!!
@@ -710,8 +728,18 @@ fun HostEditorScreen(
                     "Leave blank to keep saved credential"
                 },
                 keyboardType = KeyboardType.Text,
-                visualTransformation = if (credentialType == CredentialType.Password) PasswordVisualTransformation() else VisualTransformation.None,
-                singleLine = credentialType == CredentialType.Password
+                visualTransformation = if (credentialType == CredentialType.Password && !credentialSecretVisible) PasswordVisualTransformation() else VisualTransformation.None,
+                singleLine = credentialType == CredentialType.Password,
+                trailingAction = if (credentialType == CredentialType.Password) {
+                    {
+                        PasswordVisibilityToggle(
+                            visible = credentialSecretVisible,
+                            onToggle = { credentialSecretVisible = !credentialSecretVisible }
+                        )
+                    }
+                } else {
+                    null
+                }
             ) { nextSecret ->
                 credentialSecret = nextSecret
                 if (nextSecret.isNotBlank()) {
@@ -782,7 +810,13 @@ fun HostEditorScreen(
                     value = credentialPassphrase,
                     placeholder = if (savePassphrase) "Save passphrase" else "Ask when needed",
                     keyboardType = KeyboardType.Password,
-                    visualTransformation = PasswordVisualTransformation()
+                    visualTransformation = if (credentialPassphraseVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingAction = {
+                        PasswordVisibilityToggle(
+                            visible = credentialPassphraseVisible,
+                            onToggle = { credentialPassphraseVisible = !credentialPassphraseVisible }
+                        )
+                    }
                 ) { credentialPassphrase = it }
                 if (keyImportSummary.isNotBlank()) {
                     Spacer(Modifier.height(10.dp))
@@ -1660,6 +1694,7 @@ private fun DeckTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = true,
+    trailingAction: (@Composable () -> Unit)? = null,
     onValueChange: (String) -> Unit
 ) {
     Column(modifier) {
@@ -1679,7 +1714,7 @@ private fun DeckTextField(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = visualTransformation,
             decorationBox = { inner ->
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
@@ -1687,14 +1722,35 @@ private fun DeckTextField(
                         .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(18.dp))
                         .height(if (singleLine) 50.dp else 152.dp)
                         .padding(horizontal = 15.dp, vertical = 13.dp),
-                    contentAlignment = Alignment.CenterStart
+                    verticalAlignment = if (singleLine) Alignment.CenterVertically else Alignment.Top
                 ) {
-                    if (value.isBlank()) {
-                        Text(placeholder, color = DeckColors.TertiaryText, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                        if (value.isBlank()) {
+                            Text(placeholder, color = DeckColors.TertiaryText, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        inner()
                     }
-                    inner()
+                    trailingAction?.invoke()
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun PasswordVisibilityToggle(
+    visible: Boolean,
+    onToggle: () -> Unit
+) {
+    IconButton(
+        onClick = onToggle,
+        modifier = Modifier.size(24.dp)
+    ) {
+        Icon(
+            imageVector = if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+            contentDescription = if (visible) "Hide password" else "Show password",
+            tint = DeckColors.SecondaryText,
+            modifier = Modifier.size(18.dp)
         )
     }
 }

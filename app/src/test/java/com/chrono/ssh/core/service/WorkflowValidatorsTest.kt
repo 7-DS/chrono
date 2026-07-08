@@ -2252,6 +2252,24 @@ class WorkflowValidatorsTest {
     }
 
     @Test
+    fun credentialDeletePolicyDeletesIdentityAndUnlinksHosts() {
+        val first = server(username = "aldr").copy(id = "server-1", credentialId = "identity-1")
+        val second = server(username = "root").copy(id = "server-2", credentialId = "identity-2")
+        val credentials = listOf(
+            Credential(id = "identity-1", label = "Deploy key", type = CredentialType.PrivateKey, publicKeyPreview = "ssh-ed25519 AAAA", encryptedPayloadRef = "secret-1", createdAtEpochMillis = 1L),
+            Credential(id = "identity-2", label = "Root password", type = CredentialType.Password, publicKeyPreview = null, encryptedPayloadRef = "secret-2", createdAtEpochMillis = 2L)
+        )
+
+        val result = CredentialDeletePolicy.delete(credentials, listOf(first, second), "identity-1")
+
+        assertTrue(result.deleted)
+        assertEquals(listOf("identity-2"), result.credentials.map { it.id })
+        assertEquals(1, result.unlinkedCount)
+        assertNull(result.servers[0].credentialId)
+        assertEquals("identity-2", result.servers[1].credentialId)
+    }
+
+    @Test
     fun vaultSecretExportPolicyRequiresConfirmationForRawSecrets() {
         val key = Credential(
             id = "identity-1",
@@ -2576,6 +2594,22 @@ class WorkflowValidatorsTest {
 
         assertTrue(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", null))
         assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", existing.id))
+    }
+
+    @Test
+    fun credentialUniquenessRejectsDuplicatePrivateKeyMaterial() {
+        val existing = Credential(
+            id = "identity-1",
+            label = "Production Key",
+            type = CredentialType.PrivateKey,
+            publicKeyPreview = "OpenSSH key (SHA256:abc)",
+            encryptedPayloadRef = "secret-key",
+            createdAtEpochMillis = 1L
+        )
+
+        assertTrue(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), " OpenSSH key (SHA256:abc) ", null))
+        assertFalse(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), "OpenSSH key (SHA256:abc)", existing.id))
+        assertFalse(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), "OpenSSH key (SHA256:other)", null))
     }
 
     private fun server(username: String): ServerProfile {
