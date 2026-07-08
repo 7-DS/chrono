@@ -318,7 +318,7 @@ class TerminalScreenTest {
     }
 
     @Test
-    fun terminalTopStripSessionsKeepsRealDuplicateWorkspaces() {
+    fun terminalTopStripSessionsKeepsOriginalOrderForDuplicateWorkspaces() {
         val server = server()
         val sessions = terminalTopStripSessions(
             selectedWorkspaceKey = "server-1|duplicate",
@@ -326,11 +326,11 @@ class TerminalScreenTest {
             activeSessions = listOf("server-1" to server, "server-1|duplicate" to server.copy(name = "Box duplicate"))
         )
 
-        assertEquals(listOf("server-1|duplicate", "server-1"), sessions.map { it.first })
+        assertEquals(listOf("server-1", "server-1|duplicate"), sessions.map { it.first })
     }
 
     @Test
-    fun terminalTopStripSessionsKeepsSelectedWorkspaceFirst() {
+    fun terminalTopStripSessionsDoesNotReorderWhenSelectingWorkspace() {
         val server = server()
         val other = server.copy(id = "server-2", name = "Other")
         val sessions = terminalTopStripSessions(
@@ -339,7 +339,7 @@ class TerminalScreenTest {
             activeSessions = listOf("server-2" to other, "server-1" to server)
         )
 
-        assertEquals(listOf("server-1", "server-2"), sessions.map { it.first })
+        assertEquals(listOf("server-2", "server-1"), sessions.map { it.first })
     }
 
     @Test
@@ -425,7 +425,6 @@ class TerminalScreenTest {
         val server = server()
         val other = server.copy(id = "server-2", name = "Other")
         val sessions = terminalSftpStripSessions(
-            selectedSftpWorkspaceKey = null,
             listOf(
                 "sftp-1" to server,
                 "sftp-1|duplicate" to server.copy(name = "Box duplicate"),
@@ -437,15 +436,14 @@ class TerminalScreenTest {
     }
 
     @Test
-    fun terminalSftpStripSessionsKeepsSelectedWorkspaceFirst() {
+    fun terminalSftpStripSessionsDoesNotReorderWhenSelectingWorkspace() {
         val server = server()
         val other = server.copy(id = "server-2", name = "Other")
         val sessions = terminalSftpStripSessions(
-            selectedSftpWorkspaceKey = "sftp-1",
             listOf("sftp-2" to other, "sftp-1" to server)
         )
 
-        assertEquals(listOf("sftp-1", "sftp-2"), sessions.map { it.first })
+        assertEquals(listOf("sftp-2", "sftp-1"), sessions.map { it.first })
     }
 
     @Test

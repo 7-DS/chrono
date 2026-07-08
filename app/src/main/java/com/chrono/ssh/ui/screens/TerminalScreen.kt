@@ -300,9 +300,6 @@ internal fun terminalTopStripSessions(
     activeSessions: List<Pair<String, ServerProfile>>
 ): List<Pair<String, ServerProfile>> {
     val active = activeSessions.distinctBy { it.first }
-    active.firstOrNull { it.first == selectedWorkspaceKey }?.let { selected ->
-        return listOf(selected) + active.filterNot { it.first == selectedWorkspaceKey }
-    }
     return if (active.none { it.second.id == selectedServer.id }) {
         active.ifEmpty { listOf(selectedWorkspaceKey to selectedServer) }
     } else {
@@ -311,12 +308,9 @@ internal fun terminalTopStripSessions(
 }
 
 internal fun terminalSftpStripSessions(
-    selectedSftpWorkspaceKey: String?,
     sftpSessions: List<Pair<String, ServerProfile>>
 ): List<Pair<String, ServerProfile>> {
-    val active = sftpSessions.distinctBy { it.first }
-    val selected = active.firstOrNull { it.first == selectedSftpWorkspaceKey } ?: return active
-    return listOf(selected) + active.filterNot { it.first == selected.first }
+    return sftpSessions.distinctBy { it.first }
 }
 
 internal fun terminalSessionChipLabel(name: String, occurrence: Int): String {
@@ -392,6 +386,7 @@ fun TerminalScreen(
     onOpenServer: (ServerProfile) -> TerminalWorkspaceState,
     onSelectServer: (String) -> Unit,
     onDuplicateServer: (ServerProfile) -> Unit,
+    onCloseWorkspace: (String) -> Unit,
     onBack: () -> Unit,
     onEditHost: (ServerProfile) -> Unit,
     onSelectSftp: (String) -> Unit = {},
@@ -1105,7 +1100,7 @@ fun TerminalScreen(
             },
             onSelect = { onSelectServer(it) },
             onSelectSftp = onSelectSftp,
-            onClose = { disconnectShell { onBack() } },
+            onClose = { onCloseWorkspace(workspaceKey) },
             onReconnect = { connectOrReview(reconnectAttempt = 1) },
             onDuplicate = { onDuplicateServer(selectedServer) },
             onOpenSftp = { onOpenSftp(selectedServer) },
@@ -1499,11 +1494,11 @@ private fun TerminalTopBar(
     onToggleFullscreen: () -> Unit,
     transcriptActionsEnabled: Boolean
 ) {
-    val sessionStrip = remember(activeSessions, selectedWorkspaceKey, selectedServer) {
+    val sessionStrip = remember(activeSessions, selectedServer) {
         terminalTopStripSessions(selectedWorkspaceKey, selectedServer, activeSessions)
     }
-    val sftpStrip = remember(sftpSessions, selectedSftpWorkspaceKey) {
-        terminalSftpStripSessions(selectedSftpWorkspaceKey, sftpSessions)
+    val sftpStrip = remember(sftpSessions) {
+        terminalSftpStripSessions(sftpSessions)
     }
     val activeMenuActions: @Composable () -> Unit = {
         DropdownMenuItem(text = { TerminalMenuText("Duplicate") }, onClick = {
@@ -1554,7 +1549,9 @@ private fun TerminalTopBar(
                         menuOpen = tabMenuOpen && workspaceKey == selectedWorkspaceKey,
                         onMenuOpenChange = onTabMenuOpenChange,
                         menuContent = activeMenuActions.takeIf { workspaceKey == selectedWorkspaceKey },
-                        onClick = { onSelect(workspaceKey) }
+                        onClick = {
+                            if (workspaceKey != selectedWorkspaceKey) onSelect(workspaceKey)
+                        }
                     )
                 }
                 val sftpOccurrences = mutableMapOf<String, Int>()
@@ -1568,7 +1565,9 @@ private fun TerminalTopBar(
                         terminalBackground = terminalBackground,
                         badge = "SFTP",
                         label = terminalSftpChipLabel(server.name, occurrence),
-                        onClick = { onSelectSftp(workspaceKey) }
+                        onClick = {
+                            if (workspaceKey != selectedSftpWorkspaceKey) onSelectSftp(workspaceKey)
+                        }
                     )
                 }
             }

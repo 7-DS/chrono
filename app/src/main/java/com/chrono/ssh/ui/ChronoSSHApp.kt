@@ -1253,6 +1253,7 @@ fun ChronoSSHApp(
                                 selectedTab = AppTab.Connections
                             },
                             onDuplicateServer = { duplicateConnection(it) },
+                            onCloseWorkspace = { closeConnectionWorkspace(it) },
                             onBack = {
                                 closeTerminalSurface()
                             },
