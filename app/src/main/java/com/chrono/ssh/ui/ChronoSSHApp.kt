@@ -1445,6 +1445,7 @@ fun ChronoSSHApp(
                             onServerClick = { editingServerId = it.id },
                             onTerminalClick = { launchConnection(it) },
                             onTrustHost = ::reviewHostKey,
+                            onMoveServer = repository::moveServer,
                             onToggleForward = { forward ->
                                 scope.launch { repository.toggleForward(forward.id) }
                             },
