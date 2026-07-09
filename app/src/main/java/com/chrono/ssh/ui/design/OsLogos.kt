@@ -77,3 +77,34 @@ fun osLogoDrawableOrNull(osName: String): Int? {
         else -> null
     }
 }
+
+@DrawableRes
+fun termiusTerminalOsLogoDrawableOrNull(osName: String): Int? {
+    val normalized = osName.trim().lowercase()
+    return when {
+        normalized.isBlank() -> null
+        "android" in normalized -> R.drawable.termius_os_android
+        "windows" in normalized -> R.drawable.termius_os_windows
+        "macos" in normalized || "mac os" in normalized -> R.drawable.termius_os_macos
+        "apple" in normalized || normalized == "darwin" -> R.drawable.termius_os_apple
+        "ubuntu" in normalized -> R.drawable.termius_os_ubuntu
+        "debian" in normalized -> R.drawable.termius_os_debian
+        "alma" in normalized || "almalinux" in normalized -> R.drawable.termius_os_almalinux
+        "amazon linux" in normalized || "amzn" in normalized -> R.drawable.termius_os_amazonlinux
+        "rocky" in normalized -> R.drawable.termius_os_rocky
+        "centos" in normalized -> R.drawable.termius_os_centos
+        "red hat" in normalized || "rhel" in normalized -> R.drawable.termius_os_redhat
+        "fedora" in normalized -> R.drawable.termius_os_fedora
+        "arch" in normalized -> R.drawable.termius_os_arch
+        "alpine" in normalized -> R.drawable.termius_os_alpine
+        "suse" in normalized || "opensuse" in normalized || "suze" in normalized -> R.drawable.termius_os_suse
+        "gentoo" in normalized -> R.drawable.termius_os_gentoo
+        "mageia" in normalized -> R.drawable.termius_os_mageia
+        "freebsd" in normalized || "free bsd" in normalized -> R.drawable.termius_os_freebsd
+        "openbsd" in normalized || "open bsd" in normalized -> R.drawable.termius_os_openbsd
+        "netbsd" in normalized || "net bsd" in normalized -> R.drawable.termius_os_netbsd
+        "routeros" in normalized || "mikrotik" in normalized -> R.drawable.termius_os_routeros
+        "linux" in normalized -> R.drawable.termius_os_linux
+        else -> null
+    }
+}

@@ -89,6 +89,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -139,6 +140,7 @@ import com.chrono.ssh.core.service.TmuxWindowInfo
 import com.chrono.ssh.core.service.buildChosenTmuxLaunchPlan
 import com.chrono.ssh.ui.design.ChronoOsLogo
 import com.chrono.ssh.ui.design.DeckColors
+import com.chrono.ssh.ui.design.termiusTerminalOsLogoDrawableOrNull
 import com.chrono.ssh.ui.terminal.ChronoSSHTerminalEngine
 import com.chrono.ssh.ui.terminal.ChronoSSHTerminalView
 import com.chrono.ssh.ui.terminal.TerminalCatalog
@@ -1756,7 +1758,17 @@ private fun TerminalSessionLogo(server: ServerProfile, modifier: Modifier = Modi
                 contentScale = ContentScale.Crop
             )
         } else {
-            ChronoOsLogo(server.osName, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            val terminalLogo = remember(server.osName) { termiusTerminalOsLogoDrawableOrNull(server.osName) }
+            if (terminalLogo != null) {
+                Image(
+                    painter = painterResource(terminalLogo),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                ChronoOsLogo(server.osName, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            }
         }
     }
 }
