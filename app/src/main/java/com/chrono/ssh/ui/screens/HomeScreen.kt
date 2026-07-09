@@ -112,7 +112,7 @@ fun HomeScreen(
     knownHosts: List<KnownHost>,
     networkMode: ServerCardNetworkMode = ServerCardNetworkMode.Totals,
     diskMode: ServerCardDiskMode = ServerCardDiskMode.Usage,
-    metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Classic,
+    metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     onAddServer: () -> Unit,
     onTrustHost: (ServerProfile) -> Unit,
     onUptimeClick: () -> Unit = {},

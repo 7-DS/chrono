@@ -525,7 +525,7 @@ class ChronoSSHRepository(private val context: Context) {
                 terminalKeepScreenOn = values["terminalKeepScreenOn"]?.toBooleanStrictOrNull() ?: false,
                 serverCardNetworkMode = values["serverCardNetworkMode"]?.let { runCatching { ServerCardNetworkMode.valueOf(it) }.getOrNull() } ?: ServerCardNetworkMode.Totals,
                 serverCardDiskMode = values["serverCardDiskMode"]?.let { runCatching { ServerCardDiskMode.valueOf(it) }.getOrNull() } ?: ServerCardDiskMode.Usage,
-                serverMetricColorPreset = values["serverMetricColorPreset"]?.let { runCatching { ServerMetricColorPreset.valueOf(it) }.getOrNull() } ?: ServerMetricColorPreset.Classic,
+                serverMetricColorPreset = values["serverMetricColorPreset"]?.let { runCatching { ServerMetricColorPreset.valueOf(it) }.getOrNull() } ?: ServerMetricColorPreset.Theme,
                 serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(values["serverDetailCardOrder"].orEmpty()),
                 serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(values["serverDetailHiddenCards"].orEmpty()),
                 homeHeadingFontPath = values["homeHeadingFontPath"]?.ifBlank { null },

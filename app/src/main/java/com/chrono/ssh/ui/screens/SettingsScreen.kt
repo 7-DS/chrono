@@ -911,6 +911,7 @@ private fun FilesSettings(
 
 internal fun ServerMetricColorPreset.label(): String {
     return when (this) {
+        ServerMetricColorPreset.Theme -> "Theme"
         ServerMetricColorPreset.Classic -> "Blue / Green"
         ServerMetricColorPreset.Calm -> "Steel / Sage"
         ServerMetricColorPreset.Graphite -> "Graphite"
@@ -1642,6 +1643,7 @@ internal fun metricPresetSelectionContentDescription(selected: Boolean): String 
 
 internal fun ServerMetricColorPreset.roleSummary(): String {
     return when (this) {
+        ServerMetricColorPreset.Theme -> "Uses the active app theme accent colors"
         ServerMetricColorPreset.Classic -> "CPU/Net blue · RAM green · Disk amber"
         ServerMetricColorPreset.Calm -> "CPU steel · RAM sage · Disk tan · Net teal"
         ServerMetricColorPreset.Graphite -> "Muted neutral rings for low-contrast themes"

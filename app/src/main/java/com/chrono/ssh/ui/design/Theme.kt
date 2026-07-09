@@ -421,7 +421,6 @@ object DeckThemeCatalog {
             yellow = lightYellow,
             purple = lightPurple,
             purpleSoft = lightPurpleSoft,
-            terminalAccent = lightAccent,
             navSurface = lightSurface,
             brand = lightPrimaryText,
             brandAlt = lightAccent
@@ -447,7 +446,6 @@ object DeckThemeCatalog {
             yellow = darkYellow,
             purple = darkPurple,
             purpleSoft = darkPurpleSoft,
-            terminalAccent = darkAccent,
             navSurface = darkSurface,
             brand = darkPrimaryText,
             brandAlt = darkAccent

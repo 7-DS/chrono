@@ -8,6 +8,7 @@ import com.chrono.ssh.core.model.ServerCardNetworkMode
 import com.chrono.ssh.core.model.AppSettings
 import com.chrono.ssh.core.data.sanitizeHeadingFontPath
 import com.chrono.ssh.core.model.ServerMetricColorPreset
+import com.chrono.ssh.ui.design.DeckColors
 import com.chrono.ssh.ui.design.metricColorsFor
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -17,7 +18,7 @@ class SettingsScreenTest {
     @Test
     fun monitoringSettingsSummaryMentionsServerCardModes() {
         assertEquals(
-            "2s · net speed · disk usage · Blue / Green",
+            "2s · net speed · disk usage · Theme",
             monitoringSettingsSummary(
                 AppSettings(
                     themeModeName = "System",
@@ -33,7 +34,7 @@ class SettingsScreenTest {
     @Test
     fun metricColorPresetLabelsCoverAllChoices() {
         assertEquals(
-            "Blue / Green, Steel / Sage, Graphite, Cobalt / Lime, Ocean Teal, Olive / Teal, Clay / Moss, Aurora, Orchid, Nordic, Solar, Circuit, Harvest, Lagoon, Metro, Mono",
+            "Theme, Blue / Green, Steel / Sage, Graphite, Cobalt / Lime, Ocean Teal, Olive / Teal, Clay / Moss, Aurora, Orchid, Nordic, Solar, Circuit, Harvest, Lagoon, Metro, Mono",
             ServerMetricColorPreset.entries.joinToString { it.label() }
         )
     }
@@ -41,7 +42,7 @@ class SettingsScreenTest {
     @Test
     fun metricColorPresetRoleSummariesCoverAllChoices() {
         assertEquals(
-            "CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Bright CPU, RAM, disk and network separation | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
+            "Uses the active app theme accent colors | CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Bright CPU, RAM, disk and network separation | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
             ServerMetricColorPreset.entries.joinToString(" | ") { it.roleSummary() }
         )
     }
@@ -57,6 +58,16 @@ class SettingsScreenTest {
         ServerMetricColorPreset.entries.forEach { preset ->
             assertNotNull(metricColorsFor(preset))
         }
+    }
+
+    @Test
+    fun themeMetricPresetUsesAppAccentRoles() {
+        val colors = metricColorsFor(ServerMetricColorPreset.Theme)
+
+        assertEquals(DeckColors.Cyan, colors.cpu)
+        assertEquals(DeckColors.Green, colors.memory)
+        assertEquals(DeckColors.Orange, colors.disk)
+        assertEquals(DeckColors.Purple, colors.network)
     }
 
     @Test

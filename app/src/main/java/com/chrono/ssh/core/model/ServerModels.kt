@@ -48,6 +48,7 @@ enum class ServerCardDiskMode {
 }
 
 enum class ServerMetricColorPreset {
+    Theme,
     Classic,
     Calm,
     Graphite,
@@ -149,7 +150,7 @@ data class AppSettings(
     val terminalKeepScreenOn: Boolean = false,
     val serverCardNetworkMode: ServerCardNetworkMode = ServerCardNetworkMode.Totals,
     val serverCardDiskMode: ServerCardDiskMode = ServerCardDiskMode.Usage,
-    val serverMetricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Classic,
+    val serverMetricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     val serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     val serverDetailHiddenCards: String = "",
     val homeHeadingFontPath: String? = null,

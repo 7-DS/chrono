@@ -108,7 +108,7 @@ fun ServerDetailScreen(
     onServiceAction: (ServiceMetric, String) -> Unit = { _, _ -> },
     onDetailToolOpen: () -> Unit = {},
     onWake: (() -> Unit)? = null,
-    metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Classic,
+    metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     serverDetailHiddenCards: String = ""
 ) {

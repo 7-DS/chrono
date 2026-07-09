@@ -12,6 +12,12 @@ data class ServerMetricColors(
 
 fun metricColorsFor(preset: ServerMetricColorPreset): ServerMetricColors {
     return when (preset) {
+        ServerMetricColorPreset.Theme -> ServerMetricColors(
+            cpu = DeckColors.Cyan,
+            memory = DeckColors.Green,
+            disk = DeckColors.Orange,
+            network = DeckColors.Purple
+        )
         ServerMetricColorPreset.Classic -> ServerMetricColors(
             cpu = DeckColors.Cyan,
             memory = DeckColors.Green,
