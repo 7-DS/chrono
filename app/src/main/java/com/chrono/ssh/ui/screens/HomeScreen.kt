@@ -81,6 +81,7 @@ import com.chrono.ssh.ui.design.LocalHeadingFontFamilies
 import com.chrono.ssh.ui.design.ChronoOsLogo
 import com.chrono.ssh.ui.design.MetricRing
 import com.chrono.ssh.ui.design.ServerMetricColors
+import com.chrono.ssh.ui.design.ServerMetricColorOverrides
 import com.chrono.ssh.ui.design.SoftPill
 import com.chrono.ssh.ui.design.StatusDot
 import com.chrono.ssh.ui.design.metricColorsFor
@@ -113,6 +114,7 @@ fun HomeScreen(
     networkMode: ServerCardNetworkMode = ServerCardNetworkMode.Totals,
     diskMode: ServerCardDiskMode = ServerCardDiskMode.Usage,
     metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
+    metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
     onAddServer: () -> Unit,
     onTrustHost: (ServerProfile) -> Unit,
     onUptimeClick: () -> Unit = {},
@@ -184,7 +186,7 @@ fun HomeScreen(
                         snapshot = snapshot,
                         networkMode = networkMode,
                         diskMode = diskMode,
-                        metricColors = metricColorsFor(metricColorPreset),
+                        metricColors = metricColorsFor(metricColorPreset, metricColorOverrides),
                         onClick = { onServerClick(server) },
                         onTerminalClick = { onTerminalClick(server) },
                         onProbeClick = { onProbeClick(server) }

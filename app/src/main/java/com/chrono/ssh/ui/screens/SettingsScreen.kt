@@ -86,6 +86,9 @@ import com.chrono.ssh.ui.design.DeckThemeMode
 import com.chrono.ssh.ui.design.HeadingFontTarget
 import com.chrono.ssh.ui.design.LargeScreenTitle
 import com.chrono.ssh.ui.design.SegmentedPillControl
+import com.chrono.ssh.ui.design.ServerMetricColorOverrides
+import com.chrono.ssh.ui.design.metricColorHex
+import com.chrono.ssh.ui.design.metricColorOverridesFrom
 import com.chrono.ssh.ui.design.metricColorsFor
 import com.chrono.ssh.ui.terminal.TerminalCatalog
 import java.io.File
@@ -861,7 +864,7 @@ private fun MonitoringSettings(
             onClick = { onSelectionPageChange(SettingsSelectionPage.MetricColors) }
         )
         Spacer(Modifier.height(10.dp))
-        MetricColorPreview(settings.serverMetricColorPreset)
+        MetricColorPreview(settings.serverMetricColorPreset, metricColorOverridesFrom(settings))
     }
 }
 
@@ -912,6 +915,7 @@ private fun FilesSettings(
 internal fun ServerMetricColorPreset.label(): String {
     return when (this) {
         ServerMetricColorPreset.Theme -> "Theme"
+        ServerMetricColorPreset.Custom -> "Custom"
         ServerMetricColorPreset.Classic -> "Blue / Green"
         ServerMetricColorPreset.Calm -> "Steel / Sage"
         ServerMetricColorPreset.Graphite -> "Graphite"
@@ -932,8 +936,11 @@ internal fun ServerMetricColorPreset.label(): String {
 }
 
 @Composable
-private fun MetricColorPreview(preset: ServerMetricColorPreset) {
-    val colors = metricColorsFor(preset)
+private fun MetricColorPreview(
+    preset: ServerMetricColorPreset,
+    overrides: ServerMetricColorOverrides = ServerMetricColorOverrides()
+) {
+    val colors = metricColorsFor(preset, overrides)
     val items = listOf(
         "CPU" to colors.cpu,
         "RAM" to colors.memory,
@@ -1371,6 +1378,7 @@ private fun SettingsSelectionScreen(
     var stagedTerminalThemeName by remember(page, settings.terminalThemeName) { mutableStateOf(settings.terminalThemeName) }
     var stagedTerminalFontFamily by remember(page, settings.terminalFontFamily) { mutableStateOf(settings.terminalFontFamily) }
     var stagedMetricColorPreset by remember(page, settings.serverMetricColorPreset) { mutableStateOf(settings.serverMetricColorPreset) }
+    var stagedMetricColorOverrides by remember(page, settings) { mutableStateOf(metricColorOverridesFrom(settings)) }
     var stagedMetricsCardOrder by remember(page, settings.serverDetailCardOrder) { mutableStateOf(ServerDetailCard.sanitizeOrderCsv(settings.serverDetailCardOrder)) }
     var stagedMetricsHiddenCards by remember(page, settings.serverDetailHiddenCards) { mutableStateOf(ServerDetailCard.sanitizeHiddenCsv(settings.serverDetailHiddenCards)) }
     fun applySelection() {
@@ -1381,6 +1389,7 @@ private fun SettingsSelectionScreen(
             terminalThemeName = stagedTerminalThemeName,
             terminalFontFamily = stagedTerminalFontFamily,
             metricColorPreset = stagedMetricColorPreset,
+            metricColorOverrides = stagedMetricColorOverrides,
             metricsCardOrder = stagedMetricsCardOrder,
             metricsHiddenCards = stagedMetricsHiddenCards
         ).also { result ->
@@ -1473,9 +1482,33 @@ private fun SettingsSelectionScreen(
                     MetricColorPresetRow(
                         preset = preset,
                         selected = preset == stagedMetricColorPreset,
+                        overrides = stagedMetricColorOverrides,
                         onClick = { stagedMetricColorPreset = preset }
                     )
                     Spacer(Modifier.height(10.dp))
+                }
+                if (stagedMetricColorPreset == ServerMetricColorPreset.Theme) {
+                    SettingsActionButton(
+                        text = "Override theme colors",
+                        onClick = {
+                            val themeColors = metricColorsFor(ServerMetricColorPreset.Theme)
+                            stagedMetricColorPreset = ServerMetricColorPreset.Custom
+                            stagedMetricColorOverrides = ServerMetricColorOverrides(
+                                cpuHex = metricColorHex(themeColors.cpu),
+                                memoryHex = metricColorHex(themeColors.memory),
+                                diskHex = metricColorHex(themeColors.disk),
+                                networkHex = metricColorHex(themeColors.network)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(10.dp))
+                }
+                if (stagedMetricColorPreset == ServerMetricColorPreset.Custom) {
+                    MetricColorOverrideEditor(
+                        overrides = stagedMetricColorOverrides,
+                        onChange = { stagedMetricColorOverrides = it }
+                    )
                 }
             }
             SettingsSelectionPage.MetricsPage -> {
@@ -1514,6 +1547,7 @@ internal fun settingsAfterSelection(
     terminalThemeName: String,
     terminalFontFamily: String,
     metricColorPreset: ServerMetricColorPreset,
+    metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
     metricsCardOrder: String = settings.serverDetailCardOrder,
     metricsHiddenCards: String = settings.serverDetailHiddenCards
 ): SettingsSelectionResult {
@@ -1521,7 +1555,13 @@ internal fun settingsAfterSelection(
         SettingsSelectionPage.AppTheme -> SettingsSelectionResult(themeFamilyId = appThemeId)
         SettingsSelectionPage.TerminalTheme -> SettingsSelectionResult(settings = settings.copy(terminalThemeName = terminalThemeName))
         SettingsSelectionPage.TerminalFont -> SettingsSelectionResult(settings = settings.copy(terminalFontFamily = terminalFontFamily))
-        SettingsSelectionPage.MetricColors -> SettingsSelectionResult(settings = settings.copy(serverMetricColorPreset = metricColorPreset))
+        SettingsSelectionPage.MetricColors -> SettingsSelectionResult(settings = settings.copy(
+            serverMetricColorPreset = metricColorPreset,
+            serverMetricCpuColorHex = metricColorOverrides.cpuHex,
+            serverMetricMemoryColorHex = metricColorOverrides.memoryHex,
+            serverMetricDiskColorHex = metricColorOverrides.diskHex,
+            serverMetricNetworkColorHex = metricColorOverrides.networkHex
+        ))
         SettingsSelectionPage.MetricsPage -> SettingsSelectionResult(settings = settings.copy(
             serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(metricsCardOrder),
             serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(metricsHiddenCards)
@@ -1582,6 +1622,7 @@ internal fun settingsMetricsCardOrderAfterMove(csv: String, card: ServerDetailCa
 private fun MetricColorPresetRow(
     preset: ServerMetricColorPreset,
     selected: Boolean,
+    overrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
     onClick: () -> Unit
 ) {
     DeckCard(
@@ -1598,10 +1639,85 @@ private fun MetricColorPresetRow(
                 Spacer(Modifier.height(6.dp))
                 Text(preset.roleSummary(), color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 15.sp)
                 Spacer(Modifier.height(8.dp))
-                MetricColorPreview(preset)
+                MetricColorPreview(preset, overrides)
             }
             Spacer(Modifier.width(12.dp))
             MetricPresetSelectionMark(selected)
+        }
+    }
+}
+
+@Composable
+private fun MetricColorOverrideEditor(
+    overrides: ServerMetricColorOverrides,
+    onChange: (ServerMetricColorOverrides) -> Unit
+) {
+    val theme = metricColorsFor(ServerMetricColorPreset.Theme)
+    val choices = listOf(
+        metricColorHex(theme.cpu) to theme.cpu,
+        metricColorHex(theme.memory) to theme.memory,
+        metricColorHex(theme.disk) to theme.disk,
+        metricColorHex(theme.network) to theme.network,
+        "#111111" to Color(0xff111111),
+        "#444444" to Color(0xff444444),
+        "#777777" to Color(0xff777777),
+        "#FFFFFF" to Color.White,
+        "#2563EB" to Color(0xff2563eb),
+        "#059669" to Color(0xff059669),
+        "#D97706" to Color(0xffd97706),
+        "#7C3AED" to Color(0xff7c3aed),
+        "#DB2777" to Color(0xffdb2777),
+        "#0891B2" to Color(0xff0891b2)
+    ).distinctBy { it.first }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        MetricColorOverrideRow("CPU", overrides.cpuHex ?: metricColorHex(theme.cpu), choices) {
+            onChange(overrides.copy(cpuHex = it))
+        }
+        MetricColorOverrideRow("RAM", overrides.memoryHex ?: metricColorHex(theme.memory), choices) {
+            onChange(overrides.copy(memoryHex = it))
+        }
+        MetricColorOverrideRow("Disk", overrides.diskHex ?: metricColorHex(theme.disk), choices) {
+            onChange(overrides.copy(diskHex = it))
+        }
+        MetricColorOverrideRow("Network", overrides.networkHex ?: metricColorHex(theme.network), choices) {
+            onChange(overrides.copy(networkHex = it))
+        }
+    }
+}
+
+@Composable
+private fun MetricColorOverrideRow(
+    label: String,
+    selectedHex: String,
+    choices: List<Pair<String, Color>>,
+    onSelect: (String) -> Unit
+) {
+    DeckCard(modifier = Modifier.fillMaxWidth(), radius = 18.dp, padding = PaddingValues(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(label, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.Black, modifier = Modifier.width(70.dp))
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                choices.forEach { (hex, color) ->
+                    val selected = hex.equals(selectedHex, ignoreCase = true)
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                width = if (selected) 3.dp else 1.dp,
+                                color = if (selected) DeckColors.PrimaryText else DeckColors.CardStroke,
+                                shape = CircleShape
+                            )
+                            .clickable { onSelect(hex) }
+                            .semantics { contentDescription = "$label color $hex" }
+                    )
+                }
+            }
         }
     }
 }
@@ -1644,6 +1760,7 @@ internal fun metricPresetSelectionContentDescription(selected: Boolean): String 
 internal fun ServerMetricColorPreset.roleSummary(): String {
     return when (this) {
         ServerMetricColorPreset.Theme -> "Uses the active app theme accent colors"
+        ServerMetricColorPreset.Custom -> "Manual CPU, RAM, disk and network colors"
         ServerMetricColorPreset.Classic -> "CPU/Net blue · RAM green · Disk amber"
         ServerMetricColorPreset.Calm -> "CPU steel · RAM sage · Disk tan · Net teal"
         ServerMetricColorPreset.Graphite -> "Muted neutral rings for low-contrast themes"

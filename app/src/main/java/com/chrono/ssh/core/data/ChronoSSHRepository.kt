@@ -526,6 +526,10 @@ class ChronoSSHRepository(private val context: Context) {
                 serverCardNetworkMode = values["serverCardNetworkMode"]?.let { runCatching { ServerCardNetworkMode.valueOf(it) }.getOrNull() } ?: ServerCardNetworkMode.Totals,
                 serverCardDiskMode = values["serverCardDiskMode"]?.let { runCatching { ServerCardDiskMode.valueOf(it) }.getOrNull() } ?: ServerCardDiskMode.Usage,
                 serverMetricColorPreset = values["serverMetricColorPreset"]?.let { runCatching { ServerMetricColorPreset.valueOf(it) }.getOrNull() } ?: ServerMetricColorPreset.Theme,
+                serverMetricCpuColorHex = values["serverMetricCpuColorHex"]?.ifBlank { null },
+                serverMetricMemoryColorHex = values["serverMetricMemoryColorHex"]?.ifBlank { null },
+                serverMetricDiskColorHex = values["serverMetricDiskColorHex"]?.ifBlank { null },
+                serverMetricNetworkColorHex = values["serverMetricNetworkColorHex"]?.ifBlank { null },
                 serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(values["serverDetailCardOrder"].orEmpty()),
                 serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(values["serverDetailHiddenCards"].orEmpty()),
                 homeHeadingFontPath = values["homeHeadingFontPath"]?.ifBlank { null },
@@ -576,6 +580,10 @@ class ChronoSSHRepository(private val context: Context) {
                     "serverCardNetworkMode=${escape(cleanSettings.serverCardNetworkMode.name)}",
                     "serverCardDiskMode=${escape(cleanSettings.serverCardDiskMode.name)}",
                     "serverMetricColorPreset=${escape(cleanSettings.serverMetricColorPreset.name)}",
+                    "serverMetricCpuColorHex=${escape(cleanSettings.serverMetricCpuColorHex.orEmpty())}",
+                    "serverMetricMemoryColorHex=${escape(cleanSettings.serverMetricMemoryColorHex.orEmpty())}",
+                    "serverMetricDiskColorHex=${escape(cleanSettings.serverMetricDiskColorHex.orEmpty())}",
+                    "serverMetricNetworkColorHex=${escape(cleanSettings.serverMetricNetworkColorHex.orEmpty())}",
                     "serverDetailCardOrder=${escape(ServerDetailCard.sanitizeOrderCsv(cleanSettings.serverDetailCardOrder))}",
                     "serverDetailHiddenCards=${escape(ServerDetailCard.sanitizeHiddenCsv(cleanSettings.serverDetailHiddenCards))}",
                     "homeHeadingFontPath=${escape(cleanSettings.homeHeadingFontPath.orEmpty())}",
@@ -2049,7 +2057,11 @@ class ChronoSSHRepository(private val context: Context) {
                     settings.sftpDefaultSortDescending.toString(),
                     settings.sftpShowHiddenByDefault.toString(),
                     ServerDetailCard.sanitizeOrderCsv(settings.serverDetailCardOrder),
-                    ServerDetailCard.sanitizeHiddenCsv(settings.serverDetailHiddenCards)
+                    ServerDetailCard.sanitizeHiddenCsv(settings.serverDetailHiddenCards),
+                    settings.serverMetricCpuColorHex.orEmpty(),
+                    settings.serverMetricMemoryColorHex.orEmpty(),
+                    settings.serverMetricDiskColorHex.orEmpty(),
+                    settings.serverMetricNetworkColorHex.orEmpty()
                 ).joinToString("|") { escape(it) }
             )
             appendLine("[servers]")
@@ -2808,6 +2820,10 @@ internal fun sanitizeLoadedSettings(settings: AppSettings): AppSettings {
         filesHeadingFontPath = sanitizeHeadingFontPath(settings.filesHeadingFontPath),
         vaultHeadingFontPath = sanitizeHeadingFontPath(settings.vaultHeadingFontPath),
         settingsHeadingFontPath = sanitizeHeadingFontPath(settings.settingsHeadingFontPath),
+        serverMetricCpuColorHex = sanitizeColorHex(settings.serverMetricCpuColorHex),
+        serverMetricMemoryColorHex = sanitizeColorHex(settings.serverMetricMemoryColorHex),
+        serverMetricDiskColorHex = sanitizeColorHex(settings.serverMetricDiskColorHex),
+        serverMetricNetworkColorHex = sanitizeColorHex(settings.serverMetricNetworkColorHex),
         serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(settings.serverDetailCardOrder),
         serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(settings.serverDetailHiddenCards)
     )
@@ -2816,6 +2832,12 @@ internal fun sanitizeLoadedSettings(settings: AppSettings): AppSettings {
     } else {
         clean.copy(appLockPinHash = null, appLockPinSalt = null, appLockBiometricEnabled = false, appLockRenderArmedAtEpochMillis = null)
     }
+}
+
+internal fun sanitizeColorHex(value: String?): String? {
+    val clean = value?.trim()?.removePrefix("#") ?: return null
+    if (clean.length != 6 || clean.any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) return null
+    return "#${clean.uppercase()}"
 }
 
 internal fun sanitizeHeadingFontPath(path: String?): String? {
@@ -3030,6 +3052,10 @@ object BackupSettingsImportPolicy {
         val sftpShowHiddenByDefaultIndex = serverCardNetworkModeIndex + 6
         val serverDetailCardOrderIndex = serverCardNetworkModeIndex + 7
         val serverDetailHiddenCardsIndex = serverCardNetworkModeIndex + 8
+        val serverMetricCpuColorHexIndex = serverCardNetworkModeIndex + 9
+        val serverMetricMemoryColorHexIndex = serverCardNetworkModeIndex + 10
+        val serverMetricDiskColorHexIndex = serverCardNetworkModeIndex + 11
+        val serverMetricNetworkColorHexIndex = serverCardNetworkModeIndex + 12
         return AppSettings(
             themeModeName = safeSettingToken(fields[0], "System"),
             themeFamilyId = safeSettingToken(fields[1], "default"),
@@ -3050,6 +3076,10 @@ object BackupSettingsImportPolicy {
             serverCardNetworkMode = fields.getOrNull(serverCardNetworkModeIndex)?.let { runCatching { ServerCardNetworkMode.valueOf(it) }.getOrNull() } ?: existing.serverCardNetworkMode,
             serverCardDiskMode = fields.getOrNull(serverCardDiskModeIndex)?.let { runCatching { ServerCardDiskMode.valueOf(it) }.getOrNull() } ?: existing.serverCardDiskMode,
             serverMetricColorPreset = fields.getOrNull(serverMetricColorPresetIndex)?.let { runCatching { ServerMetricColorPreset.valueOf(it) }.getOrNull() } ?: existing.serverMetricColorPreset,
+            serverMetricCpuColorHex = fields.getOrNull(serverMetricCpuColorHexIndex)?.ifBlank { null } ?: existing.serverMetricCpuColorHex,
+            serverMetricMemoryColorHex = fields.getOrNull(serverMetricMemoryColorHexIndex)?.ifBlank { null } ?: existing.serverMetricMemoryColorHex,
+            serverMetricDiskColorHex = fields.getOrNull(serverMetricDiskColorHexIndex)?.ifBlank { null } ?: existing.serverMetricDiskColorHex,
+            serverMetricNetworkColorHex = fields.getOrNull(serverMetricNetworkColorHexIndex)?.ifBlank { null } ?: existing.serverMetricNetworkColorHex,
             sftpDefaultSortModeName = normalizeSftpSortModeName(fields.getOrNull(sftpDefaultSortModeNameIndex) ?: existing.sftpDefaultSortModeName),
             sftpDefaultSortDescending = fields.getOrNull(sftpDefaultSortDescendingIndex)?.toBooleanStrictOrNull() ?: existing.sftpDefaultSortDescending,
             sftpShowHiddenByDefault = fields.getOrNull(sftpShowHiddenByDefaultIndex)?.toBooleanStrictOrNull() ?: existing.sftpShowHiddenByDefault,

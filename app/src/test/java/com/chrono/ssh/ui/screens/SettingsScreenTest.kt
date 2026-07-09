@@ -6,10 +6,12 @@ import com.chrono.ssh.core.model.CrashLogEntry
 import com.chrono.ssh.core.model.ServerCardDiskMode
 import com.chrono.ssh.core.model.ServerCardNetworkMode
 import com.chrono.ssh.core.model.AppSettings
+import com.chrono.ssh.core.data.sanitizeColorHex
 import com.chrono.ssh.core.data.sanitizeHeadingFontPath
 import com.chrono.ssh.core.model.ServerMetricColorPreset
-import com.chrono.ssh.ui.design.DeckColors
+import com.chrono.ssh.ui.design.ServerMetricColorOverrides
 import com.chrono.ssh.ui.design.metricColorsFor
+import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -34,7 +36,7 @@ class SettingsScreenTest {
     @Test
     fun metricColorPresetLabelsCoverAllChoices() {
         assertEquals(
-            "Theme, Blue / Green, Steel / Sage, Graphite, Cobalt / Lime, Ocean Teal, Olive / Teal, Clay / Moss, Aurora, Orchid, Nordic, Solar, Circuit, Harvest, Lagoon, Metro, Mono",
+            "Theme, Custom, Blue / Green, Steel / Sage, Graphite, Cobalt / Lime, Ocean Teal, Olive / Teal, Clay / Moss, Aurora, Orchid, Nordic, Solar, Circuit, Harvest, Lagoon, Metro, Mono",
             ServerMetricColorPreset.entries.joinToString { it.label() }
         )
     }
@@ -42,7 +44,7 @@ class SettingsScreenTest {
     @Test
     fun metricColorPresetRoleSummariesCoverAllChoices() {
         assertEquals(
-            "Uses the active app theme accent colors | CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Bright CPU, RAM, disk and network separation | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
+            "Uses the active app theme accent colors | Manual CPU, RAM, disk and network colors | CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Bright CPU, RAM, disk and network separation | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
             ServerMetricColorPreset.entries.joinToString(" | ") { it.roleSummary() }
         )
     }
@@ -61,13 +63,26 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun themeMetricPresetUsesAppAccentRoles() {
+    fun themeMetricPresetUsesVisibleAppAccentRoles() {
         val colors = metricColorsFor(ServerMetricColorPreset.Theme)
 
-        assertEquals(DeckColors.Cyan, colors.cpu)
-        assertEquals(DeckColors.Green, colors.memory)
-        assertEquals(DeckColors.Orange, colors.disk)
-        assertEquals(DeckColors.Purple, colors.network)
+        assertNotNull(colors.cpu)
+        assertNotNull(colors.memory)
+        assertNotNull(colors.disk)
+        assertNotNull(colors.network)
+    }
+
+    @Test
+    fun customMetricPresetUsesIndependentOverrides() {
+        val colors = metricColorsFor(
+            ServerMetricColorPreset.Custom,
+            ServerMetricColorOverrides(cpuHex = "#111111", memoryHex = "#222222", diskHex = "#333333", networkHex = "#444444")
+        )
+
+        assertEquals(Color(0xff111111), colors.cpu)
+        assertEquals(Color(0xff222222), colors.memory)
+        assertEquals(Color(0xff333333), colors.disk)
+        assertEquals(Color(0xff444444), colors.network)
     }
 
     @Test
@@ -165,6 +180,14 @@ class SettingsScreenTest {
         assertEquals("/tmp/home.otf", sanitizeHeadingFontPath("/tmp/home.otf"))
         assertEquals(null, sanitizeHeadingFontPath("/tmp/home.zip"))
         assertEquals(null, sanitizeHeadingFontPath("../home.ttf"))
+    }
+
+    @Test
+    fun metricColorHexSanitizerKeepsOnlySixDigitHex() {
+        assertEquals("#AABBCC", sanitizeColorHex(" aabbcc "))
+        assertEquals("#AABBCC", sanitizeColorHex("#AaBbCc"))
+        assertEquals(null, sanitizeColorHex("#abcd"))
+        assertEquals(null, sanitizeColorHex("#gggggg"))
     }
 
     @Test

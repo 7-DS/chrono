@@ -84,6 +84,7 @@ import com.chrono.ssh.ui.design.DeckColors
 import com.chrono.ssh.ui.design.InterfaceMetricCard
 import com.chrono.ssh.ui.design.MetricRing
 import com.chrono.ssh.ui.design.ServerMetricColors
+import com.chrono.ssh.ui.design.ServerMetricColorOverrides
 import com.chrono.ssh.ui.design.metricColorsFor
 import kotlin.math.ceil
 import kotlin.math.max
@@ -109,13 +110,14 @@ fun ServerDetailScreen(
     onDetailToolOpen: () -> Unit = {},
     onWake: (() -> Unit)? = null,
     metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
+    metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
     serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     serverDetailHiddenCards: String = ""
 ) {
     var showMore by remember(server.id) { mutableStateOf(false) }
     var focusedTool by remember(server.id) { mutableStateOf<DetailTool?>(null) }
     val hasMetrics = shouldRenderServerDetailMetrics(snapshot)
-    val metricColors = metricColorsFor(metricColorPreset)
+    val metricColors = metricColorsFor(metricColorPreset, metricColorOverrides)
     BackHandler(enabled = focusedTool != null) {
         focusedTool = null
     }

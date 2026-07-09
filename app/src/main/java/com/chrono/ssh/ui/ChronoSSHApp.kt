@@ -123,6 +123,7 @@ import com.chrono.ssh.ui.design.DeckThemeMode
 import com.chrono.ssh.ui.design.HeadingFontFamilies
 import com.chrono.ssh.ui.design.ChronoSSHTheme
 import com.chrono.ssh.ui.design.headingFontFamilyFromPath
+import com.chrono.ssh.ui.design.metricColorOverridesFrom
 import com.chrono.ssh.ui.screens.HostEditorScreen
 import com.chrono.ssh.ui.screens.HomeScreen
 import com.chrono.ssh.ui.screens.HostsScreen
@@ -1201,6 +1202,7 @@ fun ChronoSSHApp(
                             networkMode = appSettings.serverCardNetworkMode,
                             diskMode = appSettings.serverCardDiskMode,
                             metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                             onAddServer = { creatingServer = true },
                             onTrustHost = ::reviewHostKey,
                             onUptimeClick = { showUptime = true },
@@ -1573,6 +1575,7 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1616,6 +1619,7 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1647,6 +1651,7 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1680,6 +1685,7 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1793,6 +1799,7 @@ fun ChronoSSHApp(
                                         null
                                     },
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     serverDetailCardOrder = appSettings.serverDetailCardOrder,
                                     serverDetailHiddenCards = appSettings.serverDetailHiddenCards
                                 )
@@ -1829,6 +1836,7 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
+                            metricColorOverrides = metricColorOverridesFrom(appSettings),
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
