@@ -45,7 +45,28 @@ class DeckThemeCatalogTest {
                 assertTrue(palette.metricNetwork != Color.Unspecified)
             }
         }
-        assertEquals(DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricCpu, DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.brandAlt)
-        assertEquals(DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricCpu, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricDisk)
+        assertEquals(Color(0xFFF5B971), DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricDisk)
+        assertEquals(4, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricColors().distinct().size)
+    }
+
+    @Test
+    fun generatedAppThemesUseAuthoredMetricAccents() {
+        val palettesUsingOldCpuAccent = mutableListOf<String>()
+        val palettesUsingOldMetricSet = mutableListOf<String>()
+
+        DeckThemeCatalog.families
+            .filterNot { it.id in setOf("aurora", "graphite", "ember", "catppuccin", "rosepine", "monochrome-light", "monochrome-dark", "comic-ink") }
+            .forEach { family ->
+                listOf(family.light, family.dark).forEach { palette ->
+                    if (palette.metricCpu == palette.brandAlt) palettesUsingOldCpuAccent += palette.id
+                    if (palette.metricMemory == palette.green && palette.metricDisk == palette.yellow && palette.metricNetwork == palette.purple) {
+                        palettesUsingOldMetricSet += palette.id
+                    }
+                }
+            }
+        assertTrue("Old CPU accent mapping: $palettesUsingOldCpuAccent", palettesUsingOldCpuAccent.isEmpty())
+        assertTrue("Old metric set mapping: $palettesUsingOldMetricSet", palettesUsingOldMetricSet.isEmpty())
     }
 }
+
+private fun DeckPalette.metricColors(): List<Color> = listOf(metricCpu, metricMemory, metricDisk, metricNetwork)

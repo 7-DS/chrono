@@ -63,6 +63,13 @@ data class DeckThemeFamily(
     val modes: Set<DeckThemeMode> = setOf(DeckThemeMode.Light, DeckThemeMode.Dark)
 )
 
+private data class MetricAccentSet(
+    val cpu: Color,
+    val memory: Color,
+    val disk: Color,
+    val network: Color
+)
+
 object DeckThemeCatalog {
     const val DEFAULT_FAMILY_ID = "graphite"
 
@@ -168,7 +175,7 @@ object DeckThemeCatalog {
         metricCpu = Color(0xFF4FC3D0),
         metricMemory = Color(0xFF7BD88F),
         metricDisk = Color(0xFFECA34C),
-        metricNetwork = Color(0xFF9AA5B3)
+        metricNetwork = Color(0xFFB79CFF)
     )
 
     private val emberLight = auroraLight.copy(
@@ -261,7 +268,7 @@ object DeckThemeCatalog {
         brandAlt = Color(0xFF89B4FA),
         metricCpu = Color(0xFF89B4FA),
         metricMemory = Color(0xFFA6E3A1),
-        metricDisk = Color(0xFFF9E2AF),
+        metricDisk = Color(0xFFF5B971),
         metricNetwork = Color(0xFFCBA6F7)
     )
 
@@ -314,7 +321,7 @@ object DeckThemeCatalog {
         navSurface = Color(0xFF26233A),
         brandAlt = Color(0xFF9CCFD8),
         metricCpu = Color(0xFF9CCFD8),
-        metricMemory = Color(0xFF31748F),
+        metricMemory = Color(0xFF6FC6A3),
         metricDisk = Color(0xFFF6C177),
         metricNetwork = Color(0xFFC4A7E7)
     )
@@ -346,10 +353,10 @@ object DeckThemeCatalog {
         navSurface = Color(0xFFFFFFFF),
         brand = Color(0xFF000000),
         brandAlt = Color(0xFF000000),
-        metricCpu = Color(0xFF000000),
-        metricMemory = Color(0xFF333333),
-        metricDisk = Color(0xFF666666),
-        metricNetwork = Color(0xFF111111)
+        metricCpu = Color(0xFF111111),
+        metricMemory = Color(0xFF3F3F3F),
+        metricDisk = Color(0xFF767676),
+        metricNetwork = Color(0xFF000000)
     )
 
     private val monochromeDark = auroraDark.copy(
@@ -380,9 +387,9 @@ object DeckThemeCatalog {
         brand = Color(0xFFFFFFFF),
         brandAlt = Color(0xFFFFFFFF),
         metricCpu = Color(0xFFFFFFFF),
-        metricMemory = Color(0xFFE0E0E0),
-        metricDisk = Color(0xFFBDBDBD),
-        metricNetwork = Color(0xFFF2F2F2)
+        metricMemory = Color(0xFFCFCFCF),
+        metricDisk = Color(0xFF9A9A9A),
+        metricNetwork = Color(0xFFE6E6E6)
     )
 
     private val comicLight = monochromeLight.copy(
@@ -412,10 +419,10 @@ object DeckThemeCatalog {
         navSurface = Color(0xFFFFFFFF),
         brand = Color(0xFF000000),
         brandAlt = Color(0xFF000000),
-        metricCpu = Color(0xFF000000),
-        metricMemory = Color(0xFF000000),
-        metricDisk = Color(0xFF000000),
-        metricNetwork = Color(0xFF000000)
+        metricCpu = Color(0xFF005BBB),
+        metricMemory = Color(0xFF148A43),
+        metricDisk = Color(0xFFC46A00),
+        metricNetwork = Color(0xFF6F42C1)
     )
 
     private fun appThemeFamily(
@@ -451,7 +458,9 @@ object DeckThemeCatalog {
         darkOrange: Color,
         darkYellow: Color,
         darkPurple: Color,
-        darkPurpleSoft: Color
+        darkPurpleSoft: Color,
+        lightMetrics: MetricAccentSet,
+        darkMetrics: MetricAccentSet
     ) = DeckThemeFamily(
         id = id,
         name = name,
@@ -480,10 +489,10 @@ object DeckThemeCatalog {
             navSurface = lightSurface,
             brand = lightPrimaryText,
             brandAlt = lightAccent,
-            metricCpu = lightAccent,
-            metricMemory = lightGreen,
-            metricDisk = lightYellow,
-            metricNetwork = lightPurple
+            metricCpu = lightMetrics.cpu,
+            metricMemory = lightMetrics.memory,
+            metricDisk = lightMetrics.disk,
+            metricNetwork = lightMetrics.network
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
@@ -509,10 +518,10 @@ object DeckThemeCatalog {
             navSurface = darkSurface,
             brand = darkPrimaryText,
             brandAlt = darkAccent,
-            metricCpu = darkAccent,
-            metricMemory = darkGreen,
-            metricDisk = darkYellow,
-            metricNetwork = darkPurple
+            metricCpu = darkMetrics.cpu,
+            metricMemory = darkMetrics.memory,
+            metricDisk = darkMetrics.disk,
+            metricNetwork = darkMetrics.network
         )
     )
 
@@ -550,7 +559,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A15C),
             darkYellow = Color(0xFFD8C56C),
             darkPurple = Color(0xFFAAA8D8),
-            darkPurpleSoft = Color(0xFF30334F)
+            darkPurpleSoft = Color(0xFF30334F),
+            lightMetrics = MetricAccentSet(Color(0xFF256F9E), Color(0xFF4F8F63), Color(0xFFB9782F), Color(0xFF6D5AA8)),
+            darkMetrics = MetricAccentSet(Color(0xFF79BDE8), Color(0xFF8AC99D), Color(0xFFE2A35F), Color(0xFFB2A2E6))
         ),
         appThemeFamily(
             id = "moss",
@@ -585,7 +596,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3AA66),
             darkYellow = Color(0xFFD4C775),
             darkPurple = Color(0xFFB6ABD6),
-            darkPurpleSoft = Color(0xFF373248)
+            darkPurpleSoft = Color(0xFF373248),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF3F8F52), Color(0xFFB87924), Color(0xFF7457A6)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF8ED889), Color(0xFFE3AA66), Color(0xFFB59BE8))
         ),
         appThemeFamily(
             id = "harbor",
@@ -620,7 +633,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A764),
             darkYellow = Color(0xFFD3C575),
             darkPurple = Color(0xFFB0ACDC),
-            darkPurpleSoft = Color(0xFF34344F)
+            darkPurpleSoft = Color(0xFF34344F),
+            lightMetrics = MetricAccentSet(Color(0xFF227E92), Color(0xFF3A8E6B), Color(0xFFB8782D), Color(0xFF6960A0)),
+            darkMetrics = MetricAccentSet(Color(0xFF82C9E0), Color(0xFF78C89D), Color(0xFFE2A764), Color(0xFFB0ACDC))
         ),
         appThemeFamily(
             id = "steel",
@@ -655,7 +670,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE1A764),
             darkYellow = Color(0xFFD3C579),
             darkPurple = Color(0xFFB2B6D2),
-            darkPurpleSoft = Color(0xFF363947)
+            darkPurpleSoft = Color(0xFF363947),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7D8A), Color(0xFF4E8D67), Color(0xFFB87935), Color(0xFF6E7392)),
+            darkMetrics = MetricAccentSet(Color(0xFF8AC9D1), Color(0xFF89C79C), Color(0xFFE1A764), Color(0xFFB2B6D2))
         ),
         appThemeFamily(
             id = "plum",
@@ -690,7 +707,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE4A866),
             darkYellow = Color(0xFFD7C778),
             darkPurple = Color(0xFFC5A0DB),
-            darkPurpleSoft = Color(0xFF402D4B)
+            darkPurpleSoft = Color(0xFF402D4B),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7FA0), Color(0xFF57956F), Color(0xFFB87B2F), Color(0xFF7B57A6)),
+            darkMetrics = MetricAccentSet(Color(0xFF76C4E2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFC6A0E2))
         ),
         appThemeFamily(
             id = "olive",
@@ -725,7 +744,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A765),
             darkYellow = Color(0xFFD4C76D),
             darkPurple = Color(0xFFB7AED5),
-            darkPurpleSoft = Color(0xFF373248)
+            darkPurpleSoft = Color(0xFF373248),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF4F8F56), Color(0xFFB66A2E), Color(0xFF725AA0)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFF9ACC83), Color(0xFFE09A5B), Color(0xFFB7A4DC))
         ),
         appThemeFamily(
             id = "copper",
@@ -760,7 +781,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A06D),
             darkYellow = Color(0xFFD6C578),
             darkPurple = Color(0xFFB8AFD4),
-            darkPurpleSoft = Color(0xFF383248)
+            darkPurpleSoft = Color(0xFF383248),
+            lightMetrics = MetricAccentSet(Color(0xFF2E7F98), Color(0xFF4F8F60), Color(0xFFB86E35), Color(0xFF755A9F)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C5D8), Color(0xFF8DCA9D), Color(0xFFE29A60), Color(0xFFB8A4D8))
         ),
         appThemeFamily(
             id = "fjord",
@@ -795,7 +818,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A664),
             darkYellow = Color(0xFFD3C777),
             darkPurple = Color(0xFFB0AFDC),
-            darkPurpleSoft = Color(0xFF33364F)
+            darkPurpleSoft = Color(0xFF33364F),
+            lightMetrics = MetricAccentSet(Color(0xFF327FA8), Color(0xFF4F9675), Color(0xFFB97931), Color(0xFF6D67A4)),
+            darkMetrics = MetricAccentSet(Color(0xFF86C6E4), Color(0xFF84C9A2), Color(0xFFE2A664), Color(0xFFB0AFDC))
         ),
         appThemeFamily(
             id = "sage",
@@ -830,7 +855,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3AA66),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB5B0D4),
-            darkPurpleSoft = Color(0xFF373448)
+            darkPurpleSoft = Color(0xFF373448),
+            lightMetrics = MetricAccentSet(Color(0xFF427F97), Color(0xFF5D9967), Color(0xFFB77D2F), Color(0xFF7062A0)),
+            darkMetrics = MetricAccentSet(Color(0xFF88C5D6), Color(0xFF93CB91), Color(0xFFE3AA66), Color(0xFFB5B0D4))
         ),
         appThemeFamily(
             id = "ink",
@@ -865,7 +892,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A664),
             darkYellow = Color(0xFFD4C779),
             darkPurple = Color(0xFFB0B4D8),
-            darkPurpleSoft = Color(0xFF343847)
+            darkPurpleSoft = Color(0xFF343847),
+            lightMetrics = MetricAccentSet(Color(0xFF286F8E), Color(0xFF4C966A), Color(0xFFB8782E), Color(0xFF686F99)),
+            darkMetrics = MetricAccentSet(Color(0xFF84C9D4), Color(0xFF86C99B), Color(0xFFE2A664), Color(0xFFB0B4D8))
         ),
         appThemeFamily(
             id = "basalt",
@@ -900,7 +929,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB3B6D4),
-            darkPurpleSoft = Color(0xFF353747)
+            darkPurpleSoft = Color(0xFF353747),
+            lightMetrics = MetricAccentSet(Color(0xFF3D7F83), Color(0xFF4D9870), Color(0xFFB87A31), Color(0xFF6F7496)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C1C4), Color(0xFF86C99F), Color(0xFFE2A866), Color(0xFFB3B6D4))
         ),
         appThemeFamily(
             id = "storm",
@@ -935,7 +966,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB1B2DC),
-            darkPurpleSoft = Color(0xFF34364F)
+            darkPurpleSoft = Color(0xFF34364F),
+            lightMetrics = MetricAccentSet(Color(0xFF3F78A4), Color(0xFF55966F), Color(0xFFB87A31), Color(0xFF6D6EA2)),
+            darkMetrics = MetricAccentSet(Color(0xFF84C4E4), Color(0xFF89C99E), Color(0xFFE2A765), Color(0xFFB1B2DC))
         ),
         appThemeFamily(
             id = "wine",
@@ -970,7 +1003,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFBEACD6),
-            darkPurpleSoft = Color(0xFF3C3348)
+            darkPurpleSoft = Color(0xFF3C3348),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F91), Color(0xFF5A956D), Color(0xFFB97934), Color(0xFF836E9A)),
+            darkMetrics = MetricAccentSet(Color(0xFF7FC6D2), Color(0xFF8BC99D), Color(0xFFE3A766), Color(0xFFBEACD6))
         ),
         appThemeFamily(
             id = "sandstone",
@@ -1005,7 +1040,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD4C36B),
             darkPurple = Color(0xFFB9B0D4),
-            darkPurpleSoft = Color(0xFF383348)
+            darkPurpleSoft = Color(0xFF383348),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF629263), Color(0xFFB66A2E), Color(0xFF7A7398)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFF9BC88C), Color(0xFFE09A5B), Color(0xFFB9B0D4))
         ),
         appThemeFamily(
             id = "mint",
@@ -1040,7 +1077,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD4C87A),
             darkPurple = Color(0xFFB0B2D8),
-            darkPurpleSoft = Color(0xFF34364C)
+            darkPurpleSoft = Color(0xFF34364C),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF44A06E), Color(0xFFB87924), Color(0xFF74749C)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF81CF98), Color(0xFFE2A765), Color(0xFFB0B2D8))
         ),
         appThemeFamily(
             id = "denim",
@@ -1075,7 +1114,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB2B0DD),
-            darkPurpleSoft = Color(0xFF343650)
+            darkPurpleSoft = Color(0xFF343650),
+            lightMetrics = MetricAccentSet(Color(0xFF3F73A8), Color(0xFF52966D), Color(0xFFB8792F), Color(0xFF6E66A4)),
+            darkMetrics = MetricAccentSet(Color(0xFF78BFE6), Color(0xFF88C99C), Color(0xFFE2A765), Color(0xFFB2B0DD))
         ),
         appThemeFamily(
             id = "berry",
@@ -1110,7 +1151,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFC8A7DB),
-            darkPurpleSoft = Color(0xFF402F4B)
+            darkPurpleSoft = Color(0xFF402F4B),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7FA0), Color(0xFF58956F), Color(0xFFB87B2F), Color(0xFF8D69A5)),
+            darkMetrics = MetricAccentSet(Color(0xFF76C4E2), Color(0xFF8BC99D), Color(0xFFE3A766), Color(0xFFC8A7DB))
         ),
         appThemeFamily(
             id = "spruce",
@@ -1145,7 +1188,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB3B0D8),
-            darkPurpleSoft = Color(0xFF36354C)
+            darkPurpleSoft = Color(0xFF36354C),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF3D9962), Color(0xFFB87924), Color(0xFF76739C)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF7ECF91), Color(0xFFE2A866), Color(0xFFB3B0D8))
         ),
         appThemeFamily(
             id = "aqua",
@@ -1180,7 +1225,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD4C87A),
             darkPurple = Color(0xFFB0B0DC),
-            darkPurpleSoft = Color(0xFF34354F)
+            darkPurpleSoft = Color(0xFF34354F),
+            lightMetrics = MetricAccentSet(Color(0xFF238C9A), Color(0xFF489A72), Color(0xFFB8792F), Color(0xFF6E68A2)),
+            darkMetrics = MetricAccentSet(Color(0xFF82C8DE), Color(0xFF83CA9B), Color(0xFFE2A765), Color(0xFFB0B0DC))
         ),
         appThemeFamily(
             id = "pewter",
@@ -1215,7 +1262,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB5B7D4),
-            darkPurpleSoft = Color(0xFF373947)
+            darkPurpleSoft = Color(0xFF373947),
+            lightMetrics = MetricAccentSet(Color(0xFF3C7F8B), Color(0xFF53966D), Color(0xFFB87B31), Color(0xFF727795)),
+            darkMetrics = MetricAccentSet(Color(0xFF82C1C9), Color(0xFF88C99C), Color(0xFFE2A866), Color(0xFFB5B7D4))
         ),
         appThemeFamily(
             id = "navy",
@@ -1250,7 +1299,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB2ADDD),
-            darkPurpleSoft = Color(0xFF343450)
+            darkPurpleSoft = Color(0xFF343450),
+            lightMetrics = MetricAccentSet(Color(0xFF3F72A8), Color(0xFF53966E), Color(0xFFB8792F), Color(0xFF6F61A5)),
+            darkMetrics = MetricAccentSet(Color(0xFF7CBCE6), Color(0xFF89C99D), Color(0xFFE2A765), Color(0xFFB2ADDD))
         ),
         appThemeFamily(
             id = "clay",
@@ -1285,7 +1336,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFB9AFD4),
-            darkPurpleSoft = Color(0xFF393348)
+            darkPurpleSoft = Color(0xFF393348),
+            lightMetrics = MetricAccentSet(Color(0xFF2E7F98), Color(0xFF5B956E), Color(0xFFB86E35), Color(0xFF7D7198)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C5D8), Color(0xFF8CC99D), Color(0xFFE29A60), Color(0xFFB9AFD4))
         ),
         appThemeFamily(
             id = "cobalt",
@@ -1320,7 +1373,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD4C879),
             darkPurple = Color(0xFFB0ADDD),
-            darkPurpleSoft = Color(0xFF333450)
+            darkPurpleSoft = Color(0xFF333450),
+            lightMetrics = MetricAccentSet(Color(0xFF2E6EA8), Color(0xFF4F966D), Color(0xFFB8792F), Color(0xFF6F60A4)),
+            darkMetrics = MetricAccentSet(Color(0xFF6FC2EA), Color(0xFF86C99C), Color(0xFFE2A765), Color(0xFFB0ADDD))
         ),
         appThemeFamily(
             id = "juniper",
@@ -1355,7 +1410,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB0B2D8),
-            darkPurpleSoft = Color(0xFF34364C)
+            darkPurpleSoft = Color(0xFF34364C),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF459B6B), Color(0xFFB87924), Color(0xFF74749C)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF80CF97), Color(0xFFE2A765), Color(0xFFB0B2D8))
         ),
         appThemeFamily(
             id = "amethyst",
@@ -1390,7 +1447,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFB9A4DD),
-            darkPurpleSoft = Color(0xFF3A304E)
+            darkPurpleSoft = Color(0xFF3A304E),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7FA0), Color(0xFF57956F), Color(0xFFB87B2F), Color(0xFF7664A8)),
+            darkMetrics = MetricAccentSet(Color(0xFF76C4E2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFB9A4DD))
         ),
         appThemeFamily(
             id = "smoke",
@@ -1425,7 +1484,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB5B7D4),
-            darkPurpleSoft = Color(0xFF373947)
+            darkPurpleSoft = Color(0xFF373947),
+            lightMetrics = MetricAccentSet(Color(0xFF4B7F99), Color(0xFF57966F), Color(0xFFB87B31), Color(0xFF737795)),
+            darkMetrics = MetricAccentSet(Color(0xFF84BED6), Color(0xFF8BC99E), Color(0xFFE2A866), Color(0xFFB5B7D4))
         ),
         appThemeFamily(
             id = "forest",
@@ -1460,7 +1521,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A866),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB5B0D5),
-            darkPurpleSoft = Color(0xFF373448)
+            darkPurpleSoft = Color(0xFF373448),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF4D995B), Color(0xFFB87924), Color(0xFF76739A)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF81CF86), Color(0xFFE3A866), Color(0xFFB5B0D5))
         ),
         appThemeFamily(
             id = "lagoon",
@@ -1495,7 +1558,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB0B0DC),
-            darkPurpleSoft = Color(0xFF34354F)
+            darkPurpleSoft = Color(0xFF34354F),
+            lightMetrics = MetricAccentSet(Color(0xFF2B86A5), Color(0xFF4B9873), Color(0xFFB8792F), Color(0xFF6E68A2)),
+            darkMetrics = MetricAccentSet(Color(0xFF84C8E0), Color(0xFF84C99F), Color(0xFFE2A765), Color(0xFFB0B0DC))
         ),
         appThemeFamily(
             id = "ruby",
@@ -1530,7 +1595,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFBAAFD4),
-            darkPurpleSoft = Color(0xFF3A3348)
+            darkPurpleSoft = Color(0xFF3A3348),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F91), Color(0xFF5A956D), Color(0xFFB87934), Color(0xFF806F9A)),
+            darkMetrics = MetricAccentSet(Color(0xFF7FC6D2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFBAAFD4))
         ),
         appThemeFamily(
             id = "cedar",
@@ -1565,7 +1632,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A765),
             darkYellow = Color(0xFFD4C36B),
             darkPurple = Color(0xFFB9B0D4),
-            darkPurpleSoft = Color(0xFF383348)
+            darkPurpleSoft = Color(0xFF383348),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF66915F), Color(0xFFB66A2E), Color(0xFF7A7398)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFFA0C88B), Color(0xFFE09A5B), Color(0xFFB9B0D4))
         ),
         appThemeFamily(
             id = "ice",
@@ -1600,7 +1669,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB1B2DC),
-            darkPurpleSoft = Color(0xFF34364F)
+            darkPurpleSoft = Color(0xFF34364F),
+            lightMetrics = MetricAccentSet(Color(0xFF3F86B0), Color(0xFF52966F), Color(0xFFB8792F), Color(0xFF6D68A2)),
+            darkMetrics = MetricAccentSet(Color(0xFF79BFE8), Color(0xFF88C99D), Color(0xFFE2A765), Color(0xFFB1B2DC))
         ),
         appThemeFamily(
             id = "lichen",
@@ -1635,7 +1706,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3AA66),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB6B0D4),
-            darkPurpleSoft = Color(0xFF373448)
+            darkPurpleSoft = Color(0xFF373448),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF64985F), Color(0xFFB66A2E), Color(0xFF777399)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFF9DCA8A), Color(0xFFE09A5B), Color(0xFFB6B0D4))
         ),
         appThemeFamily(
             id = "midnight",
@@ -1670,7 +1743,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C879),
             darkPurple = Color(0xFFB1AFDD),
-            darkPurpleSoft = Color(0xFF333550)
+            darkPurpleSoft = Color(0xFF333550),
+            lightMetrics = MetricAccentSet(Color(0xFF3F73A6), Color(0xFF52966E), Color(0xFFB8792F), Color(0xFF6E66A4)),
+            darkMetrics = MetricAccentSet(Color(0xFF76BFE8), Color(0xFF86C99C), Color(0xFFE2A765), Color(0xFFB1AFDD))
         ),
         appThemeFamily(
             id = "pearl",
@@ -1705,7 +1780,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB5B7D4),
-            darkPurpleSoft = Color(0xFF373947)
+            darkPurpleSoft = Color(0xFF373947),
+            lightMetrics = MetricAccentSet(Color(0xFF3F7F8A), Color(0xFF57966F), Color(0xFFB87B31), Color(0xFF737795)),
+            darkMetrics = MetricAccentSet(Color(0xFF82C1C9), Color(0xFF8BC99E), Color(0xFFE2A866), Color(0xFFB5B7D4))
         ),
         appThemeFamily(
             id = "orchid",
@@ -1740,7 +1817,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFCFA0DB),
-            darkPurpleSoft = Color(0xFF432D4B)
+            darkPurpleSoft = Color(0xFF432D4B),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7FA0), Color(0xFF58956F), Color(0xFFB87B2F), Color(0xFF9362A3)),
+            darkMetrics = MetricAccentSet(Color(0xFF76C4E2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFCFA0DB))
         ),
         appThemeFamily(
             id = "bay",
@@ -1775,7 +1854,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB0B2D8),
-            darkPurpleSoft = Color(0xFF34364C)
+            darkPurpleSoft = Color(0xFF34364C),
+            lightMetrics = MetricAccentSet(Color(0xFF2D8494), Color(0xFF499A72), Color(0xFFB8792F), Color(0xFF74749C)),
+            darkMetrics = MetricAccentSet(Color(0xFF84C6DC), Color(0xFF83CA9B), Color(0xFFE2A765), Color(0xFFB0B2D8))
         ),
         appThemeFamily(
             id = "hazel",
@@ -1810,7 +1891,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A765),
             darkYellow = Color(0xFFD4C36B),
             darkPurple = Color(0xFFB8B1D4),
-            darkPurpleSoft = Color(0xFF383448)
+            darkPurpleSoft = Color(0xFF383448),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF66925F), Color(0xFFB66A2E), Color(0xFF797498)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFFA0C88B), Color(0xFFE09A5B), Color(0xFFB8B1D4))
         ),
         appThemeFamily(
             id = "blueprint",
@@ -1845,7 +1928,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD4C879),
             darkPurple = Color(0xFFB0ADDD),
-            darkPurpleSoft = Color(0xFF333450)
+            darkPurpleSoft = Color(0xFF333450),
+            lightMetrics = MetricAccentSet(Color(0xFF2F6FA8), Color(0xFF4F966D), Color(0xFFB8792F), Color(0xFF6F60A4)),
+            darkMetrics = MetricAccentSet(Color(0xFF70C1EA), Color(0xFF86C99C), Color(0xFFE2A765), Color(0xFFB0ADDD))
         ),
         appThemeFamily(
             id = "willow",
@@ -1880,7 +1965,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3AA66),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB6B0D4),
-            darkPurpleSoft = Color(0xFF373448)
+            darkPurpleSoft = Color(0xFF373448),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F9F), Color(0xFF64995F), Color(0xFFB66A2E), Color(0xFF777399)),
+            darkMetrics = MetricAccentSet(Color(0xFF78C6DE), Color(0xFF9DCA8A), Color(0xFFE09A5B), Color(0xFFB6B0D4))
         ),
         appThemeFamily(
             id = "garnet",
@@ -1915,7 +2002,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFBBAFD4),
-            darkPurpleSoft = Color(0xFF3A3348)
+            darkPurpleSoft = Color(0xFF3A3348),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7F91), Color(0xFF5A956D), Color(0xFFB87934), Color(0xFF816F9A)),
+            darkMetrics = MetricAccentSet(Color(0xFF7FC6D2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFBBAFD4))
         ),
         appThemeFamily(
             id = "seagrass",
@@ -1950,7 +2039,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A765),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB0B2D8),
-            darkPurpleSoft = Color(0xFF34364C)
+            darkPurpleSoft = Color(0xFF34364C),
+            lightMetrics = MetricAccentSet(Color(0xFF287C9C), Color(0xFF459D6E), Color(0xFFB87924), Color(0xFF74749C)),
+            darkMetrics = MetricAccentSet(Color(0xFF73C7E6), Color(0xFF80CF97), Color(0xFFE2A765), Color(0xFFB0B2D8))
         ),
         appThemeFamily(
             id = "granite",
@@ -1985,7 +2076,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE2A866),
             darkYellow = Color(0xFFD5C87A),
             darkPurple = Color(0xFFB5B7D4),
-            darkPurpleSoft = Color(0xFF373947)
+            darkPurpleSoft = Color(0xFF373947),
+            lightMetrics = MetricAccentSet(Color(0xFF3F7F88), Color(0xFF57966F), Color(0xFFB87B31), Color(0xFF737795)),
+            darkMetrics = MetricAccentSet(Color(0xFF80C0C8), Color(0xFF8BC99E), Color(0xFFE2A866), Color(0xFFB5B7D4))
         ),
         appThemeFamily(
             id = "dusk",
@@ -2020,7 +2113,9 @@ object DeckThemeCatalog {
             darkOrange = Color(0xFFE3A766),
             darkYellow = Color(0xFFD6C779),
             darkPurple = Color(0xFFA9A8DE),
-            darkPurpleSoft = Color(0xFF34334F)
+            darkPurpleSoft = Color(0xFF34334F),
+            lightMetrics = MetricAccentSet(Color(0xFF2F7FA0), Color(0xFF57956F), Color(0xFFB87B2F), Color(0xFF6868A8)),
+            darkMetrics = MetricAccentSet(Color(0xFF76C4E2), Color(0xFF8CC99D), Color(0xFFE3A766), Color(0xFFA9A8DE))
         )
     )
 
