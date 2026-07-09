@@ -67,6 +67,68 @@ class DeckThemeCatalogTest {
         assertTrue("Old CPU accent mapping: $palettesUsingOldCpuAccent", palettesUsingOldCpuAccent.isEmpty())
         assertTrue("Old metric set mapping: $palettesUsingOldMetricSet", palettesUsingOldMetricSet.isEmpty())
     }
+
+    @Test
+    fun everyPaletteKeepsMetricsVisibleOnCards() {
+        val weak = DeckThemeCatalog.families
+            .flatMap { listOf(it.light, it.dark) }
+            .flatMap { palette ->
+                palette.metricColors().mapIndexedNotNull { index, color ->
+                    val role = listOf("cpu", "memory", "disk", "network")[index]
+                    val surfaceDistance = colorDistance(color, palette.surface)
+                    val mutedDistance = colorDistance(color, palette.surfaceMuted)
+                    if (surfaceDistance < 0.30f || mutedDistance < 0.30f) {
+                        "${palette.id}:$role surface=$surfaceDistance muted=$mutedDistance"
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        assertTrue("Weak metric blends: $weak", weak.isEmpty())
+    }
+
+    @Test
+    fun everyPaletteKeepsPrimaryAccentsVisible() {
+        val weak = DeckThemeCatalog.families
+            .flatMap { listOf(it.light, it.dark) }
+            .flatMap { palette ->
+                listOf("cyan" to palette.cyan, "brandAlt" to palette.brandAlt).mapNotNull { (role, color) ->
+                    val surfaceDistance = colorDistance(color, palette.surface)
+                    val mutedDistance = colorDistance(color, palette.surfaceMuted)
+                    if (surfaceDistance < 0.30f || mutedDistance < 0.30f) {
+                        "${palette.id}:$role surface=$surfaceDistance muted=$mutedDistance"
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        assertTrue("Weak primary accents: $weak", weak.isEmpty())
+    }
+
+    @Test
+    fun everyPaletteKeepsCardStructureVisible() {
+        val weak = DeckThemeCatalog.families
+            .flatMap { listOf(it.light, it.dark) }
+            .flatMap { palette ->
+                listOf(
+                    "divider" to colorDistance(palette.divider, palette.surface),
+                    "cardStroke" to colorDistance(palette.cardStroke, palette.surface)
+                ).mapNotNull { (role, distance) ->
+                    if (distance < 0.16f) "${palette.id}:$role=$distance" else null
+                }
+            }
+
+        assertTrue("Weak structural colors: $weak", weak.isEmpty())
+    }
 }
 
 private fun DeckPalette.metricColors(): List<Color> = listOf(metricCpu, metricMemory, metricDisk, metricNetwork)
+
+private fun colorDistance(first: Color, second: Color): Float {
+    val red = first.red - second.red
+    val green = first.green - second.green
+    val blue = first.blue - second.blue
+    return kotlin.math.sqrt(red * red + green * green + blue * blue)
+}

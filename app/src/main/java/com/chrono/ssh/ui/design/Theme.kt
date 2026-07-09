@@ -70,6 +70,70 @@ private data class MetricAccentSet(
     val network: Color
 )
 
+private data class SurfaceLines(
+    val divider: Color,
+    val cardStroke: Color
+)
+
+private fun DeckPalette.polished(): DeckPalette {
+    val lines = surfaceLines(surface, primaryText, dark)
+    return copy(
+        divider = lines.divider,
+        cardStroke = lines.cardStroke,
+        cyan = visibleAccent(cyan, primaryText, surface, surfaceMuted),
+        brandAlt = visibleAccent(brandAlt, primaryText, surface, surfaceMuted),
+        metricCpu = visibleAccent(metricCpu, primaryText, surface, surfaceMuted),
+        metricMemory = visibleAccent(metricMemory, primaryText, surface, surfaceMuted),
+        metricDisk = visibleAccent(metricDisk, primaryText, surface, surfaceMuted),
+        metricNetwork = visibleAccent(metricNetwork, primaryText, surface, surfaceMuted)
+    )
+}
+
+private fun surfaceLines(surface: Color, text: Color, dark: Boolean): SurfaceLines {
+    val mix = if (dark) 0.22f else 0.18f
+    val strokeMix = if (dark) 0.34f else 0.28f
+    return SurfaceLines(
+        divider = surface.blendToward(text, mix),
+        cardStroke = surface.blendToward(text, strokeMix)
+    )
+}
+
+private fun visibleAccent(color: Color, text: Color, firstBackground: Color, secondBackground: Color): Color {
+    var tuned = color
+    repeat(3) {
+        if (tuned.distanceTo(firstBackground) >= 0.30f && tuned.distanceTo(secondBackground) >= 0.30f) return tuned
+        tuned = if (firstBackground.relativeLuminance() < 0.42f || secondBackground.relativeLuminance() < 0.42f) {
+            tuned.blendToward(Color.White, 0.22f)
+        } else {
+            tuned.blendToward(text, 0.20f)
+        }
+    }
+    return tuned
+}
+
+private fun Color.blendToward(target: Color, amount: Float): Color {
+    val clean = amount.coerceIn(0f, 1f)
+    return Color(
+        red = red + (target.red - red) * clean,
+        green = green + (target.green - green) * clean,
+        blue = blue + (target.blue - blue) * clean,
+        alpha = alpha + (target.alpha - alpha) * clean
+    )
+}
+
+private fun Color.distanceTo(other: Color): Float {
+    val redDelta = red - other.red
+    val greenDelta = green - other.green
+    val blueDelta = blue - other.blue
+    return kotlin.math.sqrt(redDelta * redDelta + greenDelta * greenDelta + blueDelta * blueDelta)
+}
+
+private fun Color.relativeLuminance(): Float {
+    fun channel(value: Float): Float =
+        if (value <= 0.03928f) value / 12.92f else Math.pow(((value + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+    return 0.2126f * channel(red) + 0.7152f * channel(green) + 0.0722f * channel(blue)
+}
+
 object DeckThemeCatalog {
     const val DEFAULT_FAMILY_ID = "graphite"
 
@@ -476,9 +540,9 @@ object DeckThemeCatalog {
             primaryText = lightPrimaryText,
             secondaryText = lightSecondaryText,
             tertiaryText = lightSecondaryText.copy(alpha = 0.72f),
-            divider = lightBackgroundAlt,
-            cardStroke = lightBackgroundAlt,
-            cyan = lightAccent,
+            divider = surfaceLines(lightSurface, lightPrimaryText, dark = false).divider,
+            cardStroke = surfaceLines(lightSurface, lightPrimaryText, dark = false).cardStroke,
+            cyan = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
             cyanSoft = lightAccentSoft,
             green = lightGreen,
             red = lightRed,
@@ -488,11 +552,11 @@ object DeckThemeCatalog {
             purpleSoft = lightPurpleSoft,
             navSurface = lightSurface,
             brand = lightPrimaryText,
-            brandAlt = lightAccent,
-            metricCpu = lightMetrics.cpu,
-            metricMemory = lightMetrics.memory,
-            metricDisk = lightMetrics.disk,
-            metricNetwork = lightMetrics.network
+            brandAlt = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            metricCpu = visibleAccent(lightMetrics.cpu, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            metricMemory = visibleAccent(lightMetrics.memory, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            metricDisk = visibleAccent(lightMetrics.disk, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            metricNetwork = visibleAccent(lightMetrics.network, lightPrimaryText, lightSurface, lightSurfaceMuted)
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
@@ -505,9 +569,9 @@ object DeckThemeCatalog {
             primaryText = darkPrimaryText,
             secondaryText = darkSecondaryText,
             tertiaryText = darkSecondaryText.copy(alpha = 0.72f),
-            divider = darkBackgroundAlt,
-            cardStroke = darkBackgroundAlt,
-            cyan = darkAccent,
+            divider = surfaceLines(darkSurface, darkPrimaryText, dark = true).divider,
+            cardStroke = surfaceLines(darkSurface, darkPrimaryText, dark = true).cardStroke,
+            cyan = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
             cyanSoft = darkAccentSoft,
             green = darkGreen,
             red = darkRed,
@@ -517,11 +581,11 @@ object DeckThemeCatalog {
             purpleSoft = darkPurpleSoft,
             navSurface = darkSurface,
             brand = darkPrimaryText,
-            brandAlt = darkAccent,
-            metricCpu = darkMetrics.cpu,
-            metricMemory = darkMetrics.memory,
-            metricDisk = darkMetrics.disk,
-            metricNetwork = darkMetrics.network
+            brandAlt = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            metricCpu = visibleAccent(darkMetrics.cpu, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            metricMemory = visibleAccent(darkMetrics.memory, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            metricDisk = visibleAccent(darkMetrics.disk, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            metricNetwork = visibleAccent(darkMetrics.network, darkPrimaryText, darkSurface, darkSurfaceMuted)
         )
     )
 
@@ -2124,59 +2188,59 @@ object DeckThemeCatalog {
             id = "aurora",
             name = "Aurora",
             description = "Bright command-center clarity with cyan signal accents.",
-            light = auroraLight,
-            dark = auroraDark
+            light = auroraLight.polished(),
+            dark = auroraDark.polished()
         ),
         DeckThemeFamily(
             id = "graphite",
             name = "Graphite",
             description = "Quiet operations console with restrained metal tones.",
-            light = graphiteLight,
-            dark = graphiteDark
+            light = graphiteLight.polished(),
+            dark = graphiteDark.polished()
         ),
         DeckThemeFamily(
             id = "ember",
             name = "Ember",
             description = "Warmer incident-room contrast for night work.",
-            light = emberLight,
-            dark = emberDark
+            light = emberLight.polished(),
+            dark = emberDark.polished()
         ),
         DeckThemeFamily(
             id = "catppuccin",
             name = "Catppuccin",
             description = "Soft terminal palette with calm blue and pastel status colors.",
-            light = catppuccinLight,
-            dark = catppuccinDark
+            light = catppuccinLight.polished(),
+            dark = catppuccinDark.polished()
         ),
         DeckThemeFamily(
             id = "rosepine",
             name = "Rosé Pine",
             description = "Muted rose, pine, and gold tones for a less clinical console.",
-            light = rosePineLight,
-            dark = rosePineDark
+            light = rosePineLight.polished(),
+            dark = rosePineDark.polished()
         ),
         DeckThemeFamily(
             id = "monochrome-light",
             name = "Monochrome Light",
             description = "Pure black-on-white interface and terminal accents.",
-            light = monochromeLight,
-            dark = monochromeDark,
+            light = monochromeLight.polished(),
+            dark = monochromeDark.polished(),
             modes = setOf(DeckThemeMode.Light)
         ),
         DeckThemeFamily(
             id = "monochrome-dark",
             name = "Monochrome Dark",
             description = "Pure white-on-black interface and terminal accents.",
-            light = monochromeLight,
-            dark = monochromeDark,
+            light = monochromeLight.polished(),
+            dark = monochromeDark.polished(),
             modes = setOf(DeckThemeMode.Dark)
         ),
         DeckThemeFamily(
             id = "comic-ink",
             name = "Comic Ink",
             description = "Sharp black-on-white panels with inked borders.",
-            light = comicLight,
-            dark = comicLight,
+            light = comicLight.polished(),
+            dark = comicLight.polished(),
             modes = setOf(DeckThemeMode.Light)
         )
     ) + appThemeFamilies
