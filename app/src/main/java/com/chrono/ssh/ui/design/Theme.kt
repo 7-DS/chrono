@@ -98,6 +98,24 @@ private fun surfaceLines(surface: Color, text: Color, dark: Boolean): SurfaceLin
     )
 }
 
+private fun themeSurface(base: Color, softAccent: Color, accent: Color, dark: Boolean): Color {
+    val softMix = if (dark) 0.32f else 0.46f
+    val accentMix = if (dark) 0.08f else 0.04f
+    return base.blendToward(softAccent, softMix).blendToward(accent, accentMix)
+}
+
+private fun themeMutedSurface(base: Color, softAccent: Color, accent: Color, dark: Boolean): Color {
+    val softMix = if (dark) 0.54f else 0.68f
+    val accentMix = if (dark) 0.10f else 0.08f
+    return base.blendToward(softAccent, softMix).blendToward(accent, accentMix)
+}
+
+private fun themeSurfaceLines(surface: Color, text: Color, accent: Color, dark: Boolean): SurfaceLines {
+    val divider = surface.blendToward(accent, if (dark) 0.34f else 0.42f).blendToward(text, if (dark) 0.10f else 0.12f)
+    val stroke = surface.blendToward(accent, if (dark) 0.52f else 0.60f).blendToward(text, if (dark) 0.14f else 0.18f)
+    return SurfaceLines(divider = divider, cardStroke = stroke)
+}
+
 private fun visibleAccent(color: Color, text: Color, firstBackground: Color, secondBackground: Color): Color {
     var tuned = color
     repeat(3) {
@@ -525,24 +543,34 @@ object DeckThemeCatalog {
         darkPurpleSoft: Color,
         lightMetrics: MetricAccentSet,
         darkMetrics: MetricAccentSet
-    ) = DeckThemeFamily(
-        id = id,
-        name = name,
-        description = description,
-        light = auroraLight.copy(
+    ): DeckThemeFamily {
+        val lightElementSurface = themeSurface(lightSurface, lightAccentSoft, lightAccent, dark = false)
+        val lightElementRaised = themeSurface(lightSurfaceRaised, lightAccentSoft, lightAccent, dark = false)
+        val lightElementMuted = themeMutedSurface(lightSurfaceMuted, lightAccentSoft, lightAccent, dark = false)
+        val lightLines = themeSurfaceLines(lightElementSurface, lightPrimaryText, lightAccent, dark = false)
+        val darkElementSurface = themeSurface(darkSurface, darkAccentSoft, darkAccent, dark = true)
+        val darkElementRaised = themeSurface(darkSurfaceRaised, darkAccentSoft, darkAccent, dark = true)
+        val darkElementMuted = themeMutedSurface(darkSurfaceMuted, darkAccentSoft, darkAccent, dark = true)
+        val darkLines = themeSurfaceLines(darkElementSurface, darkPrimaryText, darkAccent, dark = true)
+
+        return DeckThemeFamily(
+            id = id,
+            name = name,
+            description = description,
+            light = auroraLight.copy(
             id = "$id-light",
             name = "$name Light",
             background = lightBackground,
             backgroundAlt = lightBackgroundAlt,
-            surface = lightSurface,
-            surfaceRaised = lightSurfaceRaised,
-            surfaceMuted = lightSurfaceMuted,
+            surface = lightElementSurface,
+            surfaceRaised = lightElementRaised,
+            surfaceMuted = lightElementMuted,
             primaryText = lightPrimaryText,
             secondaryText = lightSecondaryText,
             tertiaryText = lightSecondaryText.copy(alpha = 0.72f),
-            divider = surfaceLines(lightSurface, lightPrimaryText, dark = false).divider,
-            cardStroke = surfaceLines(lightSurface, lightPrimaryText, dark = false).cardStroke,
-            cyan = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            divider = lightLines.divider,
+            cardStroke = lightLines.cardStroke,
+            cyan = visibleAccent(lightAccent, lightPrimaryText, lightElementSurface, lightElementMuted),
             cyanSoft = lightAccentSoft,
             green = lightGreen,
             red = lightRed,
@@ -552,26 +580,26 @@ object DeckThemeCatalog {
             purpleSoft = lightPurpleSoft,
             navSurface = lightSurface,
             brand = lightPrimaryText,
-            brandAlt = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricCpu = visibleAccent(lightMetrics.cpu, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricMemory = visibleAccent(lightMetrics.memory, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricDisk = visibleAccent(lightMetrics.disk, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricNetwork = visibleAccent(lightMetrics.network, lightPrimaryText, lightSurface, lightSurfaceMuted)
+            brandAlt = visibleAccent(lightAccent, lightPrimaryText, lightElementSurface, lightElementMuted),
+            metricCpu = visibleAccent(lightMetrics.cpu, lightPrimaryText, lightElementSurface, lightElementMuted),
+            metricMemory = visibleAccent(lightMetrics.memory, lightPrimaryText, lightElementSurface, lightElementMuted),
+            metricDisk = visibleAccent(lightMetrics.disk, lightPrimaryText, lightElementSurface, lightElementMuted),
+            metricNetwork = visibleAccent(lightMetrics.network, lightPrimaryText, lightElementSurface, lightElementMuted)
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
             name = "$name Dark",
             background = darkBackground,
             backgroundAlt = darkBackgroundAlt,
-            surface = darkSurface,
-            surfaceRaised = darkSurfaceRaised,
-            surfaceMuted = darkSurfaceMuted,
+            surface = darkElementSurface,
+            surfaceRaised = darkElementRaised,
+            surfaceMuted = darkElementMuted,
             primaryText = darkPrimaryText,
             secondaryText = darkSecondaryText,
             tertiaryText = darkSecondaryText.copy(alpha = 0.72f),
-            divider = surfaceLines(darkSurface, darkPrimaryText, dark = true).divider,
-            cardStroke = surfaceLines(darkSurface, darkPrimaryText, dark = true).cardStroke,
-            cyan = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            divider = darkLines.divider,
+            cardStroke = darkLines.cardStroke,
+            cyan = visibleAccent(darkAccent, darkPrimaryText, darkElementSurface, darkElementMuted),
             cyanSoft = darkAccentSoft,
             green = darkGreen,
             red = darkRed,
@@ -581,13 +609,14 @@ object DeckThemeCatalog {
             purpleSoft = darkPurpleSoft,
             navSurface = darkSurface,
             brand = darkPrimaryText,
-            brandAlt = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricCpu = visibleAccent(darkMetrics.cpu, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricMemory = visibleAccent(darkMetrics.memory, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricDisk = visibleAccent(darkMetrics.disk, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricNetwork = visibleAccent(darkMetrics.network, darkPrimaryText, darkSurface, darkSurfaceMuted)
+            brandAlt = visibleAccent(darkAccent, darkPrimaryText, darkElementSurface, darkElementMuted),
+            metricCpu = visibleAccent(darkMetrics.cpu, darkPrimaryText, darkElementSurface, darkElementMuted),
+            metricMemory = visibleAccent(darkMetrics.memory, darkPrimaryText, darkElementSurface, darkElementMuted),
+            metricDisk = visibleAccent(darkMetrics.disk, darkPrimaryText, darkElementSurface, darkElementMuted),
+            metricNetwork = visibleAccent(darkMetrics.network, darkPrimaryText, darkElementSurface, darkElementMuted)
         )
-    )
+        )
+    }
 
     private val appThemeFamilies = listOf(
         appThemeFamily(

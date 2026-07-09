@@ -122,6 +122,18 @@ class DeckThemeCatalogTest {
 
         assertTrue("Weak structural colors: $weak", weak.isEmpty())
     }
+
+    @Test
+    fun generatedThemesHaveDistinctElementSurfaces() {
+        val generated = DeckThemeCatalog.families
+            .filterNot { it.id in setOf("aurora", "graphite", "ember", "catppuccin", "rosepine", "monochrome-light", "monochrome-dark", "comic-ink") }
+
+        val lightSurfaceCount = generated.map { colorKey(it.light.surface) }.distinct().size
+        val darkSurfaceCount = generated.map { colorKey(it.dark.surface) }.distinct().size
+
+        assertTrue("Generated light themes reuse too few element surfaces", lightSurfaceCount >= generated.size / 2)
+        assertTrue("Generated dark themes reuse too few element surfaces", darkSurfaceCount >= generated.size / 2)
+    }
 }
 
 private fun DeckPalette.metricColors(): List<Color> = listOf(metricCpu, metricMemory, metricDisk, metricNetwork)
@@ -132,3 +144,6 @@ private fun colorDistance(first: Color, second: Color): Float {
     val blue = first.blue - second.blue
     return kotlin.math.sqrt(red * red + green * green + blue * blue)
 }
+
+private fun colorKey(color: Color): String =
+    "${(color.red * 255).toInt()}:${(color.green * 255).toInt()}:${(color.blue * 255).toInt()}"
