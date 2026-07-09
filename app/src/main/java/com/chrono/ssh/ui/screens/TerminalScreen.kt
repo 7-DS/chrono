@@ -302,7 +302,7 @@ internal fun terminalTopStripSessions(
     activeSessions: List<Pair<String, ServerProfile>>
 ): List<Pair<String, ServerProfile>> {
     val active = activeSessions.distinctBy { it.first }
-    return if (active.none { it.second.id == selectedServer.id }) {
+    return if (active.none { it.first == selectedWorkspaceKey }) {
         active.ifEmpty { listOf(selectedWorkspaceKey to selectedServer) }
     } else {
         active
@@ -1070,7 +1070,7 @@ fun TerminalScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    val activeSessions = workspaceSummaries.mapNotNull { summary ->
+    val activeSessions = workspaceSummaries.filter { it.connected }.mapNotNull { summary ->
         servers.firstOrNull { it.id == summary.serverId }?.let { server -> summary.key to server }
     }
 
@@ -1496,7 +1496,7 @@ private fun TerminalTopBar(
     onToggleFullscreen: () -> Unit,
     transcriptActionsEnabled: Boolean
 ) {
-    val sessionStrip = remember(activeSessions, selectedServer) {
+    val sessionStrip = remember(activeSessions, selectedWorkspaceKey, selectedServer) {
         terminalTopStripSessions(selectedWorkspaceKey, selectedServer, activeSessions)
     }
     val sftpStrip = remember(sftpSessions) {
@@ -1677,7 +1677,7 @@ private fun SquircleSessionChip(
                     .background(Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
-                TerminalSessionLogo(server, Modifier.size(28.dp))
+                TerminalSessionLogo(server, Modifier.size(21.dp))
                 if (badge != null) {
                     Text(
                         badge.take(1),

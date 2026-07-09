@@ -418,6 +418,14 @@ class ChronoSSHAppTest {
     }
 
     @Test
+    fun closingLastTerminalRestoresLaunchSurface() {
+        assertEquals(ReturnTarget.Root(AppTab.Servers), terminalReturnTargetAfterLastClose(ReturnTarget.Root(AppTab.Servers)))
+        assertEquals(ReturnTarget.Root(AppTab.Connections), terminalReturnTargetAfterLastClose(ReturnTarget.Root(AppTab.Connections)))
+        assertEquals(ReturnTarget.ServerDetail("server-1"), terminalReturnTargetAfterLastClose(ReturnTarget.ServerDetail("server-1")))
+        assertEquals(ReturnTarget.Root(AppTab.Servers), terminalReturnTargetAfterLastClose(null))
+    }
+
+    @Test
     fun metricsSchedulerSkipsTcpProbeWhenSshMetricsCanRunNow() {
         assertTrue(
             shouldCollectMetricsBeforeProbe(

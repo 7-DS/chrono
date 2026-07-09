@@ -195,6 +195,10 @@ internal fun terminalCloseIntent(fromTerminalChrome: Boolean): TerminalCloseInte
     return if (fromTerminalChrome) TerminalCloseIntent.HideSurface else TerminalCloseIntent.DisconnectWorkspace
 }
 
+internal fun terminalReturnTargetAfterLastClose(previousTarget: ReturnTarget?): ReturnTarget {
+    return previousTarget ?: ReturnTarget.Root(AppTab.Servers)
+}
+
 private fun AppSurface.rootTab(): AppTab? = when (this) {
     AppSurface.Home -> AppTab.Servers
     AppSurface.Connections -> AppTab.Connections
@@ -1033,7 +1037,7 @@ fun ChronoSSHApp(
         }
     }
 
-    fun closeConnectionWorkspace(workspaceKey: String, returnToServersWhenEmpty: Boolean = false) {
+    fun closeConnectionWorkspace(workspaceKey: String) {
         val workspace = terminalWorkspaces[workspaceKey]
         workspace?.session?.let { session ->
             val server = repository.servers.firstOrNull { it.id == workspace.serverId }
@@ -1064,7 +1068,7 @@ fun ChronoSSHApp(
         if (selectedConnectionServerId == null) {
             autoConnectRequestId = null
             terminalVisible = false
-            if (returnToServersWhenEmpty) restoreReturnTarget(transientReturnTarget ?: ReturnTarget.Root(AppTab.Servers)) else selectedTab = AppTab.Connections
+            restoreReturnTarget(terminalReturnTargetAfterLastClose(transientReturnTarget))
             transientReturnTarget = null
         } else {
             terminalVisible = true
