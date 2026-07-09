@@ -47,7 +47,11 @@ data class DeckPalette(
     val terminalAccent: Color,
     val navSurface: Color,
     val brand: Color,
-    val brandAlt: Color
+    val brandAlt: Color,
+    val metricCpu: Color = brandAlt,
+    val metricMemory: Color = green,
+    val metricDisk: Color = yellow,
+    val metricNetwork: Color = purple
 )
 
 data class DeckThemeFamily(
@@ -89,7 +93,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFF8BD5FF),
         navSurface = Color.White,
         brand = Color(0xFF12141C),
-        brandAlt = Color(0xFF21C7E8)
+        brandAlt = Color(0xFF21C7E8),
+        metricCpu = Color(0xFF1987D2),
+        metricMemory = Color(0xFF1F9E5B),
+        metricDisk = Color(0xFFE08A22),
+        metricNetwork = Color(0xFF7567D9)
     )
 
     private val auroraDark = DeckPalette(
@@ -119,7 +127,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFF8BD5FF),
         navSurface = Color(0xFF181C26),
         brand = Color(0xFFF7F8FC),
-        brandAlt = Color(0xFF36D9F2)
+        brandAlt = Color(0xFF36D9F2),
+        metricCpu = Color(0xFF36D9F2),
+        metricMemory = Color(0xFF33E17A),
+        metricDisk = Color(0xFFFFA94D),
+        metricNetwork = Color(0xFF9B8DFF)
     )
 
     private val graphiteLight = auroraLight.copy(
@@ -132,7 +144,11 @@ object DeckThemeCatalog {
         orange = Color(0xFFE9993F),
         purple = Color(0xFF626B7C),
         purpleSoft = Color(0xFFE1E4E9),
-        brandAlt = Color(0xFF25B8C7)
+        brandAlt = Color(0xFF25B8C7),
+        metricCpu = Color(0xFF287E88),
+        metricMemory = Color(0xFF4F8F63),
+        metricDisk = Color(0xFFC27B31),
+        metricNetwork = Color(0xFF626B7C)
     )
 
     private val graphiteDark = auroraDark.copy(
@@ -148,7 +164,11 @@ object DeckThemeCatalog {
         orange = Color(0xFFECA34C),
         purple = Color(0xFF9AA5B3),
         purpleSoft = Color(0xFF29313A),
-        brandAlt = Color(0xFF4FC3D0)
+        brandAlt = Color(0xFF4FC3D0),
+        metricCpu = Color(0xFF4FC3D0),
+        metricMemory = Color(0xFF7BD88F),
+        metricDisk = Color(0xFFECA34C),
+        metricNetwork = Color(0xFF9AA5B3)
     )
 
     private val emberLight = auroraLight.copy(
@@ -162,7 +182,11 @@ object DeckThemeCatalog {
         orange = Color(0xFFFF7C3D),
         yellow = Color(0xFFF0C038),
         purple = Color(0xFF7F63D6),
-        brandAlt = Color(0xFFFF7C3D)
+        brandAlt = Color(0xFFFF7C3D),
+        metricCpu = Color(0xFFD95F32),
+        metricMemory = Color(0xFF3C9B5F),
+        metricDisk = Color(0xFFD39126),
+        metricNetwork = Color(0xFF13A9B8)
     )
 
     private val emberDark = auroraDark.copy(
@@ -180,7 +204,11 @@ object DeckThemeCatalog {
         yellow = Color(0xFFFFD35A),
         purple = Color(0xFFA993FF),
         purpleSoft = Color(0xFF35274B),
-        brandAlt = Color(0xFFFF8B4D)
+        brandAlt = Color(0xFFFF8B4D),
+        metricCpu = Color(0xFFFF8B4D),
+        metricMemory = Color(0xFF57E28D),
+        metricDisk = Color(0xFFFFD35A),
+        metricNetwork = Color(0xFF35D5E4)
     )
 
     private val catppuccinLight = auroraLight.copy(
@@ -202,7 +230,11 @@ object DeckThemeCatalog {
         terminal = Color(0xFF303446),
         terminalPanel = Color(0xFF232634),
         terminalAccent = Color(0xFF8CAAEE),
-        brandAlt = Color(0xFF1E66F5)
+        brandAlt = Color(0xFF1E66F5),
+        metricCpu = Color(0xFF1E66F5),
+        metricMemory = Color(0xFF40A02B),
+        metricDisk = Color(0xFFDF8E1D),
+        metricNetwork = Color(0xFF8839EF)
     )
 
     private val catppuccinDark = auroraDark.copy(
@@ -226,7 +258,11 @@ object DeckThemeCatalog {
         terminalPanel = Color(0xFF181825),
         terminalAccent = Color(0xFF89B4FA),
         navSurface = Color(0xFF313244),
-        brandAlt = Color(0xFF89B4FA)
+        brandAlt = Color(0xFF89B4FA),
+        metricCpu = Color(0xFF89B4FA),
+        metricMemory = Color(0xFFA6E3A1),
+        metricDisk = Color(0xFFF9E2AF),
+        metricNetwork = Color(0xFFCBA6F7)
     )
 
     private val rosePineLight = auroraLight.copy(
@@ -248,7 +284,11 @@ object DeckThemeCatalog {
         terminal = Color(0xFF232136),
         terminalPanel = Color(0xFF2A273F),
         terminalAccent = Color(0xFFC4A7E7),
-        brandAlt = Color(0xFF56949F)
+        brandAlt = Color(0xFF56949F),
+        metricCpu = Color(0xFF286983),
+        metricMemory = Color(0xFF56949F),
+        metricDisk = Color(0xFFEA9D34),
+        metricNetwork = Color(0xFF907AA9)
     )
 
     private val rosePineDark = auroraDark.copy(
@@ -272,7 +312,11 @@ object DeckThemeCatalog {
         terminalPanel = Color(0xFF1F1D2E),
         terminalAccent = Color(0xFFC4A7E7),
         navSurface = Color(0xFF26233A),
-        brandAlt = Color(0xFF9CCFD8)
+        brandAlt = Color(0xFF9CCFD8),
+        metricCpu = Color(0xFF9CCFD8),
+        metricMemory = Color(0xFF31748F),
+        metricDisk = Color(0xFFF6C177),
+        metricNetwork = Color(0xFFC4A7E7)
     )
 
     private val monochromeLight = auroraLight.copy(
@@ -301,7 +345,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFF000000),
         navSurface = Color(0xFFFFFFFF),
         brand = Color(0xFF000000),
-        brandAlt = Color(0xFF000000)
+        brandAlt = Color(0xFF000000),
+        metricCpu = Color(0xFF000000),
+        metricMemory = Color(0xFF333333),
+        metricDisk = Color(0xFF666666),
+        metricNetwork = Color(0xFF111111)
     )
 
     private val monochromeDark = auroraDark.copy(
@@ -330,7 +378,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFFFFFFFF),
         navSurface = Color(0xFF0A0A0A),
         brand = Color(0xFFFFFFFF),
-        brandAlt = Color(0xFFFFFFFF)
+        brandAlt = Color(0xFFFFFFFF),
+        metricCpu = Color(0xFFFFFFFF),
+        metricMemory = Color(0xFFE0E0E0),
+        metricDisk = Color(0xFFBDBDBD),
+        metricNetwork = Color(0xFFF2F2F2)
     )
 
     private val comicLight = monochromeLight.copy(
@@ -359,7 +411,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFF000000),
         navSurface = Color(0xFFFFFFFF),
         brand = Color(0xFF000000),
-        brandAlt = Color(0xFF000000)
+        brandAlt = Color(0xFF000000),
+        metricCpu = Color(0xFF000000),
+        metricMemory = Color(0xFF000000),
+        metricDisk = Color(0xFF000000),
+        metricNetwork = Color(0xFF000000)
     )
 
     private fun appThemeFamily(
@@ -423,7 +479,11 @@ object DeckThemeCatalog {
             purpleSoft = lightPurpleSoft,
             navSurface = lightSurface,
             brand = lightPrimaryText,
-            brandAlt = lightAccent
+            brandAlt = lightAccent,
+            metricCpu = lightAccent,
+            metricMemory = lightGreen,
+            metricDisk = lightYellow,
+            metricNetwork = lightPurple
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
@@ -448,7 +508,11 @@ object DeckThemeCatalog {
             purpleSoft = darkPurpleSoft,
             navSurface = darkSurface,
             brand = darkPrimaryText,
-            brandAlt = darkAccent
+            brandAlt = darkAccent,
+            metricCpu = darkAccent,
+            metricMemory = darkGreen,
+            metricDisk = darkYellow,
+            metricNetwork = darkPurple
         )
     )
 
@@ -2096,6 +2160,10 @@ object DeckColors {
     var NavSurface = DeckThemeCatalog.families.first().light.navSurface
     var Brand = DeckThemeCatalog.families.first().light.brand
     var BrandAlt = DeckThemeCatalog.families.first().light.brandAlt
+    var MetricCpu = DeckThemeCatalog.families.first().light.metricCpu
+    var MetricMemory = DeckThemeCatalog.families.first().light.metricMemory
+    var MetricDisk = DeckThemeCatalog.families.first().light.metricDisk
+    var MetricNetwork = DeckThemeCatalog.families.first().light.metricNetwork
 
     fun apply(palette: DeckPalette) {
         Background = palette.background
@@ -2122,6 +2190,10 @@ object DeckColors {
         NavSurface = palette.navSurface
         Brand = palette.brand
         BrandAlt = palette.brandAlt
+        MetricCpu = palette.metricCpu
+        MetricMemory = palette.metricMemory
+        MetricDisk = palette.metricDisk
+        MetricNetwork = palette.metricNetwork
     }
 }
 

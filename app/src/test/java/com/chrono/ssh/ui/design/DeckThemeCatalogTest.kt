@@ -1,5 +1,6 @@
 package com.chrono.ssh.ui.design
 
+import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -32,5 +33,19 @@ class DeckThemeCatalogTest {
         assertTrue(darkFamilies.any { it.id == "monochrome-dark" })
         assertTrue(darkFamilies.none { it.id == "monochrome-light" })
         assertTrue(darkFamilies.none { it.id == "comic-ink" })
+    }
+
+    @Test
+    fun palettesCarryThemeSpecificMetricAccents() {
+        DeckThemeCatalog.families.forEach { family ->
+            listOf(family.light, family.dark).forEach { palette ->
+                assertTrue(palette.metricCpu != Color.Unspecified)
+                assertTrue(palette.metricMemory != Color.Unspecified)
+                assertTrue(palette.metricDisk != Color.Unspecified)
+                assertTrue(palette.metricNetwork != Color.Unspecified)
+            }
+        }
+        assertEquals(DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricCpu, DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.brandAlt)
+        assertEquals(DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricCpu, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricDisk)
     }
 }

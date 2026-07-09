@@ -154,33 +154,11 @@ private fun customMetricColors(overrides: ServerMetricColorOverrides): ServerMet
 }
 
 private fun themeMetricColors(): ServerMetricColors {
-    val background = DeckColors.Surface
-    val rawCandidates = listOf(
-        DeckColors.Brand,
-        DeckColors.BrandAlt,
-        DeckColors.Cyan,
-        DeckColors.Green,
-        DeckColors.Yellow,
-        DeckColors.Orange,
-        DeckColors.Purple,
-        DeckColors.Red,
-        DeckColors.PrimaryText,
-        DeckColors.SecondaryText
-    )
-    val candidates = rawCandidates.map { it.ensureVisibleOn(background) }
-    val neutralTheme = rawCandidates.take(8).maxOf { it.chromaApprox() } < 0.08f
-    val picked = if (neutralTheme && DeckColors.Background.luminanceApprox() > 0.72f && DeckColors.PrimaryText.luminanceApprox() < 0.18f) {
-        listOf(Color(0xff111111), Color(0xff444444), Color(0xff777777), Color(0xff000000))
-    } else if (neutralTheme && DeckColors.Background.luminanceApprox() < 0.12f && DeckColors.PrimaryText.luminanceApprox() > 0.82f) {
-        listOf(Color(0xfff4f4f4), Color(0xffc9c9c9), Color(0xff9c9c9c), Color(0xffffffff))
-    } else {
-        candidates + listOf(Color(0xff4da3ff), Color(0xff35c76f), Color(0xffffb24a), Color(0xffb68cff))
-    }
     return ServerMetricColors(
-        cpu = picked.getOrElse(0) { DeckColors.BrandAlt },
-        memory = picked.getOrElse(1) { DeckColors.Green },
-        disk = picked.getOrElse(2) { DeckColors.Orange },
-        network = picked.getOrElse(3) { DeckColors.Cyan }
+        cpu = DeckColors.MetricCpu,
+        memory = DeckColors.MetricMemory,
+        disk = DeckColors.MetricDisk,
+        network = DeckColors.MetricNetwork
     )
 }
 
@@ -189,23 +167,3 @@ private fun String.toColorOrNull(): Color? {
     if (clean.length != 6 || clean.any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) return null
     return Color((0xff000000L or clean.toLong(16)).toInt())
 }
-
-private fun Color.ensureVisibleOn(background: Color): Color {
-    val delta = kotlin.math.abs(luminanceApprox() - background.luminanceApprox())
-    if (delta >= 0.18f) return this
-    return if (background.luminanceApprox() < 0.5f) mix(Color.White, 0.38f) else mix(Color.Black, 0.32f)
-}
-
-private fun Color.mix(other: Color, amount: Float): Color {
-    val a = amount.coerceIn(0f, 1f)
-    return Color(
-        red = red + (other.red - red) * a,
-        green = green + (other.green - green) * a,
-        blue = blue + (other.blue - blue) * a,
-        alpha = alpha
-    )
-}
-
-private fun Color.luminanceApprox(): Float = 0.299f * red + 0.587f * green + 0.114f * blue
-
-private fun Color.chromaApprox(): Float = maxOf(red, green, blue) - minOf(red, green, blue)
