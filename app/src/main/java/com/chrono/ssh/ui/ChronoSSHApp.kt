@@ -544,7 +544,8 @@ fun ChronoSSHApp(
     var appLocked by remember { mutableStateOf(appLockPinUsable(initialSettings)) }
     var appWasBackgrounded by remember { mutableStateOf(false) }
     var hostInfoDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
-    val palette = DeckThemeCatalog.paletteFor(themeMode, themeFamilyId, isSystemInDarkTheme())
+    val systemDark = isSystemInDarkTheme()
+    val palette = DeckThemeCatalog.paletteFor(themeMode, themeFamilyId, systemDark)
     val terminalWorkspaces = remember {
         androidx.compose.runtime.mutableStateMapOf<String, TerminalWorkspaceState>()
     }
@@ -661,7 +662,11 @@ fun ChronoSSHApp(
     }
 
     fun persistTheme(nextMode: DeckThemeMode = themeMode, nextFamily: String = themeFamilyId) {
-        persistSettings(appSettings.copy(themeModeName = nextMode.name, themeFamilyId = nextFamily))
+        val availableFamilies = DeckThemeCatalog.familiesFor(nextMode, systemDark)
+        val normalizedFamily = nextFamily.takeIf { candidate -> availableFamilies.any { it.id == candidate } }
+            ?: availableFamilies.firstOrNull()?.id
+            ?: DeckThemeCatalog.DEFAULT_FAMILY_ID
+        persistSettings(appSettings.copy(themeModeName = nextMode.name, themeFamilyId = normalizedFamily))
     }
 
     DisposableEffect(context, appSettings.appLockPinHash, appLocked) {

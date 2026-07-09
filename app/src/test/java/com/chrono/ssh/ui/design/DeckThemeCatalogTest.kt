@@ -20,4 +20,17 @@ class DeckThemeCatalogTest {
 
         assertEquals(DeckThemeCatalog.families.first().light, fallback)
     }
+
+    @Test
+    fun themeFamiliesFollowResolvedLightDarkMode() {
+        val lightFamilies = DeckThemeCatalog.familiesFor(DeckThemeMode.Light, systemDark = false)
+        val darkFamilies = DeckThemeCatalog.familiesFor(DeckThemeMode.Dark, systemDark = false)
+
+        assertTrue(lightFamilies.any { it.id == "monochrome-light" })
+        assertTrue(lightFamilies.any { it.id == "comic-ink" })
+        assertTrue(lightFamilies.none { it.id == "monochrome-dark" })
+        assertTrue(darkFamilies.any { it.id == "monochrome-dark" })
+        assertTrue(darkFamilies.none { it.id == "monochrome-light" })
+        assertTrue(darkFamilies.none { it.id == "comic-ink" })
+    }
 }

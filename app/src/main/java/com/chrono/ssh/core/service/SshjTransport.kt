@@ -854,7 +854,7 @@ class SshjTransport(
                         val read = runCatching { shell.inputStream.read(buffer) }.getOrElse { -1 }
                         if (read <= 0) break
                         val bytes = buffer.copyOf(read)
-                        transcript.append(bytes.toString(Charsets.UTF_8))
+                        appendBoundedTranscript(transcript, bytes.toString(Charsets.UTF_8))
                         outputSink(bytes)
                     }
                 } finally {
@@ -865,7 +865,7 @@ class SshjTransport(
         }
 
         override val transcriptPreview: String
-            get() = transcript.toString().takeLast(1200)
+            get() = transcript.takeLast(1200).toString()
         override val isConnected: Boolean get() = canUseTerminal()
 
         override suspend fun execute(command: String, timeoutSeconds: Long): CommandResult = withContext(Dispatchers.IO) {
@@ -1499,6 +1499,19 @@ internal fun sanitizeKeyLoaderError(raw: String): String {
         .replace(Regex("/data/user/0/[^\\s:]+/cache/ssh-keys/[^\\s:]+"), "<temporary-key-file>")
         .replace(Regex("\\\\cache\\\\ssh-keys\\\\[^\\s:]+"), "\\cache\\ssh-keys\\<temporary-key-file>")
         .ifBlank { "unknown key-loader error" }
+}
+
+internal const val SSH_TRANSCRIPT_MAX_CHARS = 64 * 1024
+
+internal fun appendBoundedTranscript(transcript: StringBuilder, chunk: String) {
+    if (chunk.length >= SSH_TRANSCRIPT_MAX_CHARS) {
+        transcript.clear()
+        transcript.append(chunk.takeLast(SSH_TRANSCRIPT_MAX_CHARS))
+        return
+    }
+    transcript.append(chunk)
+    val overflow = transcript.length - SSH_TRANSCRIPT_MAX_CHARS
+    if (overflow > 0) transcript.delete(0, overflow)
 }
 
 private fun Set<FilePermission>.toOctalPermissions(): String? {

@@ -341,13 +341,19 @@ fun MetricRing(
     color: Color,
     modifier: Modifier = Modifier,
     trackColor: Color = DeckColors.SurfaceMuted,
-    valueFontSizeSp: Int = 16
+    valueFontSizeSp: Int = 16,
+    animate: Boolean = true
 ) {
-    val animatedPercent by animateFloatAsState(
-        targetValue = percent.coerceIn(0, 100).toFloat(),
-        animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing),
-        label = "metricRing"
-    )
+    val displayPercent = if (animate) {
+        val animatedPercent by animateFloatAsState(
+            targetValue = percent.coerceIn(0, 100).toFloat(),
+            animationSpec = tween(durationMillis = 420, easing = LinearOutSlowInEasing),
+            label = "metricRing"
+        )
+        animatedPercent
+    } else {
+        percent.coerceIn(0, 100).toFloat()
+    }
     Box(modifier = modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val stroke = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
@@ -365,14 +371,14 @@ fun MetricRing(
             drawArc(
                 color = color.copy(alpha = 0.82f),
                 startAngle = -90f,
-                sweepAngle = metricRingSweep(animatedPercent),
+                sweepAngle = metricRingSweep(displayPercent),
                 useCenter = false,
                 topLeft = Offset(inset, inset),
                 size = arcSize,
                 style = stroke
             )
         }
-        Text("${animatedPercent.toInt()}%", color = DeckColors.PrimaryText, fontSize = valueFontSizeSp.sp, fontWeight = FontWeight.Black)
+        Text("${displayPercent.toInt()}%", color = DeckColors.PrimaryText, fontSize = valueFontSizeSp.sp, fontWeight = FontWeight.Black)
     }
 }
 

@@ -195,8 +195,8 @@ fun HomeScreen(
         }
         AnimatedVisibility(
             visible = showCompactTopBar,
-            enter = slideInVertically(tween(220, easing = FastOutSlowInEasing)) { -it / 2 } + fadeIn(tween(180, easing = FastOutSlowInEasing)),
-            exit = slideOutVertically(tween(160, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(120, easing = FastOutSlowInEasing)),
+            enter = slideInVertically(tween(260, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(220, easing = FastOutSlowInEasing)),
+            exit = slideOutVertically(tween(190, easing = FastOutSlowInEasing)) { -it / 4 } + fadeOut(tween(160, easing = FastOutSlowInEasing)),
             modifier = Modifier.align(Alignment.TopEnd)
         ) {
             HomeCompactTopBar(onAddServer = onAddServer)
@@ -662,7 +662,8 @@ private fun HomeRingMetric(
                 color = if (available) color else DeckColors.SecondaryText,
                 modifier = Modifier.matchParentSize(),
                 trackColor = DeckColors.SurfaceMuted,
-                valueFontSizeSp = 17
+                valueFontSizeSp = 17,
+                animate = false
             )
             if (!available) {
                 Text("--", color = DeckColors.SecondaryText, fontSize = 15.sp, lineHeight = 16.sp, fontWeight = FontWeight.Black)

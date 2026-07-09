@@ -55,7 +55,8 @@ data class DeckThemeFamily(
     val name: String,
     val description: String,
     val light: DeckPalette,
-    val dark: DeckPalette
+    val dark: DeckPalette,
+    val modes: Set<DeckThemeMode> = setOf(DeckThemeMode.Light, DeckThemeMode.Dark)
 )
 
 object DeckThemeCatalog {
@@ -274,6 +275,93 @@ object DeckThemeCatalog {
         brandAlt = Color(0xFF9CCFD8)
     )
 
+    private val monochromeLight = auroraLight.copy(
+        id = "monochrome-light",
+        name = "Monochrome Light",
+        background = Color(0xFFFFFFFF),
+        backgroundAlt = Color(0xFFF2F2F2),
+        surface = Color(0xFFFFFFFF),
+        surfaceRaised = Color(0xFFFAFAFA),
+        surfaceMuted = Color(0xFFEDEDED),
+        primaryText = Color(0xFF000000),
+        secondaryText = Color(0xFF525252),
+        tertiaryText = Color(0xFF7A7A7A),
+        divider = Color(0xFFD4D4D4),
+        cardStroke = Color(0xFFBDBDBD),
+        cyan = Color(0xFF111111),
+        cyanSoft = Color(0xFFE6E6E6),
+        green = Color(0xFF222222),
+        red = Color(0xFF000000),
+        orange = Color(0xFF3A3A3A),
+        yellow = Color(0xFF5C5C5C),
+        purple = Color(0xFF1A1A1A),
+        purpleSoft = Color(0xFFE0E0E0),
+        terminal = Color(0xFFFFFFFF),
+        terminalPanel = Color(0xFFF7F7F7),
+        terminalAccent = Color(0xFF000000),
+        navSurface = Color(0xFFFFFFFF),
+        brand = Color(0xFF000000),
+        brandAlt = Color(0xFF000000)
+    )
+
+    private val monochromeDark = auroraDark.copy(
+        id = "monochrome-dark",
+        name = "Monochrome Dark",
+        background = Color(0xFF000000),
+        backgroundAlt = Color(0xFF090909),
+        surface = Color(0xFF0F0F0F),
+        surfaceRaised = Color(0xFF171717),
+        surfaceMuted = Color(0xFF050505),
+        primaryText = Color(0xFFFFFFFF),
+        secondaryText = Color(0xFFBDBDBD),
+        tertiaryText = Color(0xFF8F8F8F),
+        divider = Color(0xFF2A2A2A),
+        cardStroke = Color(0xFF363636),
+        cyan = Color(0xFFFFFFFF),
+        cyanSoft = Color(0xFF2A2A2A),
+        green = Color(0xFFEDEDED),
+        red = Color(0xFFFFFFFF),
+        orange = Color(0xFFD8D8D8),
+        yellow = Color(0xFFB8B8B8),
+        purple = Color(0xFFFFFFFF),
+        purpleSoft = Color(0xFF242424),
+        terminal = Color(0xFF000000),
+        terminalPanel = Color(0xFF080808),
+        terminalAccent = Color(0xFFFFFFFF),
+        navSurface = Color(0xFF0A0A0A),
+        brand = Color(0xFFFFFFFF),
+        brandAlt = Color(0xFFFFFFFF)
+    )
+
+    private val comicLight = monochromeLight.copy(
+        id = "comic-light",
+        name = "Comic Ink",
+        background = Color(0xFFFFFFFF),
+        backgroundAlt = Color(0xFFF8F8F8),
+        surface = Color(0xFFFFFFFF),
+        surfaceRaised = Color(0xFFFFFFFF),
+        surfaceMuted = Color(0xFFF0F0F0),
+        primaryText = Color(0xFF000000),
+        secondaryText = Color(0xFF222222),
+        tertiaryText = Color(0xFF555555),
+        divider = Color(0xFF000000),
+        cardStroke = Color(0xFF000000),
+        cyan = Color(0xFF000000),
+        cyanSoft = Color(0xFFEDEDED),
+        green = Color(0xFF111111),
+        red = Color(0xFF000000),
+        orange = Color(0xFF111111),
+        yellow = Color(0xFF333333),
+        purple = Color(0xFF000000),
+        purpleSoft = Color(0xFFE8E8E8),
+        terminal = Color(0xFFFFFFFF),
+        terminalPanel = Color(0xFFFFFFFF),
+        terminalAccent = Color(0xFF000000),
+        navSurface = Color(0xFFFFFFFF),
+        brand = Color(0xFF000000),
+        brandAlt = Color(0xFF000000)
+    )
+
     private fun appThemeFamily(
         id: String,
         name: String,
@@ -333,6 +421,7 @@ object DeckThemeCatalog {
             yellow = lightYellow,
             purple = lightPurple,
             purpleSoft = lightPurpleSoft,
+            terminalAccent = lightAccent,
             navSurface = lightSurface,
             brand = lightPrimaryText,
             brandAlt = lightAccent
@@ -358,6 +447,7 @@ object DeckThemeCatalog {
             yellow = darkYellow,
             purple = darkPurple,
             purpleSoft = darkPurpleSoft,
+            terminalAccent = darkAccent,
             navSurface = darkSurface,
             brand = darkPrimaryText,
             brandAlt = darkAccent
@@ -1907,17 +1997,53 @@ object DeckThemeCatalog {
             description = "Muted rose, pine, and gold tones for a less clinical console.",
             light = rosePineLight,
             dark = rosePineDark
+        ),
+        DeckThemeFamily(
+            id = "monochrome-light",
+            name = "Monochrome Light",
+            description = "Pure black-on-white interface and terminal accents.",
+            light = monochromeLight,
+            dark = monochromeDark,
+            modes = setOf(DeckThemeMode.Light)
+        ),
+        DeckThemeFamily(
+            id = "monochrome-dark",
+            name = "Monochrome Dark",
+            description = "Pure white-on-black interface and terminal accents.",
+            light = monochromeLight,
+            dark = monochromeDark,
+            modes = setOf(DeckThemeMode.Dark)
+        ),
+        DeckThemeFamily(
+            id = "comic-ink",
+            name = "Comic Ink",
+            description = "Sharp black-on-white panels with inked borders.",
+            light = comicLight,
+            dark = comicLight,
+            modes = setOf(DeckThemeMode.Light)
         )
     ) + appThemeFamilies
 
     fun paletteFor(mode: DeckThemeMode, familyId: String, systemDark: Boolean): DeckPalette {
-        val family = families.firstOrNull { it.id == familyId } ?: families.first()
         val useDark = when (mode) {
             DeckThemeMode.System -> systemDark
             DeckThemeMode.Light -> false
             DeckThemeMode.Dark -> true
         }
+        val resolvedMode = if (useDark) DeckThemeMode.Dark else DeckThemeMode.Light
+        val family = familiesFor(mode, systemDark).firstOrNull { it.id == familyId }
+            ?: families.firstOrNull { resolvedMode in it.modes }
+            ?: families.first()
         return if (useDark) family.dark else family.light
+    }
+
+    fun familiesFor(mode: DeckThemeMode, systemDark: Boolean): List<DeckThemeFamily> {
+        val resolvedMode = when (mode) {
+            DeckThemeMode.System -> if (systemDark) DeckThemeMode.Dark else DeckThemeMode.Light
+            DeckThemeMode.Light -> DeckThemeMode.Light
+            DeckThemeMode.Dark -> DeckThemeMode.Dark
+        }
+        return families.filter { resolvedMode in it.modes }
     }
 
     fun customFamily(

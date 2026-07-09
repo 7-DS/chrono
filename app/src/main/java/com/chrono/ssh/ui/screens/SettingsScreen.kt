@@ -7,6 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +40,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -261,6 +263,7 @@ fun SettingsScreen(
     selectionPage?.let { page ->
         SettingsSelectionScreen(
             page = page,
+            themeMode = themeMode,
             themeFamilyId = themeFamilyId,
             settings = settings,
             onBack = { onSelectionPageChange(null) },
@@ -1355,12 +1358,14 @@ enum class SettingsSelectionPage {
 @Composable
 private fun SettingsSelectionScreen(
     page: SettingsSelectionPage,
+    themeMode: DeckThemeMode,
     themeFamilyId: String,
     settings: AppSettings,
     onBack: () -> Unit,
     onThemeFamilyChange: (String) -> Unit,
     onSettingsChange: (AppSettings) -> Unit
 ) {
+    val systemDark = isSystemInDarkTheme()
     var stagedAppThemeId by remember(page, themeFamilyId) { mutableStateOf(themeFamilyId) }
     var stagedTerminalThemeName by remember(page, settings.terminalThemeName) { mutableStateOf(settings.terminalThemeName) }
     var stagedTerminalFontFamily by remember(page, settings.terminalFontFamily) { mutableStateOf(settings.terminalFontFamily) }
@@ -1427,7 +1432,13 @@ private fun SettingsSelectionScreen(
         Spacer(Modifier.height(18.dp))
         when (page) {
             SettingsSelectionPage.AppTheme -> {
-                DeckThemeCatalog.families.forEach { family ->
+                val families = DeckThemeCatalog.familiesFor(themeMode, systemDark)
+                LaunchedEffect(page, themeMode, systemDark) {
+                    if (families.none { it.id == stagedAppThemeId }) {
+                        stagedAppThemeId = families.firstOrNull()?.id ?: DeckThemeCatalog.DEFAULT_FAMILY_ID
+                    }
+                }
+                families.forEach { family ->
                     ThemeFamilyRow(
                         family = family,
                         selected = family.id == stagedAppThemeId,
