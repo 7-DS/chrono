@@ -191,7 +191,7 @@ private fun VnStatPeriodTile(
                     .fillMaxWidth(fill)
                     .height(6.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(if (selected) DeckColors.Cyan else DeckColors.SecondaryText.copy(alpha = 0.45f))
+                    .background(if (selected) DeckColors.MetricNetwork else DeckColors.SecondaryText.copy(alpha = 0.45f))
             )
         }
     }
@@ -206,9 +206,9 @@ private fun VnStatUsageCard(range: VnStatRange, usage: VnStatPeriodUsage) {
         Spacer(Modifier.height(9.dp))
         Text(usage.totalBytes.bytesLabelUi(), color = DeckColors.PrimaryText, fontSize = 46.sp, lineHeight = 48.sp, fontWeight = FontWeight.Black)
         Spacer(Modifier.height(16.dp))
-        VnStatLine("Upload", usage.transmittedBytes, usage.totalBytes, DeckColors.Orange)
+        VnStatLine("Upload", usage.transmittedBytes, usage.totalBytes, DeckColors.MetricDisk)
         Spacer(Modifier.height(9.dp))
-        VnStatLine("Download", usage.receivedBytes, usage.totalBytes, DeckColors.Cyan)
+        VnStatLine("Download", usage.receivedBytes, usage.totalBytes, DeckColors.MetricNetwork)
     }
 }
 

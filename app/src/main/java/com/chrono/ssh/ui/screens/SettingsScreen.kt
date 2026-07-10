@@ -859,13 +859,20 @@ private fun MonitoringSettings(
         )
         Spacer(Modifier.height(14.dp))
         SettingsChoiceRow(
-            title = "Server card ring colors",
-            detail = "Preset color combos for CPU, RAM, disk and network rings",
+            title = "Server card metric colors",
+            detail = "Preset or custom colors for CPU, RAM, disk, network and latency",
             value = settings.serverMetricColorPreset.label(),
             onClick = { onSelectionPageChange(SettingsSelectionPage.MetricColors) }
         )
         Spacer(Modifier.height(10.dp))
         MetricColorPreview(settings.serverMetricColorPreset, metricColorOverridesFrom(settings))
+        Spacer(Modifier.height(10.dp))
+        SettingsChoiceRow(
+            title = "Latency color",
+            detail = "Used by the ping chip on server cards",
+            value = metricColorHex(metricColorsFor(settings).latency),
+            onClick = { onSelectionPageChange(SettingsSelectionPage.MetricColors) }
+        )
     }
 }
 
@@ -946,7 +953,8 @@ private fun MetricColorPreview(
         "CPU" to colors.cpu,
         "RAM" to colors.memory,
         "Disk" to colors.disk,
-        "Net" to colors.network
+        "Net" to colors.network,
+        "Ping" to colors.latency
     )
     Row(
         modifier = Modifier
@@ -962,7 +970,7 @@ private fun MetricColorPreview(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(color.copy(alpha = 0.14f))
+                    .background(DeckColors.SurfaceRaised)
                     .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(13.dp))
                     .padding(horizontal = 8.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1419,7 +1427,7 @@ private fun SettingsSelectionScreen(
                     SettingsSelectionPage.AppTheme -> "Select app theme"
                     SettingsSelectionPage.TerminalTheme -> "Select scheme"
                     SettingsSelectionPage.TerminalFont -> "Select typeface"
-                    SettingsSelectionPage.MetricColors -> "Server card ring colors"
+                    SettingsSelectionPage.MetricColors -> "Server card metric colors"
                     SettingsSelectionPage.MetricsPage -> "Metrics Page"
                 },
                 color = DeckColors.PrimaryText,
@@ -1567,7 +1575,8 @@ internal fun settingsAfterSelection(
                 serverMetricCpuColorHex = savedOverrides.cpuHex,
                 serverMetricMemoryColorHex = savedOverrides.memoryHex,
                 serverMetricDiskColorHex = savedOverrides.diskHex,
-                serverMetricNetworkColorHex = savedOverrides.networkHex
+                serverMetricNetworkColorHex = savedOverrides.networkHex,
+                serverMetricLatencyColorHex = savedOverrides.latencyHex
             ))
         }
         SettingsSelectionPage.MetricsPage -> SettingsSelectionResult(settings = settings.copy(
@@ -1584,15 +1593,17 @@ internal fun customMetricColorOverridesForSelection(
     val currentMemory = sanitizeColorHex(current.memoryHex)
     val currentDisk = sanitizeColorHex(current.diskHex)
     val currentNetwork = sanitizeColorHex(current.networkHex)
-    if (currentCpu != null && currentMemory != null && currentDisk != null && currentNetwork != null) {
-        return ServerMetricColorOverrides(currentCpu, currentMemory, currentDisk, currentNetwork)
+    val currentLatency = sanitizeColorHex(current.latencyHex)
+    if (currentCpu != null && currentMemory != null && currentDisk != null && currentNetwork != null && currentLatency != null) {
+        return ServerMetricColorOverrides(currentCpu, currentMemory, currentDisk, currentNetwork, currentLatency)
     }
     val themeColors = metricColorsFor(ServerMetricColorPreset.Theme)
     return ServerMetricColorOverrides(
         cpuHex = currentCpu ?: metricColorHex(themeColors.cpu),
         memoryHex = currentMemory ?: metricColorHex(themeColors.memory),
         diskHex = currentDisk ?: metricColorHex(themeColors.disk),
-        networkHex = currentNetwork ?: metricColorHex(themeColors.network)
+        networkHex = currentNetwork ?: metricColorHex(themeColors.network),
+        latencyHex = currentLatency ?: metricColorHex(themeColors.latency)
     )
 }
 
@@ -1685,6 +1696,7 @@ private fun MetricColorOverrideEditor(
         metricColorHex(theme.memory) to theme.memory,
         metricColorHex(theme.disk) to theme.disk,
         metricColorHex(theme.network) to theme.network,
+        metricColorHex(theme.latency) to theme.latency,
         "#111111" to Color(0xff111111),
         "#444444" to Color(0xff444444),
         "#777777" to Color(0xff777777),
@@ -1701,6 +1713,7 @@ private fun MetricColorOverrideEditor(
         MetricColorOverrideRow("RAM", overrides.memoryHex ?: metricColorHex(theme.memory), choices) { onChange(overrides.copy(memoryHex = it)) }
         MetricColorOverrideRow("Disk", overrides.diskHex ?: metricColorHex(theme.disk), choices) { onChange(overrides.copy(diskHex = it)) }
         MetricColorOverrideRow("Network", overrides.networkHex ?: metricColorHex(theme.network), choices) { onChange(overrides.copy(networkHex = it)) }
+        MetricColorOverrideRow("Latency", overrides.latencyHex ?: metricColorHex(theme.latency), choices) { onChange(overrides.copy(latencyHex = it)) }
     }
 }
 
@@ -1838,11 +1851,11 @@ internal fun metricPresetSelectionContentDescription(selected: Boolean): String 
 internal fun ServerMetricColorPreset.roleSummary(): String {
     return when (this) {
         ServerMetricColorPreset.Theme -> "Uses the active app theme accent colors"
-        ServerMetricColorPreset.Custom -> "Manual CPU, RAM, disk and network colors"
+        ServerMetricColorPreset.Custom -> "Manual CPU, RAM, disk, network and latency colors"
         ServerMetricColorPreset.Classic -> "CPU/Net blue · RAM green · Disk amber"
         ServerMetricColorPreset.Calm -> "CPU steel · RAM sage · Disk tan · Net teal"
         ServerMetricColorPreset.Graphite -> "Muted neutral rings for low-contrast themes"
-        ServerMetricColorPreset.HighContrast -> "Bright CPU, RAM, disk and network separation"
+        ServerMetricColorPreset.HighContrast -> "Higher separation without neon accents"
         ServerMetricColorPreset.Ocean -> "Blue CPU · green RAM · amber disk · cyan network"
         ServerMetricColorPreset.Forest -> "Olive CPU · teal RAM/network · warm disk"
         ServerMetricColorPreset.Ember -> "Clay CPU · moss RAM · brass disk · cool network"

@@ -43,10 +43,25 @@ class DeckThemeCatalogTest {
                 assertTrue(palette.metricMemory != Color.Unspecified)
                 assertTrue(palette.metricDisk != Color.Unspecified)
                 assertTrue(palette.metricNetwork != Color.Unspecified)
+                assertTrue(palette.metricLatency != Color.Unspecified)
             }
         }
         assertEquals(Color(0xFFFAB387), DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricDisk)
-        assertEquals(4, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricColors().distinct().size)
+        assertEquals(5, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricColors().distinct().size)
+    }
+
+    @Test
+    fun generatedAppThemesUseAuthoredElementAccents() {
+        DeckThemeCatalog.families
+            .filterNot { it.id in setOf("aurora", "graphite", "ember", "catppuccin", "rosepine", "monochrome-light", "monochrome-dark", "comic-ink") }
+            .forEach { family ->
+                listOf(family.light, family.dark).forEach { palette ->
+                    assertEquals("${palette.id} memory role", palette.metricMemory, palette.green)
+                    assertEquals("${palette.id} disk role", palette.metricDisk, palette.orange)
+                    assertEquals("${palette.id} latency role", palette.metricLatency, palette.yellow)
+                    assertEquals("${palette.id} network role", palette.metricNetwork, palette.purple)
+                }
+            }
     }
 
     @Test
@@ -74,7 +89,7 @@ class DeckThemeCatalogTest {
             .flatMap { listOf(it.light, it.dark) }
             .flatMap { palette ->
                 palette.metricColors().mapIndexedNotNull { index, color ->
-                    val role = listOf("cpu", "memory", "disk", "network")[index]
+                    val role = listOf("cpu", "memory", "disk", "network", "latency")[index]
                     val surfaceDistance = colorDistance(color, palette.surface)
                     val mutedDistance = colorDistance(color, palette.surfaceMuted)
                     if (surfaceDistance < 0.30f || mutedDistance < 0.30f) {
@@ -136,7 +151,7 @@ class DeckThemeCatalogTest {
     }
 }
 
-private fun DeckPalette.metricColors(): List<Color> = listOf(metricCpu, metricMemory, metricDisk, metricNetwork)
+private fun DeckPalette.metricColors(): List<Color> = listOf(metricCpu, metricMemory, metricDisk, metricNetwork, metricLatency)
 
 private fun colorDistance(first: Color, second: Color): Float {
     val red = first.red - second.red

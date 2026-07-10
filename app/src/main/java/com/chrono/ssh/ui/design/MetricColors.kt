@@ -8,14 +8,16 @@ data class ServerMetricColors(
     val cpu: Color,
     val memory: Color,
     val disk: Color,
-    val network: Color
+    val network: Color,
+    val latency: Color
 )
 
 data class ServerMetricColorOverrides(
     val cpuHex: String? = null,
     val memoryHex: String? = null,
     val diskHex: String? = null,
-    val networkHex: String? = null
+    val networkHex: String? = null,
+    val latencyHex: String? = null
 )
 
 fun metricColorOverridesFrom(settings: AppSettings): ServerMetricColorOverrides =
@@ -23,7 +25,8 @@ fun metricColorOverridesFrom(settings: AppSettings): ServerMetricColorOverrides 
         cpuHex = settings.serverMetricCpuColorHex,
         memoryHex = settings.serverMetricMemoryColorHex,
         diskHex = settings.serverMetricDiskColorHex,
-        networkHex = settings.serverMetricNetworkColorHex
+        networkHex = settings.serverMetricNetworkColorHex,
+        latencyHex = settings.serverMetricLatencyColorHex
     )
 
 fun metricColorsFor(settings: AppSettings): ServerMetricColors =
@@ -40,97 +43,113 @@ fun metricColorsFor(
             cpu = DeckColors.Cyan,
             memory = DeckColors.Green,
             disk = DeckColors.Orange,
-            network = DeckColors.Cyan
+            network = DeckColors.Cyan,
+            latency = DeckColors.Green
         )
         ServerMetricColorPreset.Calm -> ServerMetricColors(
-            cpu = Color(0xff5b8def),
-            memory = Color(0xff6aa88f),
-            disk = Color(0xffb58b5a),
-            network = Color(0xff5d9aa6)
+            cpu = Color(0xff6f8fa8),
+            memory = Color(0xff78927a),
+            disk = Color(0xffa48864),
+            network = Color(0xff6f9298),
+            latency = Color(0xff78927a)
         )
         ServerMetricColorPreset.Graphite -> ServerMetricColors(
             cpu = Color(0xffa7b0bd),
             memory = Color(0xff8fa3a3),
             disk = Color(0xffb3a491),
-            network = Color(0xff93a4b7)
+            network = Color(0xff93a4b7),
+            latency = Color(0xff8fa3a3)
         )
         ServerMetricColorPreset.HighContrast -> ServerMetricColors(
-            cpu = Color(0xff4da3ff),
-            memory = Color(0xff35c76f),
-            disk = Color(0xffffa24a),
-            network = Color(0xff7cc7ff)
+            cpu = Color(0xff2f6fbb),
+            memory = Color(0xff4d8f61),
+            disk = Color(0xffb87534),
+            network = Color(0xff4a8aa8),
+            latency = Color(0xff4d8f61)
         )
         ServerMetricColorPreset.Ocean -> ServerMetricColors(
-            cpu = Color(0xff2f80ed),
-            memory = Color(0xff00a676),
-            disk = Color(0xfff2994a),
-            network = Color(0xff27a9e1)
+            cpu = Color(0xff3f6f8f),
+            memory = Color(0xff4f8f7a),
+            disk = Color(0xffa77f4f),
+            network = Color(0xff4f8fa3),
+            latency = Color(0xff4f8f7a)
         )
         ServerMetricColorPreset.Forest -> ServerMetricColors(
-            cpu = Color(0xff6b8f3e),
-            memory = Color(0xff2f8f6b),
-            disk = Color(0xffb68d40),
-            network = Color(0xff4f8f8a)
+            cpu = Color(0xff6f814a),
+            memory = Color(0xff5f8062),
+            disk = Color(0xff9a7a45),
+            network = Color(0xff5f8380),
+            latency = Color(0xff5f8062)
         )
         ServerMetricColorPreset.Ember -> ServerMetricColors(
-            cpu = Color(0xffd36b4b),
-            memory = Color(0xff7aa36f),
-            disk = Color(0xffc7953d),
-            network = Color(0xff8fa6b8)
+            cpu = Color(0xffaa664d),
+            memory = Color(0xff768a62),
+            disk = Color(0xffa98245),
+            network = Color(0xff7d8d9a),
+            latency = Color(0xff768a62)
         )
         ServerMetricColorPreset.Aurora -> ServerMetricColors(
-            cpu = Color(0xff3b82f6),
-            memory = Color(0xff10b981),
-            disk = Color(0xfff97316),
-            network = Color(0xff8b5cf6)
+            cpu = Color(0xff7aa2f7),
+            memory = Color(0xff9ece6a),
+            disk = Color(0xffe0af68),
+            network = Color(0xff7dcfff),
+            latency = Color(0xff73daca)
         )
         ServerMetricColorPreset.Orchid -> ServerMetricColors(
-            cpu = Color(0xff7c3aed),
-            memory = Color(0xffdb2777),
-            disk = Color(0xffca8a04),
-            network = Color(0xff0891b2)
+            cpu = Color(0xff8f7aa8),
+            memory = Color(0xffa06f8a),
+            disk = Color(0xffa98a55),
+            network = Color(0xff6f929a),
+            latency = Color(0xff75907a)
         )
         ServerMetricColorPreset.Nordic -> ServerMetricColors(
             cpu = Color(0xff5e81ac),
             memory = Color(0xffa3be8c),
             disk = Color(0xffd08770),
-            network = Color(0xff88c0d0)
+            network = Color(0xff88c0d0),
+            latency = Color(0xffa3be8c)
         )
         ServerMetricColorPreset.Solar -> ServerMetricColors(
-            cpu = Color(0xff2563eb),
-            memory = Color(0xff16a34a),
-            disk = Color(0xffeab308),
-            network = Color(0xffdc2626)
+            cpu = Color(0xff268bd2),
+            memory = Color(0xff859900),
+            disk = Color(0xffb58900),
+            network = Color(0xff2aa198),
+            latency = Color(0xff2aa198)
         )
         ServerMetricColorPreset.Circuit -> ServerMetricColors(
-            cpu = Color(0xff0f766e),
-            memory = Color(0xff84cc16),
-            disk = Color(0xfff59e0b),
-            network = Color(0xff6366f1)
+            cpu = Color(0xff4d8b83),
+            memory = Color(0xff7d9461),
+            disk = Color(0xffa18445),
+            network = Color(0xff6c75a8),
+            latency = Color(0xff7d9461)
         )
         ServerMetricColorPreset.Harvest -> ServerMetricColors(
-            cpu = Color(0xffb45309),
-            memory = Color(0xff4d7c0f),
-            disk = Color(0xffa16207),
-            network = Color(0xff0f766e)
+            cpu = Color(0xff9a7046),
+            memory = Color(0xff78804d),
+            disk = Color(0xffa18445),
+            network = Color(0xff5f817a),
+            latency = Color(0xff78804d)
         )
         ServerMetricColorPreset.Lagoon -> ServerMetricColors(
-            cpu = Color(0xff0284c7),
-            memory = Color(0xff059669),
-            disk = Color(0xff7c3aed),
-            network = Color(0xff0891b2)
+            cpu = Color(0xff4b83a1),
+            memory = Color(0xff4f8f7a),
+            disk = Color(0xff8370a0),
+            network = Color(0xff4f8fa3),
+            latency = Color(0xff4f8f7a)
         )
         ServerMetricColorPreset.Metro -> ServerMetricColors(
-            cpu = Color(0xff2563eb),
-            memory = Color(0xffdb2777),
-            disk = Color(0xffea580c),
-            network = Color(0xff16a34a)
+            cpu = Color(0xff5d7fa8),
+            memory = Color(0xffa06f8a),
+            disk = Color(0xffa9744f),
+            network = Color(0xff6b8f70),
+            latency = Color(0xff5f8f98)
         )
         ServerMetricColorPreset.Mono -> ServerMetricColors(
             cpu = Color(0xffc2c8cf),
             memory = Color(0xff9aa4ad),
             disk = Color(0xff7d8790),
-            network = Color(0xffaeb6bf)
+            network = Color(0xffaeb6bf),
+            latency = Color(0xffd6dbe0)
         )
     }
 }
@@ -149,7 +168,8 @@ private fun customMetricColors(overrides: ServerMetricColorOverrides): ServerMet
         cpu = overrides.cpuHex?.toColorOrNull() ?: base.cpu,
         memory = overrides.memoryHex?.toColorOrNull() ?: base.memory,
         disk = overrides.diskHex?.toColorOrNull() ?: base.disk,
-        network = overrides.networkHex?.toColorOrNull() ?: base.network
+        network = overrides.networkHex?.toColorOrNull() ?: base.network,
+        latency = overrides.latencyHex?.toColorOrNull() ?: base.latency
     )
 }
 
@@ -158,7 +178,8 @@ private fun themeMetricColors(): ServerMetricColors {
         cpu = DeckColors.MetricCpu,
         memory = DeckColors.MetricMemory,
         disk = DeckColors.MetricDisk,
-        network = DeckColors.MetricNetwork
+        network = DeckColors.MetricNetwork,
+        latency = DeckColors.MetricLatency
     )
 }
 

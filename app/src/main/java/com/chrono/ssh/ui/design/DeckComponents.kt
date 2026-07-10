@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -97,12 +96,6 @@ fun DeckCard(
     Column(
         modifier = modifier
             .animateContentSize(animationSpec = tween(220, easing = LinearOutSlowInEasing))
-            .shadow(
-                elevation = 0.dp,
-                shape = shape,
-                ambientColor = Color.Transparent,
-                spotColor = Color.Transparent
-            )
             .clip(shape)
             .background(DeckColors.Surface)
             .border(1.dp, DeckColors.CardStroke.copy(alpha = 0.58f), shape)
@@ -244,7 +237,6 @@ fun SoftPill(
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         Canvas(Modifier.size(18.dp)) {
-            drawCircle(markColor.copy(alpha = 0.10f), radius = size.minDimension / 2)
             drawCircle(markColor, radius = 4.5.dp.toPx())
         }
         Text(text, color = textColor, fontSize = 18.sp, fontWeight = FontWeight.Medium)
@@ -310,7 +302,6 @@ fun StatusDot(status: ServerStatus, modifier: Modifier = Modifier) {
         ServerStatus.Unknown -> DeckColors.SecondaryText
     }
     Canvas(modifier.size(16.dp)) {
-        drawCircle(color.copy(alpha = 0.10f), radius = size.minDimension / 2)
         drawCircle(color, radius = size.minDimension / 3)
     }
 }
@@ -327,7 +318,6 @@ fun MetricSummaryCard(
         Spacer(Modifier.weight(1f))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Canvas(Modifier.size(18.dp)) {
-                drawCircle(color.copy(alpha = 0.10f), radius = size.minDimension / 2)
                 drawCircle(color, radius = size.minDimension / 3)
             }
             Text(value, color = DeckColors.PrimaryText, fontSize = 34.sp, fontWeight = FontWeight.Black)
@@ -387,7 +377,9 @@ internal fun metricRingSweep(percent: Float): Float = 360f * percent.coerceIn(0f
 @Composable
 fun NetworkDonut(
     uploadShare: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    uploadColor: Color = DeckColors.MetricDisk,
+    downloadColor: Color = DeckColors.MetricNetwork
 ) {
     Canvas(modifier.aspectRatio(1f)) {
         val stroke = Stroke(width = 15.dp.toPx(), cap = StrokeCap.Round)
@@ -395,7 +387,7 @@ fun NetworkDonut(
         val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
         val uploadSweep = 330f * uploadShare.coerceIn(0.05f, 0.95f)
         drawArc(
-            color = DeckColors.Cyan.copy(alpha = 0.78f),
+            color = downloadColor.copy(alpha = 0.78f),
             startAngle = 105f,
             sweepAngle = 330f - uploadSweep,
             useCenter = false,
@@ -404,7 +396,7 @@ fun NetworkDonut(
             style = stroke
         )
         drawArc(
-            color = DeckColors.Orange.copy(alpha = 0.78f),
+            color = uploadColor.copy(alpha = 0.78f),
             startAngle = 105f + 330f - uploadSweep + 12f,
             sweepAngle = uploadSweep - 12f,
             useCenter = false,
@@ -486,14 +478,17 @@ fun BarChart(
 fun DirectionMetric(
     upload: Boolean,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    uploadColor: Color = DeckColors.MetricDisk,
+    downloadColor: Color = DeckColors.MetricNetwork
 ) {
+    val color = if (upload) uploadColor else downloadColor
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background((if (upload) DeckColors.Orange else DeckColors.Cyan).copy(alpha = 0.84f)),
+                .background(color.copy(alpha = 0.84f)),
             contentAlignment = Alignment.Center
         ) {
             Text(if (upload) "^" else "v", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
@@ -506,6 +501,8 @@ fun DirectionMetric(
 fun InterfaceMetricCard(
     metric: NetworkInterfaceMetric,
     modifier: Modifier = Modifier,
+    uploadColor: Color = DeckColors.MetricDisk,
+    downloadColor: Color = DeckColors.MetricNetwork,
     onClick: () -> Unit = {}
 ) {
     DeckCard(modifier = modifier.clickable(onClick = onClick), radius = 26.dp, padding = PaddingValues(horizontal = 14.dp, vertical = 14.dp)) {
@@ -521,14 +518,14 @@ fun InterfaceMetricCard(
                 .background(DeckColors.Divider)
         )
         Spacer(Modifier.height(12.dp))
-        InterfaceTrafficRow(upload = true, speed = metric.uploadRate, total = metric.uploadTotal)
+        InterfaceTrafficRow(upload = true, speed = metric.uploadRate, total = metric.uploadTotal, color = uploadColor)
         Spacer(Modifier.height(7.dp))
-        InterfaceTrafficRow(upload = false, speed = metric.downloadRate, total = metric.downloadTotal)
+        InterfaceTrafficRow(upload = false, speed = metric.downloadRate, total = metric.downloadTotal, color = downloadColor)
     }
 }
 
 @Composable
-private fun InterfaceTrafficRow(upload: Boolean, speed: String, total: String) {
+private fun InterfaceTrafficRow(upload: Boolean, speed: String, total: String, color: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -542,7 +539,7 @@ private fun InterfaceTrafficRow(upload: Boolean, speed: String, total: String) {
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background((if (upload) DeckColors.Orange else DeckColors.Cyan).copy(alpha = 0.84f)),
+                .background(color.copy(alpha = 0.84f)),
             contentAlignment = Alignment.Center
         ) {
             Text(if (upload) "↑" else "↓", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)

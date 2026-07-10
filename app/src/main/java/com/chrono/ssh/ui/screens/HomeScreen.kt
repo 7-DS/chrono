@@ -463,7 +463,7 @@ private fun ServerOverviewCard(
                 ) {
                     Text(
                         "$latency ms",
-                        color = if (snapshot.status == ServerStatus.Online) DeckColors.Green else DeckColors.SecondaryText,
+                        color = if (snapshot.status == ServerStatus.Online) metricColors.latency else DeckColors.SecondaryText,
                         fontSize = 18.sp,
                         lineHeight = 20.sp,
                         fontWeight = FontWeight.Normal,
@@ -1230,7 +1230,6 @@ private fun QuickAction(symbol: String, text: String?, accent: Color, onClick: (
 private fun HostAddQuickGlyph(color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier) {
         val stroke = Stroke(width = 2.45.dp.toPx(), cap = StrokeCap.Round)
-        drawCircle(color.copy(alpha = 0.16f), radius = size.minDimension * 0.42f, center = center)
         drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.29f, center.y), androidx.compose.ui.geometry.Offset(size.width * 0.71f, center.y), strokeWidth = stroke.width, cap = StrokeCap.Round)
         drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.29f), androidx.compose.ui.geometry.Offset(center.x, size.height * 0.71f), strokeWidth = stroke.width, cap = StrokeCap.Round)
     }

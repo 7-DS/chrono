@@ -126,6 +126,7 @@ fun ServerDetailScreen(
             server = server,
             snapshot = snapshot,
             tool = tool,
+            metricColors = metricColors,
             onBack = { focusedTool = null },
             onContainerAction = onContainerAction,
             onContainerOutput = onContainerOutput,
@@ -203,10 +204,11 @@ fun ServerDetailScreen(
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(18.dp))
-                        .background(DeckColors.PurpleSoft)
+                        .background(DeckColors.SurfaceRaised)
+                        .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(18.dp))
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text("${server.osName} ${server.osVersion}", color = DeckColors.Purple, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("${server.osName} ${server.osVersion}", color = DeckColors.SecondaryText, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -293,11 +295,11 @@ private fun renderServerDetailCard(
             true
         }
         ServerDetailCard.CpuLoad -> {
-            CpuLoadCard(snapshot, metricHistory)
+            CpuLoadCard(snapshot, metricHistory, metricColors)
             true
         }
         ServerDetailCard.System -> {
-            SystemSummaryCard(snapshot)
+            SystemSummaryCard(snapshot, metricColors)
             systemSummaryRows(snapshot).isNotEmpty()
         }
         ServerDetailCard.FailedServices -> {
@@ -309,43 +311,43 @@ private fun renderServerDetailCard(
             true
         }
         ServerDetailCard.Filesystems -> {
-            FilesystemsCard(snapshot.disk.filesystems)
+            FilesystemsCard(snapshot.disk.filesystems, metricColors)
             snapshot.disk.filesystems.isNotEmpty()
         }
         ServerDetailCard.Processes -> {
-            ProcessesCard(snapshot.processes.items, onProcessAction, summary = snapshot.processes, onOpenAll = onOpenProcesses, showPendingWhenEmpty = true, showActions = false)
+            ProcessesCard(snapshot.processes.items, onProcessAction, metricColors, summary = snapshot.processes, onOpenAll = onOpenProcesses, showPendingWhenEmpty = true, showActions = false)
             snapshot.hasCollectedMetrics() || snapshot.processes.hasProcessSummary() || snapshot.processes.items.isNotEmpty()
         }
         ServerDetailCard.Systemd -> {
-            SystemdServicesPage(snapshot.services, onServiceAction, limit = 6, onOpenAll = onOpenSystemd, showActions = false)
+            SystemdServicesPage(snapshot.services, onServiceAction, metricColors, limit = 6, onOpenAll = onOpenSystemd, showActions = false)
             snapshot.hasCollectedMetrics() || snapshot.services.shouldShowSystemdCard()
         }
         ServerDetailCard.Network -> {
-            NetworkSummaryCard(snapshot, onInterfaces)
+            NetworkSummaryCard(snapshot, metricColors, onInterfaces)
             snapshot.hasServerDetailNetworkSummary()
         }
         ServerDetailCard.Containers -> {
-            ContainersCard(snapshot.docker, onContainerAction, showActions = false)
+            ContainersCard(snapshot.docker, onContainerAction, metricColors, showActions = false)
             snapshot.docker.shouldShowContainerCard()
         }
         ServerDetailCard.Gpus -> {
-            GpusCard(snapshot.gpus)
+            GpusCard(snapshot.gpus, metricColors)
             snapshot.gpus.isNotEmpty()
         }
         ServerDetailCard.Proxmox -> {
-            ProxmoxResourcesCard(snapshot.pveResources)
+            ProxmoxResourcesCard(snapshot.pveResources, metricColors)
             snapshot.pveResources.isNotEmpty()
         }
         ServerDetailCard.Battery -> {
-            BatteryCard(snapshot.batteries)
+            BatteryCard(snapshot.batteries, metricColors)
             snapshot.batteries.isNotEmpty()
         }
         ServerDetailCard.SmartDisks -> {
-            SmartDisksCard(snapshot.smartDisks)
+            SmartDisksCard(snapshot.smartDisks, metricColors)
             snapshot.smartDisks.isNotEmpty()
         }
         ServerDetailCard.Sensors -> {
-            SensorsCard(snapshot.sensors)
+            SensorsCard(snapshot.sensors, metricColors)
             snapshot.sensors.isNotEmpty()
         }
     }
@@ -417,6 +419,7 @@ private fun DetailToolScreen(
     server: ServerProfile,
     snapshot: MetricSnapshot,
     tool: DetailTool,
+    metricColors: ServerMetricColors,
     onBack: () -> Unit,
     onContainerAction: (ContainerMetric, String) -> Unit,
     onContainerOutput: (ContainerMetric, String, (String) -> Unit) -> Unit,
@@ -464,6 +467,7 @@ private fun DetailToolScreen(
             subtitle = request.container.name.ifBlank { request.container.id.ifBlank { request.container.engine } },
             container = request.container,
             action = request.action,
+            metricColors = metricColors,
             onBack = { outputPage = null },
             onLoad = onContainerOutput
         )
@@ -497,17 +501,18 @@ private fun DetailToolScreen(
                 ContainersToolPage(
                     summary = snapshot.docker,
                     onContainerAction = guardedContainerAction,
-                    onContainerOutput = { container, action -> outputPage = ContainerOutputRequest(container, action) }
+                    onContainerOutput = { container, action -> outputPage = ContainerOutputRequest(container, action) },
+                    metricColors = metricColors
                 )
             }
             DetailTool.Processes -> {
-                ProcessesPage(snapshot.processes, guardedProcessAction)
+                ProcessesPage(snapshot.processes, guardedProcessAction, metricColors)
                 if (snapshot.processes.items.isEmpty() && !snapshot.processes.hasProcessSummary()) {
                     EmptyDetailToolCard("No process data", "Refresh metrics to populate running processes.")
                 }
             }
             DetailTool.Systemd -> {
-                SystemdServicesPage(snapshot.services, guardedServiceAction)
+                SystemdServicesPage(snapshot.services, guardedServiceAction, metricColors)
                 if (!snapshot.services.shouldShowSystemdCard()) {
                     EmptyDetailToolCard("No systemd data", "Systemd services will appear here after metrics refresh.")
                 }
@@ -837,7 +842,7 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
             )
         }
         Spacer(Modifier.height(10.dp))
-        CpuUsageRows(snapshot)
+        CpuUsageRows(snapshot, metricColors)
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
@@ -846,12 +851,12 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
                 .background(DeckColors.Divider)
         )
         Spacer(Modifier.height(10.dp))
-        CpuStatFlow(snapshot)
+        CpuStatFlow(snapshot, metricColors)
     }
 }
 
 @Composable
-private fun CpuStatFlow(snapshot: MetricSnapshot) {
+private fun CpuStatFlow(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -860,11 +865,11 @@ private fun CpuStatFlow(snapshot: MetricSnapshot) {
         verticalAlignment = Alignment.Top
     ) {
         CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, Modifier.weight(1f))
-        CpuStat("User", "${snapshot.cpu.userPercent}%", DeckColors.Cyan, Modifier.weight(1f))
+        CpuStat("User", "${snapshot.cpu.userPercent}%", metricColors.cpu, Modifier.weight(1f))
         CpuStat("System", "${snapshot.cpu.systemPercent}%", DeckColors.Red, Modifier.weight(1f))
-        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", DeckColors.Green, Modifier.weight(1f))
-        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", DeckColors.Purple, Modifier.weight(1f))
-        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", DeckColors.Orange, Modifier.weight(1f))
+        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", metricColors.memory, Modifier.weight(1f))
+        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", metricColors.latency, Modifier.weight(1f))
+        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", metricColors.disk, Modifier.weight(1f))
     }
 }
 
@@ -894,7 +899,7 @@ private fun CpuUsagePercent(percent: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CpuUsageRows(snapshot: MetricSnapshot) {
+private fun CpuUsageRows(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
     val rows = snapshot.cpu.perCore.takeIf { it.isNotEmpty() } ?: List(snapshot.cpu.cores.coerceIn(1, 32)) { core ->
         CpuCoreMetrics(
             index = core,
@@ -944,12 +949,12 @@ private fun CpuUsageRows(snapshot: MetricSnapshot) {
                 repeat(columns) { column ->
                     val color = when {
                         column >= filledCells -> DeckColors.Divider
-                        column < userCells.coerceAtLeast(if (filledCells > 0) 1 else 0) -> DeckColors.Cyan
+                        column < userCells.coerceAtLeast(if (filledCells > 0) 1 else 0) -> metricColors.cpu
                         column < userCells + systemCells.coerceAtLeast(if (filledCells > 1) 1 else 0) -> DeckColors.Red
-                        column < userCells + systemCells + niceCells -> DeckColors.Green
-                        column < userCells + systemCells + niceCells + ioWaitCells -> DeckColors.Purple
-                        column < userCells + systemCells + niceCells + ioWaitCells + stealCells -> DeckColors.Orange
-                        else -> DeckColors.Orange
+                        column < userCells + systemCells + niceCells -> metricColors.memory
+                        column < userCells + systemCells + niceCells + ioWaitCells -> metricColors.latency
+                        column < userCells + systemCells + niceCells + ioWaitCells + stealCells -> metricColors.disk
+                        else -> metricColors.disk
                     }
                     drawRoundRect(
                         color = color,
@@ -1057,16 +1062,16 @@ private fun CpuStat(label: String, value: String, color: Color, modifier: Modifi
 }
 
 @Composable
-private fun CpuLoadCard(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>) {
+private fun CpuLoadCard(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, metricColors: ServerMetricColors) {
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "pulse", title = "CPU Load", color = DeckColors.Yellow, compact = true)
+        MetricTitle(icon = "pulse", title = "CPU Load", color = metricColors.cpu, compact = true)
         Spacer(Modifier.height(10.dp))
-        CpuLoadChart(snapshot, metricHistory)
+        CpuLoadChart(snapshot, metricHistory, metricColors)
         Spacer(Modifier.height(9.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
             Legend("1m", DeckColors.Red)
-            Legend("5m", DeckColors.Cyan)
-            Legend("15m", DeckColors.Yellow)
+            Legend("5m", metricColors.cpu)
+            Legend("15m", metricColors.latency)
         }
         Spacer(Modifier.height(11.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1085,10 +1090,10 @@ private fun MetricTitle(icon: String, title: String, color: Color, compact: Bool
 }
 
 @Composable
-private fun SensorsCard(sensors: List<SensorMetric>) {
+private fun SensorsCard(sensors: List<SensorMetric>, metricColors: ServerMetricColors) {
     if (sensors.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "sensor", title = "Sensors", color = DeckColors.Green, compact = true)
+        MetricTitle(icon = "sensor", title = "Sensors", color = metricColors.latency, compact = true)
         Spacer(Modifier.height(10.dp))
         sensors.take(6).forEachIndexed { index, sensor ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -1098,17 +1103,17 @@ private fun SensorsCard(sensors: List<SensorMetric>) {
                     Text("${sensor.adapter} / ${sensor.label}", color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(12.dp))
-                Text(sensor.value, color = DeckColors.Green, fontSize = 14.sp, lineHeight = 16.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(sensor.value, color = metricColors.latency, fontSize = 14.sp, lineHeight = 16.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
 }
 
 @Composable
-private fun BatteryCard(batteries: List<BatteryMetric>) {
+private fun BatteryCard(batteries: List<BatteryMetric>, metricColors: ServerMetricColors) {
     if (batteries.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "battery", title = "Battery", color = DeckColors.Orange, compact = true)
+        MetricTitle(icon = "battery", title = "Battery", color = metricColors.disk, compact = true)
         Spacer(Modifier.height(10.dp))
         batteries.take(4).forEachIndexed { index, battery ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -1118,7 +1123,7 @@ private fun BatteryCard(batteries: List<BatteryMetric>) {
                     Text(batteryDetailLabel(battery), color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(12.dp))
-                Text(battery.capacityPercent?.let { "$it%" } ?: "--", color = DeckColors.Orange, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                Text(battery.capacityPercent?.let { "$it%" } ?: "--", color = metricColors.disk, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
             }
         }
     }
@@ -1145,10 +1150,10 @@ private fun batteryTimeLabel(seconds: Long): String {
 }
 
 @Composable
-private fun FilesystemsCard(filesystems: List<FilesystemMetric>) {
+private fun FilesystemsCard(filesystems: List<FilesystemMetric>, metricColors: ServerMetricColors) {
     if (filesystems.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "disk", title = "Filesystems", color = DeckColors.Orange, compact = true)
+        MetricTitle(icon = "disk", title = "Filesystems", color = metricColors.disk, compact = true)
         Spacer(Modifier.height(10.dp))
         filesystems.take(6).forEachIndexed { index, filesystem ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -1158,7 +1163,7 @@ private fun FilesystemsCard(filesystems: List<FilesystemMetric>) {
                     Text(filesystemDetailLabel(filesystem), color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(12.dp))
-                Text("${filesystem.usagePercent}%", color = DeckColors.Orange, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                Text("${filesystem.usagePercent}%", color = metricColors.disk, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
             }
         }
     }
@@ -1181,10 +1186,10 @@ internal fun filesystemDetailLabel(filesystem: FilesystemMetric): String {
 }
 
 @Composable
-private fun SmartDisksCard(disks: List<SmartDiskMetric>) {
+private fun SmartDisksCard(disks: List<SmartDiskMetric>, metricColors: ServerMetricColors) {
     if (disks.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "disk", title = "SMART", color = DeckColors.Cyan, compact = true)
+        MetricTitle(icon = "disk", title = "SMART", color = metricColors.disk, compact = true)
         Spacer(Modifier.height(10.dp))
         disks.take(4).forEachIndexed { index, disk ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -1194,7 +1199,7 @@ private fun SmartDisksCard(disks: List<SmartDiskMetric>) {
                     Text(smartDiskSummary(disk), color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.width(12.dp))
-                Text(smartDiskBadge(disk), color = if (disk.healthy == false) DeckColors.Red else DeckColors.Cyan, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
+                Text(smartDiskBadge(disk), color = if (disk.healthy == false) DeckColors.Red else metricColors.disk, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Black, maxLines = 1)
             }
         }
     }
@@ -1227,6 +1232,7 @@ internal fun smartDiskSummary(disk: SmartDiskMetric): String {
 private fun ProcessesCard(
     processes: List<ProcessMetric>,
     onProcessAction: (ProcessMetric, String) -> Unit,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme),
     summary: ProcessSummary? = null,
     limit: Int = 6,
     onOpenAll: (() -> Unit)? = null,
@@ -1241,7 +1247,7 @@ private fun ProcessesCard(
                 .then(if (onOpenAll != null) Modifier.clickable(onClick = onOpenAll) else Modifier),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MetricTitle(icon = "pulse", title = "Top Processes", color = DeckColors.Orange, compact = true)
+            MetricTitle(icon = "pulse", title = "Top Processes", color = metricColors.cpu, compact = true)
             if (onOpenAll != null) {
                 Spacer(Modifier.weight(1f))
                 DetailChevronGlyph(DeckColors.SecondaryText, Modifier.size(18.dp))
@@ -1254,7 +1260,7 @@ private fun ProcessesCard(
         }
         processes.take(limit).forEachIndexed { index, process ->
             if (index > 0) Spacer(Modifier.height(9.dp))
-            ProcessMetricRow(process, onProcessAction, showActions)
+            ProcessMetricRow(process, onProcessAction, showActions, metricColors)
         }
         if (processes.isEmpty()) {
             Text(processEmptyStatus(summary), color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 15.sp)
@@ -1315,37 +1321,38 @@ internal fun sortedProcesses(processes: List<ProcessMetric>, sortMode: ProcessSo
 @Composable
 private fun ProcessesPage(
     summary: ProcessSummary,
-    onProcessAction: (ProcessMetric, String) -> Unit
+    onProcessAction: (ProcessMetric, String) -> Unit,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme)
 ) {
     var sortMode by remember { mutableStateOf(ProcessSortMode.Cpu) }
     if (summary.items.isEmpty() && !summary.hasProcessSummary()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "pulse", title = "Processes", color = DeckColors.Orange, compact = true)
+        MetricTitle(icon = "pulse", title = "Processes", color = metricColors.cpu, compact = true)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             processPageMetrics(summary, summary.items).forEach { metric ->
-                ProcessPageMetricChip(metric, Modifier.weight(1f))
+                ProcessPageMetricChip(metric, metricColors, Modifier.weight(1f))
             }
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             ProcessSortMode.entries.forEach { mode ->
-                ProcessSortChip(mode, selected = sortMode == mode, modifier = Modifier.weight(1f)) {
+                ProcessSortChip(mode, selected = sortMode == mode, metricColors = metricColors, modifier = Modifier.weight(1f)) {
                     sortMode = mode
                 }
             }
         }
     }
     Spacer(Modifier.height(12.dp))
-    ProcessesCard(sortedProcesses(summary.items, sortMode), onProcessAction, summary = summary, limit = Int.MAX_VALUE)
+    ProcessesCard(sortedProcesses(summary.items, sortMode), onProcessAction, metricColors, summary = summary, limit = Int.MAX_VALUE)
 }
 
 @Composable
-private fun ProcessPageMetricChip(metric: ProcessPageMetric, modifier: Modifier = Modifier) {
+private fun ProcessPageMetricChip(metric: ProcessPageMetric, metricColors: ServerMetricColors, modifier: Modifier = Modifier) {
     val color = when (metric.colorName) {
         "green" -> DeckColors.Green
-        "orange" -> DeckColors.Orange
-        else -> DeckColors.Cyan
+        "orange" -> metricColors.cpu
+        else -> metricColors.memory
     }
     Column(
         modifier = modifier
@@ -1360,8 +1367,8 @@ private fun ProcessPageMetricChip(metric: ProcessPageMetric, modifier: Modifier 
 }
 
 @Composable
-private fun ProcessSortChip(mode: ProcessSortMode, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val color = if (selected) DeckColors.Cyan else DeckColors.SecondaryText
+private fun ProcessSortChip(mode: ProcessSortMode, selected: Boolean, metricColors: ServerMetricColors, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val color = if (selected) metricColors.cpu else DeckColors.SecondaryText
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
@@ -1385,13 +1392,13 @@ private fun DetailChevronGlyph(color: Color, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProcessMetricRow(process: ProcessMetric, onProcessAction: (ProcessMetric, String) -> Unit, showActions: Boolean = true) {
+private fun ProcessMetricRow(process: ProcessMetric, onProcessAction: (ProcessMetric, String) -> Unit, showActions: Boolean = true, metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme)) {
     Column(Modifier.fillMaxWidth()) {
         DetailMetricRow(
             title = process.command,
             subtitle = processSummary(process),
             value = process.cpuPercent?.let { "${it.cleanNumber()}%" } ?: process.state,
-            color = if (process.state.startsWith("R")) DeckColors.Green else DeckColors.SecondaryText
+            color = if (process.state.startsWith("R")) metricColors.cpu else DeckColors.SecondaryText
         )
         val actions = ProcessActionPolicy.actionsFor(process.pid)
         if (showActions && actions.isNotEmpty()) {
@@ -1429,6 +1436,7 @@ private fun FailedServicesCard(
 private fun SystemdServicesPage(
     summary: ServiceSummary,
     onServiceAction: (ServiceMetric, String) -> Unit,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme),
     limit: Int = Int.MAX_VALUE,
     onOpenAll: (() -> Unit)? = null,
     showActions: Boolean = true,
@@ -1443,7 +1451,7 @@ private fun SystemdServicesPage(
                 .then(if (onOpenAll != null) Modifier.clickable(onClick = onOpenAll) else Modifier),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MetricTitle(icon = "service", title = "Systemd Services", color = DeckColors.Purple, compact = true)
+            MetricTitle(icon = "service", title = "Systemd Services", color = metricColors.latency, compact = true)
             if (onOpenAll != null) {
                 Spacer(Modifier.weight(1f))
                 DetailChevronGlyph(DeckColors.SecondaryText, Modifier.size(18.dp))
@@ -1504,6 +1512,7 @@ private data class ContainerOutputRequest(val container: ContainerMetric, val ac
 private fun ContainersCard(
     summary: DockerSummary,
     onContainerAction: (ContainerMetric, String) -> Unit,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme),
     onContainerOutput: (ContainerMetric, String) -> Unit = onContainerAction,
     limit: Int = 3,
     showActions: Boolean = true
@@ -1512,7 +1521,7 @@ private fun ContainersCard(
     ContainerSectionCard(
         title = "Container",
         subtitle = containerSummaryLabel(summary),
-        color = DeckColors.Cyan,
+        color = metricColors.network,
         expanded = true,
         onToggle = {}
     ) {
@@ -1525,7 +1534,7 @@ private fun ContainersCard(
             rows.forEachIndexed { index, container ->
                 if (index > 0) Spacer(Modifier.height(10.dp))
                 if (showActions) {
-                    ContainerMetricRow(container, onContainerAction, onContainerOutput)
+                    ContainerMetricRow(container, onContainerAction, onContainerOutput, metricColors)
                 } else {
                     DetailMetricRow(
                         title = container.name.ifBlank { container.id },
@@ -1543,7 +1552,8 @@ private fun ContainersCard(
 private fun ContainersToolPage(
     summary: DockerSummary,
     onContainerAction: (ContainerMetric, String) -> Unit,
-    onContainerOutput: (ContainerMetric, String) -> Unit
+    onContainerOutput: (ContainerMetric, String) -> Unit,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme)
 ) {
     var containersExpanded by remember { mutableStateOf(true) }
     var imagesExpanded by remember { mutableStateOf(true) }
@@ -1551,7 +1561,7 @@ private fun ContainersToolPage(
     ContainerSectionCard(
         title = "Container",
         subtitle = containerSummaryLabel(summary),
-        color = DeckColors.Cyan,
+        color = metricColors.network,
         expanded = containersExpanded,
         onToggle = { containersExpanded = !containersExpanded }
     ) {
@@ -1562,7 +1572,7 @@ private fun ContainersToolPage(
         } else {
             summary.items.forEachIndexed { index, container ->
                 if (index > 0) Spacer(Modifier.height(10.dp))
-                ContainerMetricRow(container, onContainerAction, onContainerOutput)
+                ContainerMetricRow(container, onContainerAction, onContainerOutput, metricColors)
             }
         }
     }
@@ -1570,7 +1580,7 @@ private fun ContainersToolPage(
     ContainerSectionCard(
         title = "Images",
         subtitle = "${summary.images.size} images",
-        color = DeckColors.Purple,
+        color = metricColors.disk,
         expanded = imagesExpanded,
         onToggle = { imagesExpanded = !imagesExpanded }
     ) {
@@ -1579,7 +1589,7 @@ private fun ContainersToolPage(
         } else {
             summary.images.forEachIndexed { index, image ->
                 if (index > 0) Spacer(Modifier.height(10.dp))
-                ContainerImageRow(image, onImageAction = { selected, action ->
+            ContainerImageRow(image, metricColors, onImageAction = { selected, action ->
                     onContainerAction(ContainerMetric(selected.id, selected.repository, "", "", "", selected.engine), action)
                 })
             }
@@ -1622,17 +1632,17 @@ private fun ContainerSectionCard(
 }
 
 @Composable
-private fun ContainerImagesCard(images: List<ContainerImageMetric>, onImageAction: (ContainerImageMetric, String) -> Unit) {
+private fun ContainerImagesCard(images: List<ContainerImageMetric>, onImageAction: (ContainerImageMetric, String) -> Unit, metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme)) {
     ContainerSectionCard(
         title = "Images",
         subtitle = "${images.size} images",
-        color = DeckColors.Purple,
+        color = metricColors.disk,
         expanded = true,
         onToggle = {}
     ) {
         images.forEachIndexed { index, image ->
             if (index > 0) Spacer(Modifier.height(10.dp))
-            ContainerImageRow(image, onImageAction)
+            ContainerImageRow(image, metricColors, onImageAction)
         }
     }
 }
@@ -1668,7 +1678,7 @@ private fun ContainerActionMenu(actions: List<String>, onAction: (String) -> Uni
 }
 
 @Composable
-private fun ContainerImageRow(image: ContainerImageMetric, onImageAction: (ContainerImageMetric, String) -> Unit) {
+private fun ContainerImageRow(image: ContainerImageMetric, metricColors: ServerMetricColors, onImageAction: (ContainerImageMetric, String) -> Unit) {
     var expanded by remember(image.id) { mutableStateOf(false) }
     Column(
         Modifier
@@ -1683,7 +1693,7 @@ private fun ContainerImageRow(image: ContainerImageMetric, onImageAction: (Conta
                 Text(image.repository.substringAfterLast('/').ifBlank { image.id }, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text("${image.repository}:${image.tag}", color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text(image.size.ifBlank { "--" }, color = DeckColors.Purple, fontSize = 13.sp, fontWeight = FontWeight.Black, maxLines = 1)
+            Text(image.size.ifBlank { "--" }, color = metricColors.disk, fontSize = 13.sp, fontWeight = FontWeight.Black, maxLines = 1)
             Spacer(Modifier.width(8.dp))
             ContainerActionMenu(listOf("remove-image")) { onImageAction(image, it) }
         }
@@ -1756,7 +1766,8 @@ internal fun DockerSummary.shouldShowContainerCard(): Boolean = containers > 0 |
 private fun ContainerMetricRow(
     container: ContainerMetric,
     onContainerAction: (ContainerMetric, String) -> Unit,
-    onContainerOutput: (ContainerMetric, String) -> Unit = onContainerAction
+    onContainerOutput: (ContainerMetric, String) -> Unit = onContainerAction,
+    metricColors: ServerMetricColors = metricColorsFor(ServerMetricColorPreset.Theme)
 ) {
     var expanded by remember(container.engine, container.id, container.name) { mutableStateOf(false) }
     Column(
@@ -1772,7 +1783,7 @@ private fun ContainerMetricRow(
                 Text(container.name.ifBlank { container.id }, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(container.image.ifBlank { container.status.ifBlank { container.engine } }, color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text(container.state.ifBlank { "--" }, color = if (container.state.equals("running", ignoreCase = true)) DeckColors.Green else DeckColors.Orange, fontSize = 13.sp, fontWeight = FontWeight.Black, maxLines = 1)
+            Text(container.state.ifBlank { "--" }, color = if (container.state.equals("running", ignoreCase = true)) metricColors.memory else metricColors.disk, fontSize = 13.sp, fontWeight = FontWeight.Black, maxLines = 1)
             Spacer(Modifier.width(8.dp))
             ContainerActionMenu(ContainerRuntimeActionPolicy.actionsFor(container.state)) { action ->
                 if (action == "logs" || action == "inspect" || action == "stats") {
@@ -1827,6 +1838,7 @@ private fun ContainerOutputPage(
     subtitle: String,
     container: ContainerMetric,
     action: String,
+    metricColors: ServerMetricColors,
     onBack: () -> Unit,
     onLoad: (ContainerMetric, String, (String) -> Unit) -> Unit
 ) {
@@ -1852,7 +1864,7 @@ private fun ContainerOutputPage(
         }
         Spacer(Modifier.height(18.dp))
         if (inspectSummary != null) {
-            ContainerInspectView(inspectSummary, body)
+            ContainerInspectView(inspectSummary, body, metricColors)
         } else {
             ContainerTerminalOutput(body)
         }
@@ -1878,19 +1890,19 @@ private fun ContainerTerminalOutput(body: String) {
 }
 
 @Composable
-private fun ContainerInspectView(summary: ContainerInspectSummary, raw: String) {
+private fun ContainerInspectView(summary: ContainerInspectSummary, raw: String, metricColors: ServerMetricColors) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         DeckCard(modifier = Modifier.fillMaxWidth(), radius = 24.dp, padding = PaddingValues(16.dp)) {
-            MetricTitle(icon = "container", title = summary.name.ifBlank { "Inspect" }, color = DeckColors.Cyan, compact = true)
+            MetricTitle(icon = "container", title = summary.name.ifBlank { "Inspect" }, color = metricColors.network, compact = true)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 ContainerInspectStat("State", summary.state.ifBlank { "--" }, DeckColors.Green, Modifier.weight(1f))
-                ContainerInspectStat("Image", summary.image.substringAfterLast('/').ifBlank { "--" }, DeckColors.Purple, Modifier.weight(1f))
+                ContainerInspectStat("Image", summary.image.substringAfterLast('/').ifBlank { "--" }, metricColors.disk, Modifier.weight(1f))
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                ContainerInspectStat("Restart", summary.restartPolicy.ifBlank { "--" }, DeckColors.Orange, Modifier.weight(1f))
-                ContainerInspectStat("Network", summary.networkMode.ifBlank { "--" }, DeckColors.Cyan, Modifier.weight(1f))
+                ContainerInspectStat("Restart", summary.restartPolicy.ifBlank { "--" }, metricColors.latency, Modifier.weight(1f))
+                ContainerInspectStat("Network", summary.networkMode.ifBlank { "--" }, metricColors.network, Modifier.weight(1f))
             }
         }
         listOf(
@@ -2141,10 +2153,10 @@ private fun runtimeActionTone(action: String): Color {
 }
 
 @Composable
-private fun GpusCard(gpus: List<GpuMetric>) {
+private fun GpusCard(gpus: List<GpuMetric>, metricColors: ServerMetricColors) {
     if (gpus.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "gpu", title = "GPU", color = DeckColors.Green, compact = true)
+        MetricTitle(icon = "gpu", title = "GPU", color = metricColors.memory, compact = true)
         Spacer(Modifier.height(10.dp))
         gpus.take(6).forEachIndexed { index, gpu ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -2152,17 +2164,17 @@ private fun GpusCard(gpus: List<GpuMetric>) {
                 title = gpu.name.ifBlank { gpu.id },
                 subtitle = gpuSummary(gpu),
                 value = gpu.utilizationPercent?.let { "$it%" } ?: "--",
-                color = DeckColors.Green
+                color = metricColors.memory
             )
         }
     }
 }
 
 @Composable
-private fun ProxmoxResourcesCard(resources: List<PveResourceMetric>) {
+private fun ProxmoxResourcesCard(resources: List<PveResourceMetric>, metricColors: ServerMetricColors) {
     if (resources.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "cluster", title = "Proxmox", color = DeckColors.Purple, compact = true)
+        MetricTitle(icon = "cluster", title = "Proxmox", color = metricColors.network, compact = true)
         Spacer(Modifier.height(10.dp))
         resources.take(8).forEachIndexed { index, resource ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -2372,7 +2384,7 @@ private fun MetricGlyph(icon: String, color: Color, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>) {
+private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, metricColors: ServerMetricColors) {
     val series = cpuLoadSeries(snapshot, metricHistory)
     val line1 = series.load1
     val line5 = series.load5
@@ -2388,7 +2400,7 @@ private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSna
         val top = 8.dp.toPx()
         val bottom = size.height - 30.dp.toPx()
         val chartHeight = bottom - top
-        val grid = Color(0xFFCBCBD2)
+        val grid = DeckColors.Divider
         repeat(4) { i ->
             val y = top + chartHeight * i / 3f
             drawLine(grid, androidx.compose.ui.geometry.Offset(left, y), androidx.compose.ui.geometry.Offset(right, y), strokeWidth = 1.dp.toPx())
@@ -2397,11 +2409,11 @@ private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSna
             val x = left + right * (i + 1) / 4f
             drawLine(grid.copy(alpha = 0.75f), androidx.compose.ui.geometry.Offset(x, top), androidx.compose.ui.geometry.Offset(x, bottom), strokeWidth = 1.dp.toPx())
         }
-        drawLoadArea(line15, maxValue, left, right, top, bottom, DeckColors.Yellow)
-        drawLoadArea(line5, maxValue, left, right, top, bottom, DeckColors.Cyan)
+        drawLoadArea(line15, maxValue, left, right, top, bottom, metricColors.latency)
+        drawLoadArea(line5, maxValue, left, right, top, bottom, metricColors.cpu)
         drawLoadTrace(line1, maxValue, left, right, top, bottom, DeckColors.Red, 1.05f)
-        drawLoadTrace(line5, maxValue, left, right, top, bottom, DeckColors.Cyan, 0.95f)
-        drawLoadTrace(line15, maxValue, left, right, top, bottom, DeckColors.Yellow, 0.95f)
+        drawLoadTrace(line5, maxValue, left, right, top, bottom, metricColors.cpu, 0.95f)
+        drawLoadTrace(line15, maxValue, left, right, top, bottom, metricColors.latency, 0.95f)
         listOf(maxValue, maxValue * 0.66f, maxValue * 0.33f, 0f).forEachIndexed { index, value ->
             drawContext.canvas.nativeCanvas.drawText(
                 value.loadAxisLabel(),
@@ -2530,13 +2542,13 @@ internal fun MetricSnapshot.hasServerDetailNetworkSummary(): Boolean {
 }
 
 @Composable
-private fun NetworkSummaryCard(snapshot: MetricSnapshot, onInterfaces: () -> Unit) {
+private fun NetworkSummaryCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors, onInterfaces: () -> Unit) {
     val primary = snapshot.network.primaryInterface
     val interfaces = snapshot.network.interfaces.takeIf { it.isNotEmpty() } ?: listOf(primary)
     if (!snapshot.hasServerDetailNetworkSummary()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            MetricTitle(icon = "pulse", title = "Network", color = DeckColors.Cyan, compact = true)
+            MetricTitle(icon = "pulse", title = "Network", color = metricColors.network, compact = true)
             Spacer(Modifier.weight(1f))
             Text(
                 "${interfaces.size} iface",
@@ -2548,20 +2560,26 @@ private fun NetworkSummaryCard(snapshot: MetricSnapshot, onInterfaces: () -> Uni
             )
         }
         Spacer(Modifier.height(10.dp))
-        InterfaceMetricCard(primary, modifier = Modifier.fillMaxWidth(), onClick = onInterfaces)
+        InterfaceMetricCard(
+            primary,
+            modifier = Modifier.fillMaxWidth(),
+            uploadColor = metricColors.disk,
+            downloadColor = metricColors.network,
+            onClick = onInterfaces
+        )
     }
 }
 
 @Composable
-private fun SystemSummaryCard(snapshot: MetricSnapshot) {
+private fun SystemSummaryCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
     val rows = systemSummaryRows(snapshot)
     if (rows.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 26.dp, padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
-        MetricTitle(icon = "chip", title = "System", color = DeckColors.Purple, compact = true)
+        MetricTitle(icon = "chip", title = "System", color = metricColors.latency, compact = true)
         Spacer(Modifier.height(12.dp))
         rows.forEachIndexed { index, row ->
             if (index > 0) Spacer(Modifier.height(10.dp))
-            SystemSummaryRow(row, systemSummaryColor(row))
+            SystemSummaryRow(row, systemSummaryColor(row, metricColors))
         }
     }
 }
@@ -2579,11 +2597,14 @@ private fun SystemSummaryRow(row: SystemSummaryItem, color: Color) {
     }
 }
 
-private fun systemSummaryColor(row: SystemSummaryItem): Color {
+private fun systemSummaryColor(row: SystemSummaryItem, metricColors: ServerMetricColors): Color {
     return when (row.label) {
-        "Processes" -> DeckColors.Cyan
+        "Processes" -> metricColors.cpu
         "Services" -> if (row.value.startsWith("0/")) DeckColors.Green else DeckColors.Red
-        else -> DeckColors.Green
+        "Docker" -> metricColors.network
+        "GPU" -> metricColors.memory
+        "Proxmox" -> metricColors.network
+        else -> metricColors.memory
     }
 }
 

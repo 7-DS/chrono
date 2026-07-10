@@ -44,7 +44,7 @@ class SettingsScreenTest {
     @Test
     fun metricColorPresetRoleSummariesCoverAllChoices() {
         assertEquals(
-            "Uses the active app theme accent colors | Manual CPU, RAM, disk and network colors | CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Bright CPU, RAM, disk and network separation | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
+            "Uses the active app theme accent colors | Manual CPU, RAM, disk, network and latency colors | CPU/Net blue · RAM green · Disk amber | CPU steel · RAM sage · Disk tan · Net teal | Muted neutral rings for low-contrast themes | Higher separation without neon accents | Blue CPU · green RAM · amber disk · cyan network | Olive CPU · teal RAM/network · warm disk | Clay CPU · moss RAM · brass disk · cool network | Blue CPU · emerald RAM · orange disk · violet network | Violet CPU · magenta RAM · ochre disk · cyan network | Frost blue CPU · sage RAM · copper disk · ice network | Blue CPU · green RAM · yellow disk · red network | Teal CPU · lime RAM · amber disk · indigo network | Ochre CPU · olive RAM · brass disk · teal network | Sky CPU · emerald RAM · violet disk · cyan network | Blue CPU · magenta RAM · orange disk · green network | Single-family neutral rings",
             ServerMetricColorPreset.entries.joinToString(" | ") { it.roleSummary() }
         )
     }
@@ -70,19 +70,27 @@ class SettingsScreenTest {
         assertNotNull(colors.memory)
         assertNotNull(colors.disk)
         assertNotNull(colors.network)
+        assertNotNull(colors.latency)
     }
 
     @Test
     fun customMetricPresetUsesIndependentOverrides() {
         val colors = metricColorsFor(
             ServerMetricColorPreset.Custom,
-            ServerMetricColorOverrides(cpuHex = "#111111", memoryHex = "#222222", diskHex = "#333333", networkHex = "#444444")
+            ServerMetricColorOverrides(
+                cpuHex = "#111111",
+                memoryHex = "#222222",
+                diskHex = "#333333",
+                networkHex = "#444444",
+                latencyHex = "#555555"
+            )
         )
 
         assertEquals(Color(0xff111111), colors.cpu)
         assertEquals(Color(0xff222222), colors.memory)
         assertEquals(Color(0xff333333), colors.disk)
         assertEquals(Color(0xff444444), colors.network)
+        assertEquals(Color(0xff555555), colors.latency)
     }
 
     @Test
@@ -93,6 +101,7 @@ class SettingsScreenTest {
         assertNotNull(seeded.memoryHex)
         assertNotNull(seeded.diskHex)
         assertNotNull(seeded.networkHex)
+        assertNotNull(seeded.latencyHex)
     }
 
     @Test
@@ -103,6 +112,7 @@ class SettingsScreenTest {
         assertNotNull(seeded.memoryHex)
         assertNotNull(seeded.diskHex)
         assertNotNull(seeded.networkHex)
+        assertNotNull(seeded.latencyHex)
     }
 
     @Test
@@ -122,6 +132,7 @@ class SettingsScreenTest {
         assertNotNull(result.settings?.serverMetricMemoryColorHex)
         assertNotNull(result.settings?.serverMetricDiskColorHex)
         assertNotNull(result.settings?.serverMetricNetworkColorHex)
+        assertNotNull(result.settings?.serverMetricLatencyColorHex)
     }
 
     @Test
@@ -137,7 +148,8 @@ class SettingsScreenTest {
                 cpuHex = "#111111",
                 memoryHex = "#222222",
                 diskHex = "#333333",
-                networkHex = "#444444"
+                networkHex = "#444444",
+                latencyHex = "#555555"
             )
         )
 
@@ -146,6 +158,7 @@ class SettingsScreenTest {
         assertEquals("#222222", result.settings?.serverMetricMemoryColorHex)
         assertEquals("#333333", result.settings?.serverMetricDiskColorHex)
         assertEquals("#444444", result.settings?.serverMetricNetworkColorHex)
+        assertEquals("#555555", result.settings?.serverMetricLatencyColorHex)
     }
 
     @Test
