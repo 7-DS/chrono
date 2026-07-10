@@ -150,6 +150,22 @@ class TerminalScreenTest {
     }
 
     @Test
+    fun terminalWorkspaceSelectionSkipsDisconnectedRequestedWorkspace() {
+        val server = server()
+        val selection = terminalWorkspaceSelection(
+            selectedServerId = "server-1|closed",
+            servers = listOf(server),
+            workspaces = listOf(
+                TerminalWorkspaceSummary("server-1|closed", server.id, connected = false),
+                TerminalWorkspaceSummary("server-1|open", server.id, connected = true)
+            )
+        )
+
+        assertEquals("server-1|open", selection!!.workspaceKey)
+        assertEquals(true, selection.exists)
+    }
+
+    @Test
     fun terminalWorkspaceSelectionIgnoresWorkspacesForDeletedServers() {
         val server = server()
         val selection = terminalWorkspaceSelection(
@@ -281,9 +297,7 @@ class TerminalScreenTest {
         val server = server()
         val other = server.copy(id = "server-2", name = "Other")
         val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-1",
-            selectedServer = server,
-            activeSessions = listOf(
+            listOf(
                 "server-1" to server,
                 "server-1|duplicate" to server.copy(name = "Box duplicate"),
                 "server-2" to other
@@ -296,11 +310,7 @@ class TerminalScreenTest {
     @Test
     fun terminalTopStripSessionsDoesNotDuplicateSelectedActiveWorkspace() {
         val server = server()
-        val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-1",
-            selectedServer = server,
-            activeSessions = listOf("server-1" to server)
-        )
+        val sessions = terminalTopStripSessions(listOf("server-1" to server))
 
         assertEquals(listOf("server-1"), sessions.map { it.first })
     }
@@ -308,11 +318,7 @@ class TerminalScreenTest {
     @Test
     fun terminalTopStripSessionsUsesExistingServerWorkspaceWhenSelectedKeyDiffers() {
         val server = server()
-        val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-1",
-            selectedServer = server,
-            activeSessions = listOf("server-1|duplicate" to server)
-        )
+        val sessions = terminalTopStripSessions(listOf("server-1|duplicate" to server))
 
         assertEquals(listOf("server-1|duplicate"), sessions.map { it.first })
     }
@@ -321,9 +327,7 @@ class TerminalScreenTest {
     fun terminalTopStripSessionsKeepsOriginalOrderForDuplicateWorkspaces() {
         val server = server()
         val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-1|duplicate",
-            selectedServer = server,
-            activeSessions = listOf("server-1" to server, "server-1|duplicate" to server.copy(name = "Box duplicate"))
+            listOf("server-1" to server, "server-1|duplicate" to server.copy(name = "Box duplicate"))
         )
 
         assertEquals(listOf("server-1", "server-1|duplicate"), sessions.map { it.first })
@@ -333,26 +337,24 @@ class TerminalScreenTest {
     fun terminalTopStripSessionsDoesNotReorderWhenSelectingWorkspace() {
         val server = server()
         val other = server.copy(id = "server-2", name = "Other")
-        val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-1",
-            selectedServer = server,
-            activeSessions = listOf("server-2" to other, "server-1" to server)
-        )
+        val sessions = terminalTopStripSessions(listOf("server-2" to other, "server-1" to server))
 
         assertEquals(listOf("server-2", "server-1"), sessions.map { it.first })
     }
 
     @Test
     fun terminalTopStripSessionsDoesNotCreateStaleSelectedTabWhenSessionsRemain() {
-        val server = server()
-        val other = server.copy(id = "server-2", name = "Other")
-        val sessions = terminalTopStripSessions(
-            selectedWorkspaceKey = "server-closed",
-            selectedServer = server,
-            activeSessions = listOf("server-2" to other)
-        )
+        val other = server().copy(id = "server-2", name = "Other")
+        val sessions = terminalTopStripSessions(listOf("server-2" to other))
 
         assertEquals(listOf("server-2"), sessions.map { it.first })
+    }
+
+    @Test
+    fun terminalTopStripSessionsDoesNotCreateTabWhenNoSessionIsActive() {
+        val sessions = terminalTopStripSessions(emptyList())
+
+        assertEquals(emptyList<String>(), sessions.map { it.first })
     }
 
     @Test

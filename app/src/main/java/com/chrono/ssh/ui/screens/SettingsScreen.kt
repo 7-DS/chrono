@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chrono.ssh.core.data.BackupImportReport
+import com.chrono.ssh.core.data.sanitizeColorHex
 import com.chrono.ssh.core.model.ConnectionEvent
 import com.chrono.ssh.core.model.ConnectionEventLevel
 import com.chrono.ssh.core.model.CrashLogEntry
@@ -1483,32 +1484,32 @@ private fun SettingsSelectionScreen(
                         preset = preset,
                         selected = preset == stagedMetricColorPreset,
                         overrides = stagedMetricColorOverrides,
-                        onClick = { stagedMetricColorPreset = preset }
+                        onClick = {
+                            stagedMetricColorPreset = preset
+                            if (preset == ServerMetricColorPreset.Custom) {
+                                stagedMetricColorOverrides = customMetricColorOverridesForSelection(stagedMetricColorOverrides)
+                            }
+                        }
                     )
                     Spacer(Modifier.height(10.dp))
+                    if (preset == ServerMetricColorPreset.Custom && stagedMetricColorPreset == ServerMetricColorPreset.Custom) {
+                        MetricColorOverrideEditor(
+                            overrides = stagedMetricColorOverrides,
+                            onChange = { stagedMetricColorOverrides = it }
+                        )
+                        Spacer(Modifier.height(10.dp))
+                    }
                 }
                 if (stagedMetricColorPreset == ServerMetricColorPreset.Theme) {
                     SettingsActionButton(
                         text = "Override theme colors",
                         onClick = {
-                            val themeColors = metricColorsFor(ServerMetricColorPreset.Theme)
                             stagedMetricColorPreset = ServerMetricColorPreset.Custom
-                            stagedMetricColorOverrides = ServerMetricColorOverrides(
-                                cpuHex = metricColorHex(themeColors.cpu),
-                                memoryHex = metricColorHex(themeColors.memory),
-                                diskHex = metricColorHex(themeColors.disk),
-                                networkHex = metricColorHex(themeColors.network)
-                            )
+                            stagedMetricColorOverrides = customMetricColorOverridesForSelection(stagedMetricColorOverrides)
                         },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(10.dp))
-                }
-                if (stagedMetricColorPreset == ServerMetricColorPreset.Custom) {
-                    MetricColorOverrideEditor(
-                        overrides = stagedMetricColorOverrides,
-                        onChange = { stagedMetricColorOverrides = it }
-                    )
                 }
             }
             SettingsSelectionPage.MetricsPage -> {
@@ -1555,18 +1556,44 @@ internal fun settingsAfterSelection(
         SettingsSelectionPage.AppTheme -> SettingsSelectionResult(themeFamilyId = appThemeId)
         SettingsSelectionPage.TerminalTheme -> SettingsSelectionResult(settings = settings.copy(terminalThemeName = terminalThemeName))
         SettingsSelectionPage.TerminalFont -> SettingsSelectionResult(settings = settings.copy(terminalFontFamily = terminalFontFamily))
-        SettingsSelectionPage.MetricColors -> SettingsSelectionResult(settings = settings.copy(
-            serverMetricColorPreset = metricColorPreset,
-            serverMetricCpuColorHex = metricColorOverrides.cpuHex,
-            serverMetricMemoryColorHex = metricColorOverrides.memoryHex,
-            serverMetricDiskColorHex = metricColorOverrides.diskHex,
-            serverMetricNetworkColorHex = metricColorOverrides.networkHex
-        ))
+        SettingsSelectionPage.MetricColors -> {
+            val savedOverrides = if (metricColorPreset == ServerMetricColorPreset.Custom) {
+                customMetricColorOverridesForSelection(metricColorOverrides)
+            } else {
+                metricColorOverrides
+            }
+            SettingsSelectionResult(settings = settings.copy(
+                serverMetricColorPreset = metricColorPreset,
+                serverMetricCpuColorHex = savedOverrides.cpuHex,
+                serverMetricMemoryColorHex = savedOverrides.memoryHex,
+                serverMetricDiskColorHex = savedOverrides.diskHex,
+                serverMetricNetworkColorHex = savedOverrides.networkHex
+            ))
+        }
         SettingsSelectionPage.MetricsPage -> SettingsSelectionResult(settings = settings.copy(
             serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(metricsCardOrder),
             serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(metricsHiddenCards)
         ))
     }
+}
+
+internal fun customMetricColorOverridesForSelection(
+    current: ServerMetricColorOverrides
+): ServerMetricColorOverrides {
+    val currentCpu = sanitizeColorHex(current.cpuHex)
+    val currentMemory = sanitizeColorHex(current.memoryHex)
+    val currentDisk = sanitizeColorHex(current.diskHex)
+    val currentNetwork = sanitizeColorHex(current.networkHex)
+    if (currentCpu != null && currentMemory != null && currentDisk != null && currentNetwork != null) {
+        return ServerMetricColorOverrides(currentCpu, currentMemory, currentDisk, currentNetwork)
+    }
+    val themeColors = metricColorsFor(ServerMetricColorPreset.Theme)
+    return ServerMetricColorOverrides(
+        cpuHex = currentCpu ?: metricColorHex(themeColors.cpu),
+        memoryHex = currentMemory ?: metricColorHex(themeColors.memory),
+        diskHex = currentDisk ?: metricColorHex(themeColors.disk),
+        networkHex = currentNetwork ?: metricColorHex(themeColors.network)
+    )
 }
 
 @Composable
@@ -1670,18 +1697,10 @@ private fun MetricColorOverrideEditor(
         "#0891B2" to Color(0xff0891b2)
     ).distinctBy { it.first }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        MetricColorOverrideRow("CPU", overrides.cpuHex ?: metricColorHex(theme.cpu), choices) {
-            onChange(overrides.copy(cpuHex = it))
-        }
-        MetricColorOverrideRow("RAM", overrides.memoryHex ?: metricColorHex(theme.memory), choices) {
-            onChange(overrides.copy(memoryHex = it))
-        }
-        MetricColorOverrideRow("Disk", overrides.diskHex ?: metricColorHex(theme.disk), choices) {
-            onChange(overrides.copy(diskHex = it))
-        }
-        MetricColorOverrideRow("Network", overrides.networkHex ?: metricColorHex(theme.network), choices) {
-            onChange(overrides.copy(networkHex = it))
-        }
+        MetricColorOverrideRow("CPU", overrides.cpuHex ?: metricColorHex(theme.cpu), choices) { onChange(overrides.copy(cpuHex = it)) }
+        MetricColorOverrideRow("RAM", overrides.memoryHex ?: metricColorHex(theme.memory), choices) { onChange(overrides.copy(memoryHex = it)) }
+        MetricColorOverrideRow("Disk", overrides.diskHex ?: metricColorHex(theme.disk), choices) { onChange(overrides.copy(diskHex = it)) }
+        MetricColorOverrideRow("Network", overrides.networkHex ?: metricColorHex(theme.network), choices) { onChange(overrides.copy(networkHex = it)) }
     }
 }
 
@@ -1692,35 +1711,94 @@ private fun MetricColorOverrideRow(
     choices: List<Pair<String, Color>>,
     onSelect: (String) -> Unit
 ) {
+    var draftHex by remember(selectedHex) { mutableStateOf(selectedHex) }
+    val cleanHex = sanitizeMetricColorInput(selectedHex)
+    val previewColor = cleanHex?.let { metricColorsFor(ServerMetricColorPreset.Custom, ServerMetricColorOverrides(cpuHex = it)).cpu }
+        ?: Color.Transparent
+    val draftValid = sanitizeMetricColorInput(draftHex) != null
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 18.dp, padding = PaddingValues(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Text(label, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.Black, modifier = Modifier.width(70.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(label, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.Black, modifier = Modifier.width(70.dp))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(previewColor)
+                        .border(1.dp, DeckColors.CardStroke, CircleShape)
+                )
+                OutlinedTextField(
+                    value = draftHex,
+                    onValueChange = { value ->
+                        draftHex = value.take(7)
+                        sanitizeMetricColorInput(draftHex)?.let(onSelect)
+                    },
+                    singleLine = true,
+                    label = { Text("Hex") },
+                    isError = !draftValid,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = DeckColors.PrimaryText,
+                        unfocusedTextColor = DeckColors.PrimaryText,
+                        focusedContainerColor = DeckColors.SurfaceRaised,
+                        unfocusedContainerColor = DeckColors.SurfaceRaised,
+                        focusedBorderColor = DeckColors.Cyan,
+                        unfocusedBorderColor = DeckColors.CardStroke,
+                        focusedLabelColor = DeckColors.Cyan,
+                        unfocusedLabelColor = DeckColors.SecondaryText
+                    )
+                )
+            }
             Row(
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 choices.forEach { (hex, color) ->
-                    val selected = hex.equals(selectedHex, ignoreCase = true)
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .border(
-                                width = if (selected) 3.dp else 1.dp,
-                                color = if (selected) DeckColors.PrimaryText else DeckColors.CardStroke,
-                                shape = CircleShape
-                            )
-                            .clickable { onSelect(hex) }
-                            .semantics { contentDescription = "$label color $hex" }
+                    MetricColorSwatch(
+                        label = label,
+                        hex = hex,
+                        color = color,
+                        selected = hex.equals(selectedHex, ignoreCase = true),
+                        onSelect = onSelect
                     )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun MetricColorSwatch(
+    label: String,
+    hex: String,
+    color: Color,
+    selected: Boolean,
+    onSelect: (String) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .background(color)
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) DeckColors.PrimaryText else DeckColors.CardStroke,
+                shape = CircleShape
+            )
+            .clickable { onSelect(hex) }
+            .semantics { contentDescription = "$label color $hex" }
+    )
+}
+
+internal fun sanitizeMetricColorInput(value: String): String? =
+    sanitizeColorHex(value.take(7))
 
 @Composable
 private fun MetricPresetSelectionMark(selected: Boolean) {

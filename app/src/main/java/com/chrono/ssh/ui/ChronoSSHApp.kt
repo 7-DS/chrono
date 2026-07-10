@@ -1063,7 +1063,7 @@ fun ChronoSSHApp(
         selectedConnectionServerId = nextTerminalWorkspaceAfterClose(
             closedKey = workspaceKey,
             selectedKey = selectedConnectionServerId,
-            remainingKeys = terminalWorkspaces.keys.toList()
+            remainingKeys = terminalWorkspaces.filterValues { it.connected }.keys.toList()
         )
         if (selectedConnectionServerId == null) {
             autoConnectRequestId = null

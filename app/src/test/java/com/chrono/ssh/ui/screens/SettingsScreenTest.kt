@@ -86,6 +86,69 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun customMetricSelectionSeedsThemeColorsWhenEmpty() {
+        val seeded = customMetricColorOverridesForSelection(ServerMetricColorOverrides())
+
+        assertNotNull(seeded.cpuHex)
+        assertNotNull(seeded.memoryHex)
+        assertNotNull(seeded.diskHex)
+        assertNotNull(seeded.networkHex)
+    }
+
+    @Test
+    fun customMetricSelectionPreservesExistingOverrides() {
+        val seeded = customMetricColorOverridesForSelection(ServerMetricColorOverrides(cpuHex = "#111111"))
+
+        assertEquals("#111111", seeded.cpuHex)
+        assertNotNull(seeded.memoryHex)
+        assertNotNull(seeded.diskHex)
+        assertNotNull(seeded.networkHex)
+    }
+
+    @Test
+    fun metricColorSelectionSeedsEmptyCustomOverridesOnSave() {
+        val result = settingsAfterSelection(
+            page = SettingsSelectionPage.MetricColors,
+            settings = AppSettings(themeModeName = "System", themeFamilyId = "graphite"),
+            appThemeId = "graphite",
+            terminalThemeName = "Tokyo Night",
+            terminalFontFamily = "JetBrains Mono",
+            metricColorPreset = ServerMetricColorPreset.Custom,
+            metricColorOverrides = ServerMetricColorOverrides()
+        )
+
+        assertEquals(ServerMetricColorPreset.Custom, result.settings?.serverMetricColorPreset)
+        assertNotNull(result.settings?.serverMetricCpuColorHex)
+        assertNotNull(result.settings?.serverMetricMemoryColorHex)
+        assertNotNull(result.settings?.serverMetricDiskColorHex)
+        assertNotNull(result.settings?.serverMetricNetworkColorHex)
+    }
+
+    @Test
+    fun metricColorSelectionPersistsCustomOverrides() {
+        val result = settingsAfterSelection(
+            page = SettingsSelectionPage.MetricColors,
+            settings = AppSettings(themeModeName = "System", themeFamilyId = "graphite"),
+            appThemeId = "graphite",
+            terminalThemeName = "Tokyo Night",
+            terminalFontFamily = "JetBrains Mono",
+            metricColorPreset = ServerMetricColorPreset.Custom,
+            metricColorOverrides = ServerMetricColorOverrides(
+                cpuHex = "#111111",
+                memoryHex = "#222222",
+                diskHex = "#333333",
+                networkHex = "#444444"
+            )
+        )
+
+        assertEquals(ServerMetricColorPreset.Custom, result.settings?.serverMetricColorPreset)
+        assertEquals("#111111", result.settings?.serverMetricCpuColorHex)
+        assertEquals("#222222", result.settings?.serverMetricMemoryColorHex)
+        assertEquals("#333333", result.settings?.serverMetricDiskColorHex)
+        assertEquals("#444444", result.settings?.serverMetricNetworkColorHex)
+    }
+
+    @Test
     fun appAndTerminalThemeSelectionsStaySeparate() {
         val settings = AppSettings(
             themeModeName = "System",

@@ -1737,14 +1737,14 @@ private fun ContainerPruneCard(
 }
 
 internal fun containerSummaryLabel(summary: DockerSummary): String {
-    return if (summary.shouldShowContainerCard()) "${summary.running}/${summary.containers} running" else ""
+    return if (summary.shouldShowContainerCard()) "${summary.running}/${summary.containers} running" else "Container status unavailable"
 }
 
 internal fun containerEmptyStatus(summary: DockerSummary): String {
     return if (summary.shouldShowContainerCard()) {
         "Container totals are available; detailed rows are pending refresh."
     } else {
-        ""
+        "No container data yet. Metrics may still be pending or Docker/Podman may be unavailable."
     }
 }
 

@@ -241,15 +241,19 @@ internal fun terminalWorkspaceSelection(
     if (servers.isEmpty()) return null
     val serverIds = servers.mapTo(mutableSetOf()) { it.id }
     val validWorkspaces = workspaces.filter { it.serverId in serverIds }
-    val requestedWorkspace = selectedServerId?.let { requested -> validWorkspaces.firstOrNull { it.key == requested } }
     val connectedWorkspaces = validWorkspaces.filter { it.connected }
+    val requestedWorkspace = selectedServerId?.let { requested -> connectedWorkspaces.firstOrNull { it.key == requested } }
+    val requestedServerWorkspace = selectedServerId?.let { requested -> connectedWorkspaces.firstOrNull { it.serverId == requested } }
     val selectedServer = requestedWorkspace
+        ?.let { workspace -> servers.firstOrNull { it.id == workspace.serverId } }
+        ?: requestedServerWorkspace
         ?.let { workspace -> servers.firstOrNull { it.id == workspace.serverId } }
         ?: selectedServerId?.let { id -> servers.firstOrNull { it.id == id } }
         ?: connectedWorkspaces.firstOrNull()?.let { workspace -> servers.firstOrNull { it.id == workspace.serverId } }
         ?: validWorkspaces.firstOrNull()?.let { workspace -> servers.firstOrNull { it.id == workspace.serverId } }
         ?: servers.first()
     val workspaceKey = requestedWorkspace?.key
+        ?: requestedServerWorkspace?.key
         ?: connectedWorkspaces.firstOrNull { it.serverId == selectedServer.id }?.key
         ?: validWorkspaces.firstOrNull { it.serverId == selectedServer.id }?.key
         ?: selectedServer.id
@@ -296,17 +300,8 @@ internal fun terminalMoshStartupCommand(
         ?: TmuxCommandBuilder.attachSession(sessionName)
 }
 
-internal fun terminalTopStripSessions(
-    selectedWorkspaceKey: String,
-    selectedServer: ServerProfile,
-    activeSessions: List<Pair<String, ServerProfile>>
-): List<Pair<String, ServerProfile>> {
-    val active = activeSessions.distinctBy { it.first }
-    return if (active.none { it.first == selectedWorkspaceKey }) {
-        active.ifEmpty { listOf(selectedWorkspaceKey to selectedServer) }
-    } else {
-        active
-    }
+internal fun terminalTopStripSessions(activeSessions: List<Pair<String, ServerProfile>>): List<Pair<String, ServerProfile>> {
+    return activeSessions.distinctBy { it.first }
 }
 
 internal fun terminalSftpStripSessions(
@@ -435,7 +430,6 @@ fun TerminalScreen(
                 activeSessions = emptyList(),
                 sftpSessions = sftpWorkspaces,
                 selectedSftpWorkspaceKey = selectedSftpWorkspaceKey,
-                selectedServer = selectedServer,
                 selectedWorkspaceKey = workspaceKey,
                 terminalBackground = terminalBackground,
                 menuOpen = openingMenuOpen,
@@ -1083,7 +1077,6 @@ fun TerminalScreen(
             activeSessions = activeSessions,
             sftpSessions = sftpWorkspaces,
             selectedSftpWorkspaceKey = selectedSftpWorkspaceKey,
-            selectedServer = selectedServer,
             selectedWorkspaceKey = workspaceKey,
             terminalBackground = terminalBackground,
             menuOpen = sessionMenuOpen,
@@ -1475,7 +1468,6 @@ private fun TerminalTopBar(
     activeSessions: List<Pair<String, ServerProfile>>,
     sftpSessions: List<Pair<String, ServerProfile>>,
     selectedSftpWorkspaceKey: String?,
-    selectedServer: ServerProfile,
     selectedWorkspaceKey: String,
     terminalBackground: Color,
     menuOpen: Boolean,
@@ -1496,8 +1488,8 @@ private fun TerminalTopBar(
     onToggleFullscreen: () -> Unit,
     transcriptActionsEnabled: Boolean
 ) {
-    val sessionStrip = remember(activeSessions, selectedWorkspaceKey, selectedServer) {
-        terminalTopStripSessions(selectedWorkspaceKey, selectedServer, activeSessions)
+    val sessionStrip = remember(activeSessions) {
+        terminalTopStripSessions(activeSessions)
     }
     val sftpStrip = remember(sftpSessions) {
         terminalSftpStripSessions(sftpSessions)

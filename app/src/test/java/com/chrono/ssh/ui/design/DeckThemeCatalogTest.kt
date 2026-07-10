@@ -45,7 +45,7 @@ class DeckThemeCatalogTest {
                 assertTrue(palette.metricNetwork != Color.Unspecified)
             }
         }
-        assertEquals(Color(0xFFF5B971), DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricDisk)
+        assertEquals(Color(0xFFFAB387), DeckThemeCatalog.families.first { it.id == "catppuccin" }.dark.metricDisk)
         assertEquals(4, DeckThemeCatalog.families.first { it.id == "comic-ink" }.light.metricColors().distinct().size)
     }
 
