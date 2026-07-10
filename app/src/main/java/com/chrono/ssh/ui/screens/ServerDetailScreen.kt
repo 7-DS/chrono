@@ -2363,7 +2363,7 @@ private fun MetricGlyph(icon: String, color: Color, modifier: Modifier = Modifie
                 drawCircle(color, radius = size.minDimension * 0.075f, center = c, style = Fill)
             }
             else -> {
-                val pad = size.minDimension * 0.22f
+                val pad = size.minDimension * 0.28f
                 drawRoundRect(
                     color = color,
                     topLeft = androidx.compose.ui.geometry.Offset(pad, pad),
@@ -2373,10 +2373,10 @@ private fun MetricGlyph(icon: String, color: Color, modifier: Modifier = Modifie
                 )
                 repeat(4) { i ->
                     val pos = size.minDimension * (0.2f + i * 0.2f)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, 0f), androidx.compose.ui.geometry.Offset(pos, pad * 0.75f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height), androidx.compose.ui.geometry.Offset(pos, size.height - pad * 0.75f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, pos), androidx.compose.ui.geometry.Offset(pad * 0.75f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width, pos), androidx.compose.ui.geometry.Offset(size.width - pad * 0.75f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height * 0.1f), androidx.compose.ui.geometry.Offset(pos, pad * 0.84f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height * 0.9f), androidx.compose.ui.geometry.Offset(pos, size.height - pad * 0.84f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.1f, pos), androidx.compose.ui.geometry.Offset(pad * 0.84f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.9f, pos), androidx.compose.ui.geometry.Offset(size.width - pad * 0.84f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
                 }
             }
         }

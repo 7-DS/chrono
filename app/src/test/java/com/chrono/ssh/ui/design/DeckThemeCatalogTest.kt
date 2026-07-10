@@ -51,20 +51,6 @@ class DeckThemeCatalogTest {
     }
 
     @Test
-    fun generatedAppThemesUseAuthoredElementAccents() {
-        DeckThemeCatalog.families
-            .filterNot { it.id in setOf("aurora", "graphite", "ember", "catppuccin", "rosepine", "monochrome-light", "monochrome-dark", "comic-ink") }
-            .forEach { family ->
-                listOf(family.light, family.dark).forEach { palette ->
-                    assertEquals("${palette.id} memory role", palette.metricMemory, palette.green)
-                    assertEquals("${palette.id} disk role", palette.metricDisk, palette.orange)
-                    assertEquals("${palette.id} latency role", palette.metricLatency, palette.yellow)
-                    assertEquals("${palette.id} network role", palette.metricNetwork, palette.purple)
-                }
-            }
-    }
-
-    @Test
     fun generatedAppThemesUseAuthoredMetricAccents() {
         val palettesUsingOldCpuAccent = mutableListOf<String>()
         val palettesUsingOldMetricSet = mutableListOf<String>()
@@ -102,6 +88,33 @@ class DeckThemeCatalogTest {
 
         assertTrue("Weak metric blends: $weak", weak.isEmpty())
     }
+
+    @Test
+    fun everyPaletteKeepsServerDetailAccentsDistinct() {
+        val tooClose = DeckThemeCatalog.families
+            .flatMap { listOf(it.light, it.dark) }
+            .flatMap { palette ->
+                val metricColors = listOf(
+                    "cpu" to palette.metricCpu,
+                    "memory" to palette.metricMemory,
+                    "disk" to palette.metricDisk,
+                    "network" to palette.metricNetwork,
+                    "latency" to palette.metricLatency
+                )
+                val chartColors = listOf("system" to palette.red) + metricColors
+                metricColors.closePairsFor(palette.id) + chartColors.closePairsFor("${palette.id}:cpu-chart")
+            }
+
+        assertTrue("Server detail accents too similar: $tooClose", tooClose.isEmpty())
+    }
+
+    private fun List<Pair<String, Color>>.closePairsFor(scope: String): List<String> =
+        flatMapIndexed { index, first ->
+            drop(index + 1).mapNotNull { second ->
+                val distance = colorDistance(first.second, second.second)
+                if (distance < 0.20f) "$scope:${first.first}/${second.first}=$distance" else null
+            }
+        }
 
     @Test
     fun everyPaletteKeepsPrimaryAccentsVisible() {

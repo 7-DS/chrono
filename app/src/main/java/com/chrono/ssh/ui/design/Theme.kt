@@ -84,11 +84,11 @@ private fun DeckPalette.polished(): DeckPalette {
         cardStroke = lines.cardStroke,
         cyan = visibleAccent(cyan, primaryText, surface, surfaceMuted),
         brandAlt = visibleAccent(brandAlt, primaryText, surface, surfaceMuted),
-        metricCpu = visibleAccent(metricCpu, primaryText, surface, surfaceMuted),
-        metricMemory = visibleAccent(metricMemory, primaryText, surface, surfaceMuted),
-        metricDisk = visibleAccent(metricDisk, primaryText, surface, surfaceMuted),
-        metricNetwork = visibleAccent(metricNetwork, primaryText, surface, surfaceMuted),
-        metricLatency = visibleAccent(metricLatency, primaryText, surface, surfaceMuted)
+        metricCpu = metricCpu,
+        metricMemory = metricMemory,
+        metricDisk = metricDisk,
+        metricNetwork = metricNetwork,
+        metricLatency = metricLatency
     )
 }
 
@@ -221,11 +221,11 @@ object DeckThemeCatalog {
         purple = Color(0xFF626B7C),
         purpleSoft = Color(0xFFE1E4E9),
         brandAlt = Color(0xFF25B8C7),
-        metricCpu = Color(0xFF287E88),
-        metricMemory = Color(0xFF65727B),
-        metricDisk = Color(0xFF9B7446),
-        metricNetwork = Color(0xFF7A6E8E),
-        metricLatency = Color(0xFF3D7D6D)
+        metricCpu = Color(0xFF256D8C),
+        metricMemory = Color(0xFF3F7A45),
+        metricDisk = Color(0xFF9A642C),
+        metricNetwork = Color(0xFF7057A6),
+        metricLatency = Color(0xFFB22828)
     )
 
     private val graphiteDark = auroraDark.copy(
@@ -242,11 +242,11 @@ object DeckThemeCatalog {
         purple = Color(0xFF9AA5B3),
         purpleSoft = Color(0xFF29313A),
         brandAlt = Color(0xFF4FC3D0),
-        metricCpu = Color(0xFF4FC3D0),
-        metricMemory = Color(0xFFA4B0BA),
-        metricDisk = Color(0xFFECA34C),
-        metricNetwork = Color(0xFFB79CFF),
-        metricLatency = Color(0xFF76B89E)
+        metricCpu = Color(0xFF78C6E8),
+        metricMemory = Color(0xFF8ED176),
+        metricDisk = Color(0xFFE4AC5B),
+        metricNetwork = Color(0xFFB59AE8),
+        metricLatency = Color(0xFF68C8B4)
     )
 
     private val emberLight = auroraLight.copy(
@@ -261,11 +261,11 @@ object DeckThemeCatalog {
         yellow = Color(0xFFF0C038),
         purple = Color(0xFF7F63D6),
         brandAlt = Color(0xFFFF7C3D),
-        metricCpu = Color(0xFFD95F32),
-        metricMemory = Color(0xFFB56B3D),
-        metricDisk = Color(0xFFD39126),
-        metricNetwork = Color(0xFF13A9B8),
-        metricLatency = Color(0xFF648E54)
+        metricCpu = Color(0xFF256D8C),
+        metricMemory = Color(0xFF3F7A45),
+        metricDisk = Color(0xFF9A642C),
+        metricNetwork = Color(0xFF7057A6),
+        metricLatency = Color(0xFFB22828)
     )
 
     private val emberDark = auroraDark.copy(
@@ -284,11 +284,11 @@ object DeckThemeCatalog {
         purple = Color(0xFFA993FF),
         purpleSoft = Color(0xFF35274B),
         brandAlt = Color(0xFFFF8B4D),
-        metricCpu = Color(0xFFFF8B4D),
-        metricMemory = Color(0xFFFFC266),
-        metricDisk = Color(0xFFE27D66),
-        metricNetwork = Color(0xFF35D5E4),
-        metricLatency = Color(0xFF7BC98A)
+        metricCpu = Color(0xFF78C6E8),
+        metricMemory = Color(0xFF8ED176),
+        metricDisk = Color(0xFFE4AC5B),
+        metricNetwork = Color(0xFFB59AE8),
+        metricLatency = Color(0xFF68C8B4)
     )
 
     private val catppuccinLight = auroraLight.copy(
@@ -311,11 +311,11 @@ object DeckThemeCatalog {
         terminalPanel = Color(0xFF232634),
         terminalAccent = Color(0xFF8CAAEE),
         brandAlt = Color(0xFF1E66F5),
-        metricCpu = Color(0xFF8839EF),
-        metricMemory = Color(0xFF209FB5),
+        metricCpu = Color(0xFF1E66F5),
+        metricMemory = Color(0xFF40A02B),
         metricDisk = Color(0xFFFE640B),
-        metricNetwork = Color(0xFFE64553),
-        metricLatency = Color(0xFF40A02B)
+        metricNetwork = Color(0xFF8839EF),
+        metricLatency = Color(0xFF179299)
     )
 
     private val catppuccinDark = auroraDark.copy(
@@ -340,11 +340,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFF89B4FA),
         navSurface = Color(0xFF313244),
         brandAlt = Color(0xFF89B4FA),
-        metricCpu = Color(0xFFCBA6F7),
-        metricMemory = Color(0xFF89DCEB),
+        metricCpu = Color(0xFF89B4FA),
+        metricMemory = Color(0xFFA6E3A1),
         metricDisk = Color(0xFFFAB387),
-        metricNetwork = Color(0xFFF38BA8),
-        metricLatency = Color(0xFFA6E3A1)
+        metricNetwork = Color(0xFFCBA6F7),
+        metricLatency = Color(0xFF94E2D5)
     )
 
     private val rosePineLight = auroraLight.copy(
@@ -368,10 +368,10 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFFC4A7E7),
         brandAlt = Color(0xFF56949F),
         metricCpu = Color(0xFF286983),
-        metricMemory = Color(0xFFB4637A),
+        metricMemory = Color(0xFF56949F),
         metricDisk = Color(0xFFEA9D34),
         metricNetwork = Color(0xFF907AA9),
-        metricLatency = Color(0xFF56949F)
+        metricLatency = Color(0xFF3F7A45)
     )
 
     private val rosePineDark = auroraDark.copy(
@@ -396,11 +396,11 @@ object DeckThemeCatalog {
         terminalAccent = Color(0xFFC4A7E7),
         navSurface = Color(0xFF26233A),
         brandAlt = Color(0xFF9CCFD8),
-        metricCpu = Color(0xFF9CCFD8),
-        metricMemory = Color(0xFFEB6F92),
+        metricCpu = Color(0xFF3E8FB0),
+        metricMemory = Color(0xFF9CCFD8),
         metricDisk = Color(0xFFF6C177),
         metricNetwork = Color(0xFFC4A7E7),
-        metricLatency = Color(0xFF9CCFD8)
+        metricLatency = Color(0xFF908CAA)
     )
 
     private val monochromeLight = auroraLight.copy(
@@ -430,11 +430,11 @@ object DeckThemeCatalog {
         navSurface = Color(0xFFFFFFFF),
         brand = Color(0xFF000000),
         brandAlt = Color(0xFF000000),
-        metricCpu = Color(0xFF111111),
-        metricMemory = Color(0xFF3F3F3F),
-        metricDisk = Color(0xFF767676),
-        metricNetwork = Color(0xFF000000),
-        metricLatency = Color(0xFF5A5A5A)
+        metricCpu = Color(0xFF005BBB),
+        metricMemory = Color(0xFF148A43),
+        metricDisk = Color(0xFFC46A00),
+        metricNetwork = Color(0xFF6F42C1),
+        metricLatency = Color(0xFFB22828)
     )
 
     private val monochromeDark = auroraDark.copy(
@@ -464,11 +464,11 @@ object DeckThemeCatalog {
         navSurface = Color(0xFF0A0A0A),
         brand = Color(0xFFFFFFFF),
         brandAlt = Color(0xFFFFFFFF),
-        metricCpu = Color(0xFFFFFFFF),
-        metricMemory = Color(0xFFCFCFCF),
-        metricDisk = Color(0xFF9A9A9A),
-        metricNetwork = Color(0xFFE6E6E6),
-        metricLatency = Color(0xFFB5B5B5)
+        metricCpu = Color(0xFF72C8F0),
+        metricMemory = Color(0xFF8ED176),
+        metricDisk = Color(0xFFE4AC5B),
+        metricNetwork = Color(0xFFB59AE8),
+        metricLatency = Color(0xFF68C8B4)
     )
 
     private val comicLight = monochromeLight.copy(
@@ -554,20 +554,20 @@ object DeckThemeCatalog {
             cardStroke = lightLines.cardStroke,
             cyan = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
             cyanSoft = lightAccentSoft,
-            green = visibleAccent(lightMetrics.memory, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            green = lightMetrics.memory,
             red = lightRed,
-            orange = visibleAccent(lightMetrics.disk, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            yellow = visibleAccent(lightMetrics.latency, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            purple = visibleAccent(lightMetrics.network, lightPrimaryText, lightSurface, lightSurfaceMuted),
+            orange = lightMetrics.disk,
+            yellow = lightMetrics.latency,
+            purple = lightMetrics.network,
             purpleSoft = lightSurfaceMuted.blendToward(lightMetrics.network, 0.16f),
             navSurface = lightSurface,
             brand = lightPrimaryText,
             brandAlt = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricCpu = visibleAccent(lightMetrics.cpu, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricMemory = visibleAccent(lightMetrics.memory, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricDisk = visibleAccent(lightMetrics.disk, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricNetwork = visibleAccent(lightMetrics.network, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricLatency = visibleAccent(lightMetrics.latency, lightPrimaryText, lightSurface, lightSurfaceMuted)
+            metricCpu = lightMetrics.cpu,
+            metricMemory = lightMetrics.memory,
+            metricDisk = lightMetrics.disk,
+            metricNetwork = lightMetrics.network,
+            metricLatency = lightMetrics.latency
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
@@ -584,20 +584,20 @@ object DeckThemeCatalog {
             cardStroke = darkLines.cardStroke,
             cyan = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
             cyanSoft = darkAccentSoft,
-            green = visibleAccent(darkMetrics.memory, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            green = darkMetrics.memory,
             red = darkRed,
-            orange = visibleAccent(darkMetrics.disk, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            yellow = visibleAccent(darkMetrics.latency, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            purple = visibleAccent(darkMetrics.network, darkPrimaryText, darkSurface, darkSurfaceMuted),
+            orange = darkMetrics.disk,
+            yellow = darkMetrics.latency,
+            purple = darkMetrics.network,
             purpleSoft = darkSurfaceMuted.blendToward(darkMetrics.network, 0.18f),
             navSurface = darkSurface,
             brand = darkPrimaryText,
             brandAlt = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricCpu = visibleAccent(darkMetrics.cpu, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricMemory = visibleAccent(darkMetrics.memory, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricDisk = visibleAccent(darkMetrics.disk, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricNetwork = visibleAccent(darkMetrics.network, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricLatency = visibleAccent(darkMetrics.latency, darkPrimaryText, darkSurface, darkSurfaceMuted)
+            metricCpu = darkMetrics.cpu,
+            metricMemory = darkMetrics.memory,
+            metricDisk = darkMetrics.disk,
+            metricNetwork = darkMetrics.network,
+            metricLatency = darkMetrics.latency
         )
         )
     }
@@ -627,8 +627,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF6CB4E4),
             darkAccentSoft = Color(0xFF1C3B50),
             darkRed = Color(0xFFE17884),
-            lightMetrics = MetricAccentSet(Color(0xFF2F6178), Color(0xFF6E7580), Color(0xFFA15C4B), Color(0xFF586BA6)),
-            darkMetrics = MetricAccentSet(Color(0xFF75B5D1), Color(0xFFA7B0BA), Color(0xFFE18A70), Color(0xFF9FADEB))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF4D7672)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE8B872), network = Color(0xFFCEADE3), latency = Color(0xFF90B9B8))
         ),
         appThemeFamily(
             id = "moss",
@@ -654,8 +654,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF8BC79A),
             darkAccentSoft = Color(0xFF263F2B),
             darkRed = Color(0xFFE48686),
-            lightMetrics = MetricAccentSet(Color(0xFF5D7E3E), Color(0xFF2F7A4C), Color(0xFF8A7A35), Color(0xFF4E7564)),
-            darkMetrics = MetricAccentSet(Color(0xFFA7C77A), Color(0xFF82D090), Color(0xFFD0C06E), Color(0xFF8DB7A3))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF257B6C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF89D180), disk = Color(0xFFD0C06E), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "harbor",
@@ -681,8 +681,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF73C7D2),
             darkAccentSoft = Color(0xFF1D4148),
             darkRed = Color(0xFFE37C8B),
-            lightMetrics = MetricAccentSet(Color(0xFF1F7F8B), Color(0xFF2E8873), Color(0xFFC0605A), Color(0xFF527D95)),
-            darkMetrics = MetricAccentSet(Color(0xFF7DD1DA), Color(0xFF75C4AE), Color(0xFFE58C87), Color(0xFF8DBBD0))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF1F7F8B), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7057A6), latency = Color(0xFFB22828)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF70C5B0))
         ),
         appThemeFamily(
             id = "steel",
@@ -708,8 +708,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7BC4CF),
             darkAccentSoft = Color(0xFF244147),
             darkRed = Color(0xFFE17F88),
-            lightMetrics = MetricAccentSet(Color(0xFF556D78), Color(0xFF7B8588), Color(0xFFA06444), Color(0xFF4E7780)),
-            darkMetrics = MetricAccentSet(Color(0xFFA8BBC4), Color(0xFFC0C8CA), Color(0xFFD28B68), Color(0xFF82C4CF))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF517B75)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFFA0C8C2))
         ),
         appThemeFamily(
             id = "plum",
@@ -735,8 +735,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFC5A0DB),
             darkAccentSoft = Color(0xFF402D4B),
             darkRed = Color(0xFFE48699),
-            lightMetrics = MetricAccentSet(Color(0xFF7B57A6), Color(0xFFA05A85), Color(0xFFB88935), Color(0xFF5A7898)),
-            darkMetrics = MetricAccentSet(Color(0xFFC6A0E2), Color(0xFFDF8BC1), Color(0xFFE3B064), Color(0xFF82B9D1))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF646E5D), disk = Color(0xFF9E682D), network = Color(0xFF7057A6), latency = Color(0xFFB22828)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF95B1B9))
         ),
         appThemeFamily(
             id = "olive",
@@ -762,8 +762,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFB8C36C),
             darkAccentSoft = Color(0xFF3A3F24),
             darkRed = Color(0xFFE58683),
-            lightMetrics = MetricAccentSet(Color(0xFF6F7F32), Color(0xFF5D7944), Color(0xFFA07A2E), Color(0xFF7A6A45)),
-            darkMetrics = MetricAccentSet(Color(0xFFC1C86E), Color(0xFF9ACC83), Color(0xFFD6B35D), Color(0xFFB39B70))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF5D7944), disk = Color(0xFF944C37), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFD6B35D), network = Color(0xFFCEADE3), latency = Color(0xFF6EC8AE))
         ),
         appThemeFamily(
             id = "copper",
@@ -789,8 +789,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFE2A06D),
             darkAccentSoft = Color(0xFF4A3324),
             darkRed = Color(0xFFE58486),
-            lightMetrics = MetricAccentSet(Color(0xFF7F5539), Color(0xFF8F6A3F), Color(0xFF3F8A73), Color(0xFF7C637C)),
-            darkMetrics = MetricAccentSet(Color(0xFFF0B890), Color(0xFFD89A64), Color(0xFF7FD0B4), Color(0xFFBCA2C8))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF5D7443), disk = Color(0xFF944C37), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFF7FD0B4), network = Color(0xFFCEADE3), latency = Color(0xFFB0AB81))
         ),
         appThemeFamily(
             id = "fjord",
@@ -816,8 +816,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF75BEE1),
             darkAccentSoft = Color(0xFF1E3D50),
             darkRed = Color(0xFFE27F8B),
-            lightMetrics = MetricAccentSet(Color(0xFF357EA6), Color(0xFF5F8799), Color(0xFF8A8FA3), Color(0xFFB06B52)),
-            darkMetrics = MetricAccentSet(Color(0xFF86C6E4), Color(0xFFA2C7D5), Color(0xFFB6BFE2), Color(0xFFE0997D))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF8A8FA3), network = Color(0xFF6C5486), latency = Color(0xFF4A838A)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFC7B8B1), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "sage",
@@ -843,8 +843,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFA4C89C),
             darkAccentSoft = Color(0xFF31422D),
             darkRed = Color(0xFFE5868B),
-            lightMetrics = MetricAccentSet(Color(0xFF6B8048), Color(0xFF87956F), Color(0xFF8D7B5D), Color(0xFF5F7C72)),
-            darkMetrics = MetricAccentSet(Color(0xFFBED08A), Color(0xFFC0CA91), Color(0xFFC2A982), Color(0xFF8FBCAE))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF6D8B60), disk = Color(0xFF845626), network = Color(0xFF7057A6), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF8ACEB6))
         ),
         appThemeFamily(
             id = "ink",
@@ -870,8 +870,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF72C3D0),
             darkAccentSoft = Color(0xFF214147),
             darkRed = Color(0xFFE27E87),
-            lightMetrics = MetricAccentSet(Color(0xFF1D3945), Color(0xFF4B5560), Color(0xFF8A6B4E), Color(0xFF8B3A4A)),
-            darkMetrics = MetricAccentSet(Color(0xFF9AC9D2), Color(0xFFAAB5B9), Color(0xFFD4A577), Color(0xFFE27E87))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF1D3945), memory = Color(0xFF2E8062), disk = Color(0xFF845626), network = Color(0xFF7057A6), latency = Color(0xFF4B5560)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF92BCB7))
         ),
         appThemeFamily(
             id = "basalt",
@@ -897,8 +897,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF87C8B1),
             darkAccentSoft = Color(0xFF294138),
             darkRed = Color(0xFFE28389),
-            lightMetrics = MetricAccentSet(Color(0xFF53635E), Color(0xFF4D7F6D), Color(0xFF8B7358), Color(0xFF8F5B57)),
-            darkMetrics = MetricAccentSet(Color(0xFF9CADAA), Color(0xFF86C99F), Color(0xFFC5A27E), Color(0xFFD78A86))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF4D7F6D)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF6CC8B1))
         ),
         appThemeFamily(
             id = "storm",
@@ -924,8 +924,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF94BCE0),
             darkAccentSoft = Color(0xFF2C3D4F),
             darkRed = Color(0xFFE17F89),
-            lightMetrics = MetricAccentSet(Color(0xFF496B7C), Color(0xFF708090), Color(0xFFA8934F), Color(0xFF4F7E8A)),
-            darkMetrics = MetricAccentSet(Color(0xFFA7C3D6), Color(0xFFB3C0CC), Color(0xFFD5C879), Color(0xFF84C4D0))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF4D7978)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFD5C879), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "wine",
@@ -951,8 +951,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFD99AB0),
             darkAccentSoft = Color(0xFF492F3A),
             darkRed = Color(0xFFE37B8C),
-            lightMetrics = MetricAccentSet(Color(0xFF8B527E), Color(0xFF836E9A), Color(0xFFB86E57), Color(0xFF6A7F5F)),
-            darkMetrics = MetricAccentSet(Color(0xFFCFA0C6), Color(0xFFBEACD6), Color(0xFFE09480), Color(0xFFA1C487))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF53737B)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "sandstone",
@@ -978,8 +978,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFD5B16D),
             darkAccentSoft = Color(0xFF443722),
             darkRed = Color(0xFFE48684),
-            lightMetrics = MetricAccentSet(Color(0xFF9A6740), Color(0xFFB66A2E), Color(0xFF7F8E55), Color(0xFF8A6B55)),
-            darkMetrics = MetricAccentSet(Color(0xFFD79A6C), Color(0xFFE09A5B), Color(0xFFA8C075), Color(0xFFC0A080))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF4D7842), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFCDB465), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "mint",
@@ -1005,8 +1005,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7CCDB8),
             darkAccentSoft = Color(0xFF22443B),
             darkRed = Color(0xFFE27F89),
-            lightMetrics = MetricAccentSet(Color(0xFF2D8B91), Color(0xFF44A06E), Color(0xFF278CA0), Color(0xFF7A76A5)),
-            darkMetrics = MetricAccentSet(Color(0xFF80CBD0), Color(0xFF81CF98), Color(0xFF73C7E6), Color(0xFFB0B2D8))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7A76A5), latency = Color(0xFF44A06E)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8CD17A), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF6BC9B1))
         ),
         appThemeFamily(
             id = "denim",
@@ -1032,8 +1032,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF8DB7E3),
             darkAccentSoft = Color(0xFF2B3E54),
             darkRed = Color(0xFFE17E89),
-            lightMetrics = MetricAccentSet(Color(0xFF3F73A8), Color(0xFF526FA5), Color(0xFF7B82A8), Color(0xFFB07938)),
-            darkMetrics = MetricAccentSet(Color(0xFF78BFE6), Color(0xFF91ADE2), Color(0xFFB2B0DD), Color(0xFFE2A765))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF7B82A8), network = Color(0xFF604B8F), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFC4AFAE), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "berry",
@@ -1059,8 +1059,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFD99BC8),
             darkAccentSoft = Color(0xFF492F45),
             darkRed = Color(0xFFE37B99),
-            lightMetrics = MetricAccentSet(Color(0xFF8B5FA6), Color(0xFFC65672), Color(0xFF8D69A5), Color(0xFFB8795A)),
-            darkMetrics = MetricAccentSet(Color(0xFFC8A7DB), Color(0xFFE37B99), Color(0xFFC8A7DB), Color(0xFFE0A080))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF726C56), disk = Color(0xFF8D69A5), network = Color(0xFF604B8F), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF97ABAA))
         ),
         appThemeFamily(
             id = "spruce",
@@ -1086,8 +1086,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF78C990),
             darkAccentSoft = Color(0xFF244332),
             darkRed = Color(0xFFE28288),
-            lightMetrics = MetricAccentSet(Color(0xFF2E766E), Color(0xFF4D995B), Color(0xFF6F7A42), Color(0xFF8A6D4E)),
-            darkMetrics = MetricAccentSet(Color(0xFF7FC0B6), Color(0xFF81CF86), Color(0xFFB6C06F), Color(0xFFC29A70))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF4D995B)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF89D07C), disk = Color(0xFFC7B968), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "aqua",
@@ -1113,8 +1113,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF72CDD2),
             darkAccentSoft = Color(0xFF1F4548),
             darkRed = Color(0xFFE27F89),
-            lightMetrics = MetricAccentSet(Color(0xFF2D7999), Color(0xFF238C9A), Color(0xFF4C8AA0), Color(0xFFB65F5B)),
-            darkMetrics = MetricAccentSet(Color(0xFF85C9E0), Color(0xFF82C8DE), Color(0xFF8ABCD2), Color(0xFFE08F88))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "pewter",
@@ -1140,8 +1140,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF94C9BA),
             darkAccentSoft = Color(0xFF2E413C),
             darkRed = Color(0xFFE2838B),
-            lightMetrics = MetricAccentSet(Color(0xFF566E7A), Color(0xFF6F7B75), Color(0xFF9A7A55), Color(0xFF5D7C89)),
-            darkMetrics = MetricAccentSet(Color(0xFFA9B7BD), Color(0xFFAAB7B0), Color(0xFFD0A67C), Color(0xFF8FBCC8))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF547B73)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF81C2B2))
         ),
         appThemeFamily(
             id = "navy",
@@ -1167,8 +1167,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF91ADE2),
             darkAccentSoft = Color(0xFF2C3855),
             darkRed = Color(0xFFE17F8A),
-            lightMetrics = MetricAccentSet(Color(0xFF4E5F92), Color(0xFF3F72A8), Color(0xFF5D628F), Color(0xFFAA7A38)),
-            darkMetrics = MetricAccentSet(Color(0xFF9FADEB), Color(0xFF7CBCE6), Color(0xFFB2ADDD), Color(0xFFD6A85D))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "clay",
@@ -1194,8 +1194,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFE29A86),
             darkAccentSoft = Color(0xFF4A3029),
             darkRed = Color(0xFFE48686),
-            lightMetrics = MetricAccentSet(Color(0xFF9A5B4C), Color(0xFFB86E35), Color(0xFF6D8A5B), Color(0xFF8A6F6B)),
-            darkMetrics = MetricAccentSet(Color(0xFFD49382), Color(0xFFE29A60), Color(0xFFA2C890), Color(0xFFB9A3A0))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF4E7943), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFCBB76F), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "cobalt",
@@ -1221,8 +1221,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7DB5EA),
             darkAccentSoft = Color(0xFF243D5A),
             darkRed = Color(0xFFE17E8A),
-            lightMetrics = MetricAccentSet(Color(0xFF665CB5), Color(0xFF2E6EA8), Color(0xFF5C7DC8), Color(0xFFB2743A)),
-            darkMetrics = MetricAccentSet(Color(0xFFAAA2F0), Color(0xFF6FC2EA), Color(0xFF9FA8FF), Color(0xFFE0A05F))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFB8A9C4), network = Color(0xFFE0A05F), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "juniper",
@@ -1248,8 +1248,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7BCBB6),
             darkAccentSoft = Color(0xFF25443D),
             darkRed = Color(0xFFE2818A),
-            lightMetrics = MetricAccentSet(Color(0xFF377761), Color(0xFF459B6B), Color(0xFF5B7F70), Color(0xFF9B6F4A)),
-            darkMetrics = MetricAccentSet(Color(0xFF8ABFAE), Color(0xFF80CF97), Color(0xFF8DB9A9), Color(0xFFC79470))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF459B6B)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8CD17A), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF6BC9B1))
         ),
         appThemeFamily(
             id = "amethyst",
@@ -1275,8 +1275,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFB9A4DD),
             darkAccentSoft = Color(0xFF3A304E),
             darkRed = Color(0xFFE38595),
-            lightMetrics = MetricAccentSet(Color(0xFF686BB0), Color(0xFF9362A3), Color(0xFFB25F8F), Color(0xFFB88A35)),
-            darkMetrics = MetricAccentSet(Color(0xFFADA8E0), Color(0xFFCFA0DB), Color(0xFFE090BD), Color(0xFFE3A766))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF756B81), disk = Color(0xFF845626), network = Color(0xFFB88A35), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "smoke",
@@ -1302,8 +1302,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF98C4D8),
             darkAccentSoft = Color(0xFF30424B),
             darkRed = Color(0xFFE2838A),
-            lightMetrics = MetricAccentSet(Color(0xFF676F78), Color(0xFF697580), Color(0xFF8B7B6B), Color(0xFF7A6B8A)),
-            darkMetrics = MetricAccentSet(Color(0xFFB7C0C8), Color(0xFFB1B8BE), Color(0xFFC8B49C), Color(0xFFB6A7C9))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6494), latency = Color(0xFF4B7672)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF97BEBA))
         ),
         appThemeFamily(
             id = "forest",
@@ -1329,8 +1329,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF8AC982),
             darkAccentSoft = Color(0xFF2D4329),
             darkRed = Color(0xFFE48684),
-            lightMetrics = MetricAccentSet(Color(0xFF5C783E), Color(0xFF3E7F45), Color(0xFF7A7F3C), Color(0xFF8A6A45)),
-            darkMetrics = MetricAccentSet(Color(0xFFA7C982), Color(0xFF81CF86), Color(0xFFB7C06A), Color(0xFFC19A70))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF277B6B)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF89D07C), disk = Color(0xFFC7B965), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "lagoon",
@@ -1356,8 +1356,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF75C2DD),
             darkAccentSoft = Color(0xFF1F3F50),
             darkRed = Color(0xFFE17F8A),
-            lightMetrics = MetricAccentSet(Color(0xFF2C7B92), Color(0xFF2B86A5), Color(0xFF3F8F8F), Color(0xFFB46A5D)),
-            darkMetrics = MetricAccentSet(Color(0xFF87C7DA), Color(0xFF84C8E0), Color(0xFF7FC9C6), Color(0xFFE18F82))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "ruby",
@@ -1383,8 +1383,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFE28F99),
             darkAccentSoft = Color(0xFF4A2E33),
             darkRed = Color(0xFFE28F99),
-            lightMetrics = MetricAccentSet(Color(0xFF965573), Color(0xFFA84F5A), Color(0xFFC06A70), Color(0xFF7A6F8A)),
-            darkMetrics = MetricAccentSet(Color(0xFFD79BB0), Color(0xFFE37B8C), Color(0xFFE4A0A8), Color(0xFFBBAFD4))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF74609B), latency = Color(0xFF5F6A66)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF95B5B5))
         ),
         appThemeFamily(
             id = "cedar",
@@ -1410,8 +1410,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFC5B16E),
             darkAccentSoft = Color(0xFF403823),
             darkRed = Color(0xFFE48684),
-            lightMetrics = MetricAccentSet(Color(0xFF80603D), Color(0xFF7A6A45), Color(0xFF66915F), Color(0xFFA06A3A)),
-            darkMetrics = MetricAccentSet(Color(0xFFB99A70), Color(0xFFB79A70), Color(0xFFA0C88B), Color(0xFFD28E62))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF657045), disk = Color(0xFF944C37), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFCAB76D), network = Color(0xFFCEADE3), latency = Color(0xFF71C2AC))
         ),
         appThemeFamily(
             id = "ice",
@@ -1437,8 +1437,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF8CC4E3),
             darkAccentSoft = Color(0xFF2A4050),
             darkRed = Color(0xFFE17F8A),
-            lightMetrics = MetricAccentSet(Color(0xFF4A8FA2), Color(0xFF6A9BB6), Color(0xFF7B8FA8), Color(0xFF8E72A7)),
-            darkMetrics = MetricAccentSet(Color(0xFF9BD4E0), Color(0xFFA6D5E8), Color(0xFFB1B2DC), Color(0xFFC7A6DF))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF7B8FA8), network = Color(0xFF6C5486), latency = Color(0xFF4B8284)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFC3B0AE), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "lichen",
@@ -1464,8 +1464,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFAFC887),
             darkAccentSoft = Color(0xFF37422B),
             darkRed = Color(0xFFE58689),
-            lightMetrics = MetricAccentSet(Color(0xFF6F7F53), Color(0xFF64985F), Color(0xFF6D8062), Color(0xFF8A7A53)),
-            darkMetrics = MetricAccentSet(Color(0xFFBAC789), Color(0xFF9DCA8A), Color(0xFFA7B89A), Color(0xFFD0B470))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF64985F), disk = Color(0xFF845626), network = Color(0xFF735B9C), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF6EC8AF))
         ),
         appThemeFamily(
             id = "midnight",
@@ -1491,8 +1491,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF86B5E4),
             darkAccentSoft = Color(0xFF263B55),
             darkRed = Color(0xFFE17E8A),
-            lightMetrics = MetricAccentSet(Color(0xFF5A62A6), Color(0xFF59609B), Color(0xFF8A6FB0), Color(0xFFB0764B)),
-            darkMetrics = MetricAccentSet(Color(0xFF9FADEB), Color(0xFF8B91E8), Color(0xFFB1AFDD), Color(0xFFE2A765))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF8A6FB0), network = Color(0xFF604B8F), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFC3AEAE), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "pearl",
@@ -1518,8 +1518,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF95C9C0),
             darkAccentSoft = Color(0xFF2E413E),
             darkRed = Color(0xFFE2838A),
-            lightMetrics = MetricAccentSet(Color(0xFF6C8D8A), Color(0xFF8A798F), Color(0xFFB8945A), Color(0xFF6E7E88)),
-            darkMetrics = MetricAccentSet(Color(0xFFA7C9C3), Color(0xFFC0A9C5), Color(0xFFD8B980), Color(0xFFA8B7C0))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF4B7A7C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "orchid",
@@ -1545,8 +1545,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFCFA0DB),
             darkAccentSoft = Color(0xFF432D4B),
             darkRed = Color(0xFFE48699),
-            lightMetrics = MetricAccentSet(Color(0xFF7D69A8), Color(0xFFB25F95), Color(0xFF6D8B8E), Color(0xFFB88742)),
-            darkMetrics = MetricAccentSet(Color(0xFFBFA7DA), Color(0xFFE08FC3), Color(0xFF91C4C8), Color(0xFFE3B06E))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF6B7063), disk = Color(0xFF9A642C), network = Color(0xFF7057A6), latency = Color(0xFF36685F)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF96B2BA))
         ),
         appThemeFamily(
             id = "bay",
@@ -1572,8 +1572,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7BC9D1),
             darkAccentSoft = Color(0xFF254247),
             darkRed = Color(0xFFE2828B),
-            lightMetrics = MetricAccentSet(Color(0xFF4C778A), Color(0xFF2D8494), Color(0xFF6F8A8E), Color(0xFFB07850)),
-            darkMetrics = MetricAccentSet(Color(0xFFA2C8D3), Color(0xFF84C6DC), Color(0xFFA5C3C5), Color(0xFFD8A07B))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF6F8A8E), network = Color(0xFF604B8F), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFA5C3C5), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "hazel",
@@ -1599,8 +1599,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFC5BB72),
             darkAccentSoft = Color(0xFF403C24),
             darkRed = Color(0xFFE48684),
-            lightMetrics = MetricAccentSet(Color(0xFF84704A), Color(0xFF946D3F), Color(0xFF66925F), Color(0xFF7A6D5A)),
-            darkMetrics = MetricAccentSet(Color(0xFFC6AC77), Color(0xFFC9A06A), Color(0xFFA0C88B), Color(0xFFB8A88F))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF5F7543), disk = Color(0xFF944C37), network = Color(0xFF7B6098), latency = Color(0xFF1F6A60)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFCAB76D), network = Color(0xFFCEADE3), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "blueprint",
@@ -1626,8 +1626,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF82B6EA),
             darkAccentSoft = Color(0xFF263E5A),
             darkRed = Color(0xFFE17E8A),
-            lightMetrics = MetricAccentSet(Color(0xFF2F6FA8), Color(0xFF3F78B5), Color(0xFF245D8F), Color(0xFF8F6ED0)),
-            darkMetrics = MetricAccentSet(Color(0xFF70C1EA), Color(0xFF82B6EA), Color(0xFF5DA8D8), Color(0xFFB7A2FF))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF8F6ED0), latency = Color(0xFF247B70)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF70C1EA), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         ),
         appThemeFamily(
             id = "willow",
@@ -1653,8 +1653,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFB5C889),
             darkAccentSoft = Color(0xFF39432C),
             darkRed = Color(0xFFE58689),
-            lightMetrics = MetricAccentSet(Color(0xFF6A844E), Color(0xFF64995F), Color(0xFF9B9348), Color(0xFF8A7450)),
-            darkMetrics = MetricAccentSet(Color(0xFFACC58A), Color(0xFF9DCA8A), Color(0xFFD0C06F), Color(0xFFC8A076))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF64995F), disk = Color(0xFF845626), network = Color(0xFF735A9C), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFD0C06F), network = Color(0xFFCEADE3), latency = Color(0xFF6EC8AF))
         ),
         appThemeFamily(
             id = "garnet",
@@ -1680,8 +1680,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFDA96A4),
             darkAccentSoft = Color(0xFF492F37),
             darkRed = Color(0xFFE27D8A),
-            lightMetrics = MetricAccentSet(Color(0xFF8D5060), Color(0xFFC55764), Color(0xFF8C6370), Color(0xFFB87934)),
-            darkMetrics = MetricAccentSet(Color(0xFFCC8EA0), Color(0xFFE27D8A), Color(0xFFC7A0AA), Color(0xFFE3A766))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF616D6B)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF94B5B4))
         ),
         appThemeFamily(
             id = "seagrass",
@@ -1707,8 +1707,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF7BCBB5),
             darkAccentSoft = Color(0xFF25443B),
             darkRed = Color(0xFFE2818A),
-            lightMetrics = MetricAccentSet(Color(0xFF397E72), Color(0xFF459D6E), Color(0xFF2F8F91), Color(0xFF8A7A45)),
-            darkMetrics = MetricAccentSet(Color(0xFF8BC6B8), Color(0xFF80CF97), Color(0xFF7ACDD0), Color(0xFFC4B16E))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF459D6E)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8CD17A), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF6BC9B1))
         ),
         appThemeFamily(
             id = "granite",
@@ -1734,8 +1734,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFF91C6BD),
             darkAccentSoft = Color(0xFF2E403D),
             darkRed = Color(0xFFE2838A),
-            lightMetrics = MetricAccentSet(Color(0xFF5F727A), Color(0xFF6B7670), Color(0xFF8A7A66), Color(0xFF9A675C)),
-            darkMetrics = MetricAccentSet(Color(0xFFB1BDC3), Color(0xFFB1B8B3), Color(0xFFC0AA90), Color(0xFFD08F84))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF245E9A), memory = Color(0xFF36693B), disk = Color(0xFF845626), network = Color(0xFF7B6098), latency = Color(0xFF517870)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFCEADE3), latency = Color(0xFF97BEB3))
         ),
         appThemeFamily(
             id = "dusk",
@@ -1761,8 +1761,8 @@ object DeckThemeCatalog {
             darkAccent = Color(0xFFA9A8DE),
             darkAccentSoft = Color(0xFF34334F),
             darkRed = Color(0xFFE38595),
-            lightMetrics = MetricAccentSet(Color(0xFF5E639B), Color(0xFF8A6FA5), Color(0xFFB5658A), Color(0xFFB88442)),
-            darkMetrics = MetricAccentSet(Color(0xFFB4AFE0), Color(0xFFC2A3D6), Color(0xFFE08AAD), Color(0xFFE3A766))
+            lightMetrics = MetricAccentSet(cpu = Color(0xFF205388), memory = Color(0xFF6F7382), disk = Color(0xFF845626), network = Color(0xFFB88442), latency = Color(0xFF3D766C)),
+            darkMetrics = MetricAccentSet(cpu = Color(0xFF72B8EF), memory = Color(0xFF8ED176), disk = Color(0xFFE4AC5B), network = Color(0xFFB59AE8), latency = Color(0xFF68C8B4))
         )
     )
 
