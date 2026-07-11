@@ -468,7 +468,7 @@ private fun ServerOverviewCard(
                         maxLines = 1
                     )
                 }
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(2.dp))
             }
             StatusDot(snapshot?.status ?: ServerStatus.Unknown, Modifier.size(12.dp))
             Spacer(Modifier.width(6.dp))

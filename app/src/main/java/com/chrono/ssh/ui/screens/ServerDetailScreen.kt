@@ -923,8 +923,8 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
         val pillHeight = when {
             !cpuUsagePillsEnabled && coreCount <= 8 -> 8.dp
             !cpuUsagePillsEnabled && coreCount <= 16 -> 6.5.dp
-            cpuUsagePillsEnabled && coreCount <= 8 -> 10.dp
-            cpuUsagePillsEnabled && coreCount <= 16 -> 7.dp
+            cpuUsagePillsEnabled && coreCount <= 8 -> 9.dp
+            cpuUsagePillsEnabled && coreCount <= 16 -> 6.5.dp
             else -> 5.dp
         }
         val rowGap = when {
@@ -1066,15 +1066,15 @@ private fun CpuStat(label: String, value: String, color: Color, modifier: Modifi
         if (showIndicator) {
             Box(
                 Modifier
-                    .padding(top = 1.dp)
-                    .size(width = 6.dp, height = 13.dp)
-                    .clip(RoundedCornerShape(3.dp))
+                    .padding(top = 2.dp)
+                    .size(width = 5.dp, height = 10.dp)
+                    .clip(RoundedCornerShape(2.5.dp))
                     .background(color)
             )
         }
         Column(horizontalAlignment = Alignment.Start) {
-            Text(label, color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(value, color = DeckColors.PrimaryText, fontSize = 16.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(label, color = DeckColors.SecondaryText, fontSize = 14.sp, lineHeight = 15.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(value, color = DeckColors.PrimaryText, fontSize = 13.5.sp, lineHeight = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
     }
 }
