@@ -557,6 +557,13 @@ private fun AppearanceSettings(
         )
         Spacer(Modifier.height(12.dp))
         SettingsChoiceRow(
+            title = "App accent",
+            detail = "Buttons, toggles, and focused controls",
+            value = settings.appAccentColorHex ?: metricColorHex(DeckColors.Accent),
+            onClick = { onSelectionPageChange(SettingsSelectionPage.AppAccent) }
+        )
+        Spacer(Modifier.height(12.dp))
+        SettingsChoiceRow(
             title = "Metrics Page",
             detail = "Show, hide, and reorder server detail cards",
             value = "",
@@ -744,7 +751,7 @@ private fun TerminalSettings(
                         customKeysOpen = false
                     }
                 ) {
-                    Text("Save", color = DeckColors.Cyan, fontWeight = FontWeight.Black)
+                    Text("Save", color = DeckColors.Accent, fontWeight = FontWeight.Black)
                 }
             },
             dismissButton = {
@@ -1176,7 +1183,7 @@ private fun PinLockDialog(
                         PinDialogMode.Change -> "Save"
                         PinDialogMode.Disable -> "Turn Off"
                     },
-                    color = if (confirmEnabled) DeckColors.Cyan else DeckColors.SecondaryText,
+                    color = if (confirmEnabled) DeckColors.Accent else DeckColors.SecondaryText,
                     fontWeight = FontWeight.Black
                 )
             }
@@ -1265,7 +1272,7 @@ private fun HostShareLinkImportDialog(
         },
         confirmButton = {
             TextButton(enabled = payload.isNotBlank(), onClick = { onImport(payload) }) {
-                Text("Import", color = if (payload.isBlank()) DeckColors.SecondaryText else DeckColors.Cyan, fontWeight = FontWeight.Black)
+                Text("Import", color = if (payload.isBlank()) DeckColors.SecondaryText else DeckColors.Accent, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {
@@ -1324,7 +1331,7 @@ private fun BackupPassphraseDialog(
         },
         confirmButton = {
             TextButton(enabled = confirmEnabled, onClick = { onConfirm(passphrase) }) {
-                Text(action, color = if (confirmEnabled) DeckColors.Cyan else DeckColors.SecondaryText, fontWeight = FontWeight.Black)
+                Text(action, color = if (confirmEnabled) DeckColors.Accent else DeckColors.SecondaryText, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {
@@ -1374,6 +1381,7 @@ private fun AboutDiagnosticsSettings(
 
 enum class SettingsSelectionPage {
     AppTheme,
+    AppAccent,
     TerminalTheme,
     TerminalFont,
     MetricColors,
@@ -1394,6 +1402,7 @@ private fun SettingsSelectionScreen(
     var stagedAppThemeId by remember(page, themeFamilyId) { mutableStateOf(themeFamilyId) }
     var stagedTerminalThemeName by remember(page, settings.terminalThemeName) { mutableStateOf(settings.terminalThemeName) }
     var stagedTerminalFontFamily by remember(page, settings.terminalFontFamily) { mutableStateOf(settings.terminalFontFamily) }
+    var stagedAppAccentHex by remember(page, settings.appAccentColorHex) { mutableStateOf(settings.appAccentColorHex ?: metricColorHex(DeckColors.Accent)) }
     var stagedMetricColorPreset by remember(page, settings.serverMetricColorPreset) { mutableStateOf(settings.serverMetricColorPreset) }
     var stagedMetricColorOverrides by remember(page, settings) { mutableStateOf(metricColorOverridesFrom(settings)) }
     var stagedMetricsCardOrder by remember(page, settings.serverDetailCardOrder) { mutableStateOf(ServerDetailCard.sanitizeOrderCsv(settings.serverDetailCardOrder)) }
@@ -1405,6 +1414,7 @@ private fun SettingsSelectionScreen(
             appThemeId = stagedAppThemeId,
             terminalThemeName = stagedTerminalThemeName,
             terminalFontFamily = stagedTerminalFontFamily,
+            appAccentHex = stagedAppAccentHex,
             metricColorPreset = stagedMetricColorPreset,
             metricColorOverrides = stagedMetricColorOverrides,
             metricsCardOrder = stagedMetricsCardOrder,
@@ -1433,6 +1443,7 @@ private fun SettingsSelectionScreen(
             Text(
                 text = when (page) {
                     SettingsSelectionPage.AppTheme -> "Select app theme"
+                    SettingsSelectionPage.AppAccent -> "App accent"
                     SettingsSelectionPage.TerminalTheme -> "Select scheme"
                     SettingsSelectionPage.TerminalFont -> "Select typeface"
                     SettingsSelectionPage.MetricColors -> "Server card metric colors"
@@ -1473,6 +1484,14 @@ private fun SettingsSelectionScreen(
                     )
                     Spacer(Modifier.height(10.dp))
                 }
+            }
+            SettingsSelectionPage.AppAccent -> {
+                MetricColorOverrideRow(
+                    label = "Accent",
+                    selectedHex = stagedAppAccentHex,
+                    choices = appAccentColorChoices(),
+                    onSelect = { stagedAppAccentHex = it }
+                )
             }
             SettingsSelectionPage.TerminalTheme -> {
                 TerminalCatalog.themes.forEach { theme ->
@@ -1564,12 +1583,14 @@ internal fun settingsAfterSelection(
     terminalThemeName: String,
     terminalFontFamily: String,
     metricColorPreset: ServerMetricColorPreset,
+    appAccentHex: String = settings.appAccentColorHex ?: metricColorHex(DeckColors.Accent),
     metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
     metricsCardOrder: String = settings.serverDetailCardOrder,
     metricsHiddenCards: String = settings.serverDetailHiddenCards
 ): SettingsSelectionResult {
     return when (page) {
         SettingsSelectionPage.AppTheme -> SettingsSelectionResult(themeFamilyId = appThemeId)
+        SettingsSelectionPage.AppAccent -> SettingsSelectionResult(settings = settings.copy(appAccentColorHex = sanitizeColorHex(appAccentHex)))
         SettingsSelectionPage.TerminalTheme -> SettingsSelectionResult(settings = settings.copy(terminalThemeName = terminalThemeName))
         SettingsSelectionPage.TerminalFont -> SettingsSelectionResult(settings = settings.copy(terminalFontFamily = terminalFontFamily))
         SettingsSelectionPage.MetricColors -> {
@@ -1725,6 +1746,25 @@ private fun MetricColorOverrideEditor(
     }
 }
 
+private fun appAccentColorChoices(): List<Pair<String, Color>> {
+    val theme = listOf(
+        metricColorHex(DeckColors.Accent) to DeckColors.Accent,
+        metricColorHex(DeckColors.Cyan) to DeckColors.Cyan,
+        metricColorHex(DeckColors.Purple) to DeckColors.Purple,
+        metricColorHex(DeckColors.Orange) to DeckColors.Orange,
+        metricColorHex(DeckColors.Green) to DeckColors.Green
+    )
+    val fixed = listOf(
+        "#2563EB" to Color(0xff2563eb),
+        "#0891B2" to Color(0xff0891b2),
+        "#059669" to Color(0xff059669),
+        "#7C3AED" to Color(0xff7c3aed),
+        "#DB2777" to Color(0xffdb2777),
+        "#D97706" to Color(0xffd97706)
+    )
+    return (theme + fixed).distinctBy { it.first.uppercase() }
+}
+
 @Composable
 private fun MetricColorOverrideRow(
     label: String,
@@ -1768,9 +1808,9 @@ private fun MetricColorOverrideRow(
                         unfocusedTextColor = DeckColors.PrimaryText,
                         focusedContainerColor = DeckColors.SurfaceRaised,
                         unfocusedContainerColor = DeckColors.SurfaceRaised,
-                        focusedBorderColor = DeckColors.Cyan,
+                        focusedBorderColor = DeckColors.Accent,
                         unfocusedBorderColor = DeckColors.CardStroke,
-                        focusedLabelColor = DeckColors.Cyan,
+                        focusedLabelColor = DeckColors.Accent,
                         unfocusedLabelColor = DeckColors.SecondaryText
                     )
                 )
@@ -1994,7 +2034,7 @@ private fun CrashLogsPanel(crashLogs: List<CrashLogEntry>, onClearCrashLogs: () 
             Spacer(Modifier.height(6.dp))
             Text(crash.stackTrace, color = DeckColors.SecondaryText, fontSize = 11.sp, lineHeight = 14.sp, maxLines = 10, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(6.dp))
-            Text("Tap to copy full crash log", color = DeckColors.Cyan, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            Text("Tap to copy full crash log", color = DeckColors.Accent, fontSize = 11.sp, fontWeight = FontWeight.Black)
         }
         Spacer(Modifier.height(10.dp))
     }
@@ -2068,7 +2108,7 @@ private fun SettingsToggleRow(title: String, checked: Boolean, detail: String, o
                 Modifier
                     .size(20.dp)
                     .clip(CircleShape)
-                    .background(if (checked) DeckColors.Green else DeckColors.SecondaryText)
+                    .background(if (checked) DeckColors.Accent else DeckColors.SecondaryText)
             )
         }
     }
@@ -2195,8 +2235,8 @@ private fun SettingsActionButton(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(if (enabled) DeckColors.SurfaceMuted else DeckColors.Surface)
-            .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(18.dp))
+            .background(if (enabled) DeckColors.Accent.copy(alpha = 0.10f) else DeckColors.Surface)
+            .border(1.dp, if (enabled) DeckColors.Accent.copy(alpha = 0.28f) else DeckColors.CardStroke, RoundedCornerShape(18.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp)
     ) {

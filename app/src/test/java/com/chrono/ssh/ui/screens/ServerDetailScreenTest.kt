@@ -52,6 +52,7 @@ class ServerDetailScreenTest {
         assertEquals(listOf(0.9f), series.load1)
         assertEquals(listOf(0.5f), series.load5)
         assertEquals(listOf(0.2f), series.load15)
+        assertEquals(listOf("-45s", "-30s", "-15s", "now"), series.axisLabels)
     }
 
     @Test
@@ -70,6 +71,13 @@ class ServerDetailScreenTest {
         assertEquals(71f, series.load1.last())
         assertEquals(0f, series.load5.first())
         assertEquals(5f, series.load5.last())
+        assertEquals(listOf("-45s", "-30s", "-15s", "now"), series.axisLabels)
+    }
+
+    @Test
+    fun cpuLoadScaleUsesCoreCapacityAsFloor() {
+        assertEquals(8f, niceLoadMax(maxSeen = 0.4f, cores = 8))
+        assertEquals(11.5f, niceLoadMax(maxSeen = 10f, cores = 8))
     }
 
     @Test

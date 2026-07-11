@@ -1155,7 +1155,7 @@ fun ChronoSSHApp(
             settings = headingFontFamilyFromPath(appSettings.settingsHeadingFontPath)
         )
     }
-    ChronoSSHTheme(palette = palette, headingFonts = headingFonts) {
+    ChronoSSHTheme(palette = palette, headingFonts = headingFonts, accentOverrideHex = appSettings.appAccentColorHex) {
         AppBackground {
             Box(Modifier.fillMaxSize()) {
                 if (appLocked && appLockPinUsable(appSettings)) {

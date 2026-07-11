@@ -558,6 +558,7 @@ class ChronoSSHRepository(private val context: Context) {
                 serverMetricDiskColorHex = values["serverMetricDiskColorHex"]?.ifBlank { null },
                 serverMetricNetworkColorHex = values["serverMetricNetworkColorHex"]?.ifBlank { null },
                 serverMetricLatencyColorHex = values["serverMetricLatencyColorHex"]?.ifBlank { null },
+                appAccentColorHex = values["appAccentColorHex"]?.ifBlank { null },
                 serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(values["serverDetailCardOrder"].orEmpty()),
                 serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(values["serverDetailHiddenCards"].orEmpty()),
                 homeHeadingFontPath = values["homeHeadingFontPath"]?.ifBlank { null },
@@ -614,6 +615,7 @@ class ChronoSSHRepository(private val context: Context) {
                     "serverMetricDiskColorHex=${escape(cleanSettings.serverMetricDiskColorHex.orEmpty())}",
                     "serverMetricNetworkColorHex=${escape(cleanSettings.serverMetricNetworkColorHex.orEmpty())}",
                     "serverMetricLatencyColorHex=${escape(cleanSettings.serverMetricLatencyColorHex.orEmpty())}",
+                    "appAccentColorHex=${escape(cleanSettings.appAccentColorHex.orEmpty())}",
                     "serverDetailCardOrder=${escape(ServerDetailCard.sanitizeOrderCsv(cleanSettings.serverDetailCardOrder))}",
                     "serverDetailHiddenCards=${escape(ServerDetailCard.sanitizeHiddenCsv(cleanSettings.serverDetailHiddenCards))}",
                     "homeHeadingFontPath=${escape(cleanSettings.homeHeadingFontPath.orEmpty())}",
@@ -2875,6 +2877,7 @@ internal fun sanitizeLoadedSettings(settings: AppSettings): AppSettings {
         serverMetricDiskColorHex = sanitizeColorHex(settings.serverMetricDiskColorHex),
         serverMetricNetworkColorHex = sanitizeColorHex(settings.serverMetricNetworkColorHex),
         serverMetricLatencyColorHex = sanitizeColorHex(settings.serverMetricLatencyColorHex),
+        appAccentColorHex = sanitizeColorHex(settings.appAccentColorHex),
         serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(settings.serverDetailCardOrder),
         serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(settings.serverDetailHiddenCards)
     )

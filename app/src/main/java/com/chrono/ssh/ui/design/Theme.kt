@@ -1919,6 +1919,7 @@ object DeckColors {
     var NavSurface = DeckThemeCatalog.families.first().light.navSurface
     var Brand = DeckThemeCatalog.families.first().light.brand
     var BrandAlt = DeckThemeCatalog.families.first().light.brandAlt
+    var Accent = DeckThemeCatalog.families.first().light.cyan
     var MetricCpu = DeckThemeCatalog.families.first().light.metricCpu
     var MetricMemory = DeckThemeCatalog.families.first().light.metricMemory
     var MetricDisk = DeckThemeCatalog.families.first().light.metricDisk
@@ -1950,6 +1951,7 @@ object DeckColors {
         NavSurface = palette.navSurface
         Brand = palette.brand
         BrandAlt = palette.brandAlt
+        Accent = palette.cyan
         MetricCpu = palette.metricCpu
         MetricMemory = palette.metricMemory
         MetricDisk = palette.metricDisk
@@ -1966,9 +1968,11 @@ fun ChronoSSHTheme(
         systemDark = isSystemInDarkTheme()
     ),
     headingFonts: HeadingFontFamilies? = null,
+    accentOverrideHex: String? = null,
     content: @Composable () -> Unit
 ) {
     DeckColors.apply(palette)
+    accentOverrideHex?.toDeckColorOrNull()?.let { DeckColors.Accent = it }
     val scheme = if (palette.dark) {
         darkColorScheme(
             primary = palette.cyan,
@@ -2034,4 +2038,10 @@ fun ChronoSSHTheme(
             content = content
         )
     }
+}
+
+private fun String.toDeckColorOrNull(): Color? {
+    val value = trim()
+    if (!Regex("^#[0-9A-Fa-f]{6}$").matches(value)) return null
+    return Color(value.drop(1).toLong(16) or 0xff000000)
 }

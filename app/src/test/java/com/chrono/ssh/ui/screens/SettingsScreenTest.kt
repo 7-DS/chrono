@@ -20,7 +20,7 @@ class SettingsScreenTest {
     @Test
     fun monitoringSettingsSummaryMentionsServerCardModes() {
         assertEquals(
-            "2s · net speed · disk usage · Theme",
+            "2s · uptime bg off · net speed · disk usage · Theme",
             monitoringSettingsSummary(
                 AppSettings(
                     themeModeName = "System",

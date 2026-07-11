@@ -157,6 +157,7 @@ data class AppSettings(
     val serverMetricDiskColorHex: String? = null,
     val serverMetricNetworkColorHex: String? = null,
     val serverMetricLatencyColorHex: String? = null,
+    val appAccentColorHex: String? = null,
     val serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     val serverDetailHiddenCards: String = "",
     val homeHeadingFontPath: String? = null,

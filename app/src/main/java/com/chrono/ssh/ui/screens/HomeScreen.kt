@@ -464,8 +464,8 @@ private fun ServerOverviewCard(
                     Text(
                         "$latency ms",
                         color = if (snapshot.status == ServerStatus.Online) metricColors.latency else DeckColors.SecondaryText,
-                        fontSize = 18.sp,
-                        lineHeight = 20.sp,
+                        fontSize = 12.sp,
+                        lineHeight = 14.sp,
                         fontWeight = FontWeight.Normal,
                         maxLines = 1
                     )

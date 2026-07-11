@@ -864,10 +864,10 @@ private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsage
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.Top
     ) {
-        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, Modifier.weight(1f))
+        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, Modifier.weight(1f), showIndicator = false)
         CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user, Modifier.weight(1f))
         CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system, Modifier.weight(1f))
         CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice, Modifier.weight(1f))
@@ -918,8 +918,9 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
     val coreCount = visibleRows.size.coerceAtLeast(1)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         val pillHeight = when {
-            coreCount <= 8 -> 8.dp
-            coreCount <= 16 -> 6.5.dp
+            coreCount <= 8 -> 18.dp
+            coreCount <= 16 -> 13.dp
+            coreCount <= 24 -> 8.dp
             else -> 5.dp
         }
         val rowGap = when {
@@ -940,7 +941,7 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
                 else -> 2.dp
             }.toPx()
             val rowGapPx = rowGap.toPx()
-            val cellWidth = ((size.width - gap * (columns - 1)) / columns).coerceAtLeast(3f)
+            val cellWidth = ((size.width - gap * (columns - 1)) / columns).coerceIn(3f, 6.dp.toPx())
             val cellHeight = pillHeight.toPx()
             visibleRows.forEachIndexed { row, core ->
                 val filledCells = ((core.usagePercent / 100f) * columns).toInt().coerceIn(0, columns)
@@ -1051,13 +1052,15 @@ private fun DrawScope.drawLoadArea(
 }
 
 @Composable
-private fun CpuStat(label: String, value: String, color: Color, modifier: Modifier = Modifier, horizontalAlignment: Alignment.Horizontal = Alignment.Start) {
+private fun CpuStat(label: String, value: String, color: Color, modifier: Modifier = Modifier, horizontalAlignment: Alignment.Horizontal = Alignment.Start, showIndicator: Boolean = true) {
     Column(
         modifier = modifier,
         horizontalAlignment = horizontalAlignment
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Canvas(Modifier.size(7.dp)) { drawCircle(color) }
+            if (showIndicator) {
+                Canvas(Modifier.size(7.dp)) { drawCircle(color) }
+            }
             Text(label, color = DeckColors.SecondaryText, fontSize = 11.sp, lineHeight = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Text(value, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
@@ -1066,15 +1069,16 @@ private fun CpuStat(label: String, value: String, color: Color, modifier: Modifi
 
 @Composable
 private fun CpuLoadCard(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, metricColors: ServerMetricColors) {
+    val loadColors = cpuLoadLegendColors(metricColors)
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
         MetricTitle(icon = "pulse", title = "CPU Load", color = metricColors.cpu, compact = true)
         Spacer(Modifier.height(10.dp))
-        CpuLoadChart(snapshot, metricHistory, metricColors)
+        CpuLoadChart(snapshot, metricHistory, loadColors)
         Spacer(Modifier.height(9.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            Legend("1m", DeckColors.Red)
-            Legend("5m", metricColors.cpu)
-            Legend("15m", metricColors.latency)
+            Legend("1m", loadColors.oneMinute)
+            Legend("5m", loadColors.fiveMinute)
+            Legend("15m", loadColors.fifteenMinute)
         }
         Spacer(Modifier.height(11.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1426,7 +1430,7 @@ private fun FailedServicesCard(
 ) {
     if (services.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "pulse", title = "Failed Services", color = DeckColors.Red, compact = true)
+        MetricTitle(icon = "pulse", title = "Failed Services", color = DeckColors.Orange, compact = true)
         Spacer(Modifier.height(10.dp))
         services.take(limit).forEachIndexed { index, service ->
             if (index > 0) Spacer(Modifier.height(9.dp))
@@ -2387,12 +2391,12 @@ private fun MetricGlyph(icon: String, color: Color, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, metricColors: ServerMetricColors) {
+private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, loadColors: CpuLoadLegendColors) {
     val series = cpuLoadSeries(snapshot, metricHistory)
     val line1 = series.load1
     val line5 = series.load5
     val line15 = series.load15
-    val maxValue = niceLoadMax((line1 + line5 + line15).maxOrNull() ?: 0.6f)
+    val maxValue = niceLoadMax((line1 + line5 + line15).maxOrNull() ?: 0.6f, snapshot.cpu.cores)
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -2412,11 +2416,11 @@ private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSna
             val x = left + right * (i + 1) / 4f
             drawLine(grid.copy(alpha = 0.75f), androidx.compose.ui.geometry.Offset(x, top), androidx.compose.ui.geometry.Offset(x, bottom), strokeWidth = 1.dp.toPx())
         }
-        drawLoadArea(line15, maxValue, left, right, top, bottom, metricColors.latency)
-        drawLoadArea(line5, maxValue, left, right, top, bottom, metricColors.cpu)
-        drawLoadTrace(line1, maxValue, left, right, top, bottom, DeckColors.Red, 1.05f)
-        drawLoadTrace(line5, maxValue, left, right, top, bottom, metricColors.cpu, 0.95f)
-        drawLoadTrace(line15, maxValue, left, right, top, bottom, metricColors.latency, 0.95f)
+        drawLoadArea(line15, maxValue, left, right, top, bottom, loadColors.fifteenMinute)
+        drawLoadArea(line5, maxValue, left, right, top, bottom, loadColors.fiveMinute)
+        drawLoadTrace(line1, maxValue, left, right, top, bottom, loadColors.oneMinute, 1.05f)
+        drawLoadTrace(line5, maxValue, left, right, top, bottom, loadColors.fiveMinute, 0.95f)
+        drawLoadTrace(line15, maxValue, left, right, top, bottom, loadColors.fifteenMinute, 0.95f)
         listOf(maxValue, maxValue * 0.66f, maxValue * 0.33f, 0f).forEachIndexed { index, value ->
             drawContext.canvas.nativeCanvas.drawText(
                 value.loadAxisLabel(),
@@ -2429,7 +2433,7 @@ private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSna
                 }
             )
         }
-        listOf("-15m", "-10m", "-5m", "now").forEachIndexed { index, label ->
+        series.axisLabels.forEachIndexed { index, label ->
             drawContext.canvas.nativeCanvas.drawText(
                 label,
                 left + right * (index + 0.65f) / 4f,
@@ -2447,7 +2451,8 @@ private fun CpuLoadChart(snapshot: MetricSnapshot, metricHistory: List<MetricSna
 internal data class CpuLoadSeries(
     val load1: List<Float>,
     val load5: List<Float>,
-    val load15: List<Float>
+    val load15: List<Float>,
+    val axisLabels: List<String>
 )
 
 internal fun cpuLoadSeries(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>): CpuLoadSeries {
@@ -2455,17 +2460,47 @@ internal fun cpuLoadSeries(snapshot: MetricSnapshot, metricHistory: List<MetricS
         .distinctBy { it.collectedAtEpochMillis }
         .sortedBy { it.collectedAtEpochMillis }
         .takeLast(64)
+    val now = samples.lastOrNull()?.collectedAtEpochMillis ?: snapshot.collectedAtEpochMillis
+    val oldest = samples.firstOrNull()?.collectedAtEpochMillis ?: now
+    val spanMinutes = ((now - oldest).coerceAtLeast(0L) / 60_000f).coerceAtLeast(0f)
     return CpuLoadSeries(
         load1 = samples.map { it.cpu.load1.coerceAtLeast(0f) },
         load5 = samples.map { it.cpu.load5.coerceAtLeast(0f) },
-        load15 = samples.map { it.cpu.load15.coerceAtLeast(0f) }
+        load15 = samples.map { it.cpu.load15.coerceAtLeast(0f) },
+        axisLabels = loadAxisTimeLabels(spanMinutes)
     )
 }
 
-private fun niceLoadMax(maxSeen: Float): Float {
-    val floor = 0.6f
+internal fun niceLoadMax(maxSeen: Float, cores: Int): Float {
+    val floor = max(0.6f, cores.coerceAtLeast(1).toFloat())
     if (maxSeen <= floor) return floor
     return (ceil((maxSeen * 1.12f) * 2f) / 2f).coerceAtLeast(floor)
+}
+
+private fun loadAxisTimeLabels(spanMinutes: Float): List<String> {
+    if (spanMinutes < 1f) return listOf("-45s", "-30s", "-15s", "now")
+    val span = ceil(spanMinutes).toInt().coerceAtLeast(1)
+    return listOf(
+        "-${span}m",
+        "-${ceil(span * 2f / 3f).toInt()}m",
+        "-${ceil(span / 3f).toInt()}m",
+        "now"
+    )
+}
+
+private data class CpuLoadLegendColors(
+    val oneMinute: Color,
+    val fiveMinute: Color,
+    val fifteenMinute: Color
+)
+
+private fun cpuLoadLegendColors(metricColors: ServerMetricColors): CpuLoadLegendColors {
+    val usage = cpuUsageColorsFor(metricColors)
+    return CpuLoadLegendColors(
+        oneMinute = usage.user,
+        fiveMinute = usage.system,
+        fifteenMinute = usage.ioWait
+    )
 }
 
 private fun Float.loadAxisLabel(): String {
