@@ -798,6 +798,13 @@ private fun MonitoringSettings(
             onCheckedChange = { onSettingsChange(settings.copy(uptimeBackgroundMonitoringEnabled = it)) }
         )
         Spacer(Modifier.height(10.dp))
+        SettingsToggleRow(
+            title = "CPU usage pills",
+            checked = settings.cpuUsagePillsEnabled,
+            detail = "Use pill bars instead of the compact dot-style CPU rows",
+            onCheckedChange = { onSettingsChange(settings.copy(cpuUsagePillsEnabled = it)) }
+        )
+        Spacer(Modifier.height(10.dp))
         SettingsStepperRow(
             title = "Auto refresh",
             detail = "Reachability checks and eligible SSH metrics",

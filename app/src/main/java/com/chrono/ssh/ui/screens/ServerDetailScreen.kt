@@ -113,6 +113,7 @@ fun ServerDetailScreen(
     onWake: (() -> Unit)? = null,
     metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
+    cpuUsagePillsEnabled: Boolean = true,
     serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     serverDetailHiddenCards: String = ""
 ) {
@@ -251,6 +252,7 @@ fun ServerDetailScreen(
                         snapshot = snapshot,
                         metricHistory = metricHistory,
                         metricColors = metricColors,
+                        cpuUsagePillsEnabled = cpuUsagePillsEnabled,
                         onInterfaces = onInterfaces,
                         onContainerAction = onContainerAction,
                         onProcessAction = onProcessAction,
@@ -280,6 +282,7 @@ private fun renderServerDetailCard(
     snapshot: MetricSnapshot,
     metricHistory: List<MetricSnapshot>,
     metricColors: ServerMetricColors,
+    cpuUsagePillsEnabled: Boolean,
     onInterfaces: () -> Unit,
     onContainerAction: (ContainerMetric, String) -> Unit,
     onProcessAction: (ProcessMetric, String) -> Unit,
@@ -293,7 +296,7 @@ private fun renderServerDetailCard(
             true
         }
         ServerDetailCard.CpuUsage -> {
-            CpuUsageCard(snapshot, metricColors)
+            CpuUsageCard(snapshot, metricColors, cpuUsagePillsEnabled)
             true
         }
         ServerDetailCard.CpuLoad -> {
@@ -822,7 +825,7 @@ private fun DetailActionGlyph(icon: DetailTileIcon, color: Color, modifier: Modi
 }
 
 @Composable
-private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
+private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors, cpuUsagePillsEnabled: Boolean) {
     val cpuUsageColors = cpuUsageColorsFor(metricColors)
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 18.dp, vertical = 15.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -845,7 +848,7 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
             )
         }
         Spacer(Modifier.height(10.dp))
-        CpuUsageRows(snapshot, cpuUsageColors)
+        CpuUsageRows(snapshot, cpuUsageColors, cpuUsagePillsEnabled)
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
@@ -864,15 +867,15 @@ private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsage
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, Modifier.weight(1f), showIndicator = false)
-        CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user, Modifier.weight(1f))
-        CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system, Modifier.weight(1f))
-        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice, Modifier.weight(1f))
-        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", cpuUsageColors.ioWait, Modifier.weight(1f))
-        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", cpuUsageColors.steal, Modifier.weight(1f))
+        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, showIndicator = false)
+        CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user)
+        CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system)
+        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice)
+        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", cpuUsageColors.ioWait)
+        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", cpuUsageColors.steal)
     }
 }
 
@@ -902,7 +905,7 @@ private fun CpuUsagePercent(percent: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors) {
+private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors, cpuUsagePillsEnabled: Boolean) {
     val rows = snapshot.cpu.perCore.takeIf { it.isNotEmpty() } ?: List(snapshot.cpu.cores.coerceIn(1, 32)) { core ->
         CpuCoreMetrics(
             index = core,
@@ -918,9 +921,10 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
     val coreCount = visibleRows.size.coerceAtLeast(1)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         val pillHeight = when {
-            coreCount <= 8 -> 18.dp
-            coreCount <= 16 -> 13.dp
-            coreCount <= 24 -> 8.dp
+            !cpuUsagePillsEnabled && coreCount <= 8 -> 8.dp
+            !cpuUsagePillsEnabled && coreCount <= 16 -> 6.5.dp
+            cpuUsagePillsEnabled && coreCount <= 8 -> 10.dp
+            cpuUsagePillsEnabled && coreCount <= 16 -> 7.dp
             else -> 5.dp
         }
         val rowGap = when {
@@ -941,8 +945,9 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
                 else -> 2.dp
             }.toPx()
             val rowGapPx = rowGap.toPx()
-            val cellWidth = ((size.width - gap * (columns - 1)) / columns).coerceIn(3f, 6.dp.toPx())
+            val cellWidth = ((size.width - gap * (columns - 1)) / columns).coerceAtLeast(3f)
             val cellHeight = pillHeight.toPx()
+            val radius = if (cpuUsagePillsEnabled) cellHeight / 2f else 1.5.dp.toPx()
             visibleRows.forEachIndexed { row, core ->
                 val filledCells = ((core.usagePercent / 100f) * columns).toInt().coerceIn(0, columns)
                 val userCells = ((core.userPercent / 100f) * columns).toInt().coerceIn(0, filledCells)
@@ -964,7 +969,7 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
                         color = color,
                         topLeft = androidx.compose.ui.geometry.Offset(column * (cellWidth + gap), row * (cellHeight + rowGapPx)),
                         size = androidx.compose.ui.geometry.Size(cellWidth, cellHeight),
-                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(cellHeight / 2f, cellHeight / 2f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
                         style = Fill
                     )
                 }
@@ -1052,24 +1057,31 @@ private fun DrawScope.drawLoadArea(
 }
 
 @Composable
-private fun CpuStat(label: String, value: String, color: Color, modifier: Modifier = Modifier, horizontalAlignment: Alignment.Horizontal = Alignment.Start, showIndicator: Boolean = true) {
-    Column(
+private fun CpuStat(label: String, value: String, color: Color, modifier: Modifier = Modifier, showIndicator: Boolean = true) {
+    Row(
         modifier = modifier,
-        horizontalAlignment = horizontalAlignment
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            if (showIndicator) {
-                Canvas(Modifier.size(7.dp)) { drawCircle(color) }
-            }
-            Text(label, color = DeckColors.SecondaryText, fontSize = 11.sp, lineHeight = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (showIndicator) {
+            Box(
+                Modifier
+                    .padding(top = 1.dp)
+                    .size(width = 6.dp, height = 13.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(color)
+            )
         }
-        Text(value, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(label, color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 13.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(value, color = DeckColors.PrimaryText, fontSize = 16.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        }
     }
 }
 
 @Composable
 private fun CpuLoadCard(snapshot: MetricSnapshot, metricHistory: List<MetricSnapshot>, metricColors: ServerMetricColors) {
-    val loadColors = cpuLoadLegendColors(metricColors)
+    val loadColors = cpuLoadLegendColors()
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
         MetricTitle(icon = "pulse", title = "CPU Load", color = metricColors.cpu, compact = true)
         Spacer(Modifier.height(10.dp))
@@ -1254,7 +1266,7 @@ private fun ProcessesCard(
                 .then(if (onOpenAll != null) Modifier.clickable(onClick = onOpenAll) else Modifier),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MetricTitle(icon = "pulse", title = "Top Processes", color = metricColors.cpu, compact = true)
+            MetricTitle(icon = "pulse", title = "Top Processes", color = DeckColors.Purple, compact = true)
             if (onOpenAll != null) {
                 Spacer(Modifier.weight(1f))
                 DetailChevronGlyph(DeckColors.SecondaryText, Modifier.size(18.dp))
@@ -1334,7 +1346,7 @@ private fun ProcessesPage(
     var sortMode by remember { mutableStateOf(ProcessSortMode.Cpu) }
     if (summary.items.isEmpty() && !summary.hasProcessSummary()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 17.dp, vertical = 16.dp)) {
-        MetricTitle(icon = "pulse", title = "Processes", color = metricColors.cpu, compact = true)
+        MetricTitle(icon = "pulse", title = "Processes", color = DeckColors.Purple, compact = true)
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
             processPageMetrics(summary, summary.items).forEach { metric ->
@@ -1458,7 +1470,7 @@ private fun SystemdServicesPage(
                 .then(if (onOpenAll != null) Modifier.clickable(onClick = onOpenAll) else Modifier),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MetricTitle(icon = "service", title = "Systemd Services", color = metricColors.latency, compact = true)
+            MetricTitle(icon = "service", title = "Systemd Services", color = DeckColors.Purple, compact = true)
             if (onOpenAll != null) {
                 Spacer(Modifier.weight(1f))
                 DetailChevronGlyph(DeckColors.SecondaryText, Modifier.size(18.dp))
@@ -2472,7 +2484,7 @@ internal fun cpuLoadSeries(snapshot: MetricSnapshot, metricHistory: List<MetricS
 }
 
 internal fun niceLoadMax(maxSeen: Float, cores: Int): Float {
-    val floor = max(0.6f, cores.coerceAtLeast(1).toFloat())
+    val floor = 1f
     if (maxSeen <= floor) return floor
     return (ceil((maxSeen * 1.12f) * 2f) / 2f).coerceAtLeast(floor)
 }
@@ -2494,12 +2506,11 @@ private data class CpuLoadLegendColors(
     val fifteenMinute: Color
 )
 
-private fun cpuLoadLegendColors(metricColors: ServerMetricColors): CpuLoadLegendColors {
-    val usage = cpuUsageColorsFor(metricColors)
+private fun cpuLoadLegendColors(): CpuLoadLegendColors {
     return CpuLoadLegendColors(
-        oneMinute = usage.user,
-        fiveMinute = usage.system,
-        fifteenMinute = usage.ioWait
+        oneMinute = Color(0xFFEF4444),
+        fiveMinute = Color(0xFF2563EB),
+        fifteenMinute = Color(0xFFF59E0B)
     )
 }
 
@@ -2613,7 +2624,7 @@ private fun SystemSummaryCard(snapshot: MetricSnapshot, metricColors: ServerMetr
     val rows = systemSummaryRows(snapshot)
     if (rows.isEmpty()) return
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 26.dp, padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
-        MetricTitle(icon = "chip", title = "System", color = metricColors.latency, compact = true)
+        MetricTitle(icon = "chip", title = "System", color = DeckColors.Cyan, compact = true)
         Spacer(Modifier.height(12.dp))
         rows.forEachIndexed { index, row ->
             if (index > 0) Spacer(Modifier.height(10.dp))

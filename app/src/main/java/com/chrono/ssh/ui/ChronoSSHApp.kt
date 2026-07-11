@@ -1817,7 +1817,8 @@ fun ChronoSSHApp(
                                         null
                                     },
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    cpuUsagePillsEnabled = appSettings.cpuUsagePillsEnabled,
                                     serverDetailCardOrder = appSettings.serverDetailCardOrder,
                                     serverDetailHiddenCards = appSettings.serverDetailHiddenCards
                                 )

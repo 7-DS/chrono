@@ -452,8 +452,6 @@ private fun ServerOverviewCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            StatusDot(snapshot?.status ?: ServerStatus.Unknown, Modifier.size(12.dp))
-            Spacer(Modifier.width(6.dp))
             snapshot?.latencyMs?.let { latency ->
                 Box(
                     modifier = Modifier
@@ -463,7 +461,7 @@ private fun ServerOverviewCard(
                 ) {
                     Text(
                         "$latency ms",
-                        color = if (snapshot.status == ServerStatus.Online) metricColors.latency else DeckColors.SecondaryText,
+                        color = if (snapshot.status == ServerStatus.Online) DeckColors.Green else DeckColors.SecondaryText,
                         fontSize = 12.sp,
                         lineHeight = 14.sp,
                         fontWeight = FontWeight.Normal,
@@ -472,6 +470,8 @@ private fun ServerOverviewCard(
                 }
                 Spacer(Modifier.width(6.dp))
             }
+            StatusDot(snapshot?.status ?: ServerStatus.Unknown, Modifier.size(12.dp))
+            Spacer(Modifier.width(6.dp))
             SshGlyphButton(onTerminalClick)
         }
         val hasCpu = snapshot?.hasCpuMetrics() == true

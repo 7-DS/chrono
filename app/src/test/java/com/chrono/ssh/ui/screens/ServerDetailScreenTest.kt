@@ -75,8 +75,8 @@ class ServerDetailScreenTest {
     }
 
     @Test
-    fun cpuLoadScaleUsesCoreCapacityAsFloor() {
-        assertEquals(8f, niceLoadMax(maxSeen = 0.4f, cores = 8))
+    fun cpuLoadScaleUsesObservedLoadFloor() {
+        assertEquals(1f, niceLoadMax(maxSeen = 0.4f, cores = 8))
         assertEquals(11.5f, niceLoadMax(maxSeen = 10f, cores = 8))
     }
 

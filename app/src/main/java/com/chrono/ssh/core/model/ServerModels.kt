@@ -158,6 +158,7 @@ data class AppSettings(
     val serverMetricNetworkColorHex: String? = null,
     val serverMetricLatencyColorHex: String? = null,
     val appAccentColorHex: String? = null,
+    val cpuUsagePillsEnabled: Boolean = true,
     val serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     val serverDetailHiddenCards: String = "",
     val homeHeadingFontPath: String? = null,
