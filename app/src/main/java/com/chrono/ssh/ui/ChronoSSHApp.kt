@@ -115,6 +115,7 @@ import com.chrono.ssh.core.service.SftpSortMode
 import com.chrono.ssh.core.service.TerminalSessionForegroundService
 import com.chrono.ssh.core.service.TerminalSessionRegistry
 import com.chrono.ssh.core.service.TcpReachabilityProbe
+import com.chrono.ssh.core.service.UptimeMonitoringForegroundService
 import com.chrono.ssh.core.service.WakeOnLanSender
 import com.chrono.ssh.ui.design.AppBackground
 import com.chrono.ssh.ui.design.DeckColors
@@ -602,6 +603,9 @@ fun ChronoSSHApp(
             connectionCount = serviceConnectionCount,
             nonTerminalConnectionCount = activeNonTerminalConnectionCount
         )
+    }
+    LaunchedEffect(context, appSettings.uptimeBackgroundMonitoringEnabled) {
+        UptimeMonitoringForegroundService.setRunning(context, appSettings.uptimeBackgroundMonitoringEnabled)
     }
     LaunchedEffect(context, activeConnectionCount, repository.servers.size) {
         while (true) {
@@ -1218,6 +1222,16 @@ fun ChronoSSHApp(
                         AppSurface.Uptime -> UptimeScreen(
                             servers = repository.servers,
                             snapshots = repository.snapshots,
+                            metricHistory = repository.metricHistory,
+                            backgroundMonitoringEnabled = appSettings.uptimeBackgroundMonitoringEnabled,
+                            onBackgroundMonitoringChange = { enabled ->
+                                persistSettings(appSettings.copy(uptimeBackgroundMonitoringEnabled = enabled))
+                            },
+                            onHostMonitoringChange = { server, enabled ->
+                                repository.upsertServer(
+                                    server.copy(monitoringConfig = server.monitoringConfig.copy(enabled = enabled))
+                                )
+                            },
                             onBack = { showUptime = false },
                             onServerClick = {
                                 showUptime = false

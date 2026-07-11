@@ -168,6 +168,7 @@ data class AppSettings(
     val sftpDefaultSortDescending: Boolean = false,
     val sftpShowHiddenByDefault: Boolean = false,
     val autoRefreshSeconds: Int = 2,
+    val uptimeBackgroundMonitoringEnabled: Boolean = false,
     val appLockPinHash: String? = null,
     val appLockPinSalt: String? = null,
     val appLockBiometricEnabled: Boolean = false,

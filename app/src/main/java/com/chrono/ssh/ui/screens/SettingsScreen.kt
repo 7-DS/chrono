@@ -462,7 +462,8 @@ internal fun monitoringSettingsSummary(settings: AppSettings): String {
         ServerCardDiskMode.Rates -> "disk speed"
         ServerCardDiskMode.Totals -> "disk totals"
     }
-    return "${settings.autoRefreshSeconds}s · $network · $disk · ${settings.serverMetricColorPreset.label()}"
+    val background = if (settings.uptimeBackgroundMonitoringEnabled) "uptime bg on" else "uptime bg off"
+    return "${settings.autoRefreshSeconds}s · $background · $network · $disk · ${settings.serverMetricColorPreset.label()}"
 }
 
 internal fun filesSettingsSummary(settings: AppSettings): String {
@@ -782,7 +783,14 @@ private fun MonitoringSettings(
     onSettingsChange: (AppSettings) -> Unit,
     onSelectionPageChange: (SettingsSelectionPage?) -> Unit
 ) {
-    SettingsCard("Monitoring") {
+        SettingsCard("Monitoring") {
+        SettingsToggleRow(
+            title = "Background uptime monitoring",
+            checked = settings.uptimeBackgroundMonitoringEnabled,
+            detail = "Keep uptime checks running after the app leaves the foreground",
+            onCheckedChange = { onSettingsChange(settings.copy(uptimeBackgroundMonitoringEnabled = it)) }
+        )
+        Spacer(Modifier.height(10.dp))
         SettingsStepperRow(
             title = "Auto refresh",
             detail = "Reachability checks and eligible SSH metrics",

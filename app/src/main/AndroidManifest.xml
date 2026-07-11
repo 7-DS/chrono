@@ -34,6 +34,15 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Long-lived SSH, local shell, VNC, RDP, SFTP, and SMB sessions kept alive while the user has active connections." />
         </service>
+        <service
+            android:name=".core.service.UptimeMonitoringForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Periodic TCP uptime checks for hosts explicitly enabled by the user." />
+        </service>
 
         <activity
             android:name=".MainActivity"

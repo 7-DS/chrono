@@ -159,7 +159,9 @@ internal object MetricSnapshotSeedPolicy {
     }
 
     fun hasSeedableData(snapshot: MetricSnapshot): Boolean {
-        return snapshot.uptime != "--" ||
+        return snapshot.status == ServerStatus.Online ||
+            snapshot.status == ServerStatus.Offline ||
+            snapshot.uptime != "--" ||
             snapshot.cpu.usagePercent > 0 ||
             snapshot.cpu.perCore.isNotEmpty() ||
             snapshot.memory.totalMb > 0 ||
@@ -273,6 +275,29 @@ internal object MetricHistoryRetentionPolicy {
         return (summarized + detailed)
             .distinctBy { it.collectedAtEpochMillis }
             .sortedBy { it.collectedAtEpochMillis }
+    }
+}
+
+internal object UptimeHistoryPersistencePolicy {
+    fun encode(snapshot: MetricSnapshot): String {
+        return listOf(
+            snapshot.serverId,
+            snapshot.status.name,
+            snapshot.latencyMs?.toString().orEmpty(),
+            snapshot.collectedAtEpochMillis.toString()
+        ).joinToString("|") { escape(it) }
+    }
+
+    fun decode(line: String, unavailable: (String) -> MetricSnapshot): MetricSnapshot? {
+        val fields = line.split('|').map(::unescape)
+        val serverId = fields.getOrNull(0)?.takeIf { it.isNotBlank() } ?: return null
+        val status = fields.getOrNull(1)?.let { runCatching { ServerStatus.valueOf(it) }.getOrNull() } ?: return null
+        val collectedAt = fields.getOrNull(3)?.toLongOrNull()?.takeIf { it > 0L } ?: return null
+        return unavailable(serverId).copy(
+            status = status,
+            latencyMs = fields.getOrNull(2)?.toIntOrNull(),
+            collectedAtEpochMillis = collectedAt
+        )
     }
 }
 
@@ -409,6 +434,7 @@ class ChronoSSHRepository(private val context: Context) {
     private val serversFile = File(storeDir, "servers.v1.txt")
     private val settingsFile = File(storeDir, "settings.v1.txt")
     private val eventsFile = File(storeDir, "connection-events.v1.txt")
+    private val uptimeHistoryFile = File(storeDir, "uptime-history.v1.txt")
     private val credentialsFile = File(storeDir, "credentials.v1.txt")
     private val knownHostsFile = File(storeDir, "known-hosts.v1.txt")
     private val snippetsFile = File(storeDir, "snippets.v1.txt")
@@ -475,6 +501,7 @@ class ChronoSSHRepository(private val context: Context) {
         recoverStartupSection(sftpBookmarksFile) { sftpBookmarks.addAll(loadSftpBookmarks().ifEmpty { defaultSftpBookmarks() }) }
         recoverStartupSection(transfersFile) { transfers.addAll(loadTransfers()) }
         recoverStartupSection(eventsFile) { connectionEvents.putAll(loadEvents().groupBy { it.serverId }) }
+        recoverStartupSection(uptimeHistoryFile) { metricHistory.putAll(loadUptimeHistory().groupBy { it.serverId }) }
         snapshots.putAll(defaultSnapshots())
         servers.forEach { server -> snapshots.putIfAbsent(server.id, seedSnapshot(server.id)) }
         crashLogs.addAll(CrashLogStore.load(context).sortedByDescending { it.atEpochMillis })
@@ -542,6 +569,7 @@ class ChronoSSHRepository(private val context: Context) {
                 sftpDefaultSortDescending = values["sftpDefaultSortDescending"]?.toBooleanStrictOrNull() ?: false,
                 sftpShowHiddenByDefault = values["sftpShowHiddenByDefault"]?.toBooleanStrictOrNull() ?: false,
                 autoRefreshSeconds = ServerStatusRefreshPolicy.normalize(values["autoRefreshSeconds"]?.toIntOrNull()),
+                uptimeBackgroundMonitoringEnabled = values["uptimeBackgroundMonitoringEnabled"]?.toBooleanStrictOrNull() ?: false,
                 appLockPinHash = values["appLockPinHash"]?.ifBlank { null },
                 appLockPinSalt = values["appLockPinSalt"]?.ifBlank { null },
                 appLockBiometricEnabled = values["appLockBiometricEnabled"]?.toBooleanStrictOrNull() ?: false,
@@ -597,6 +625,7 @@ class ChronoSSHRepository(private val context: Context) {
                     "sftpDefaultSortDescending=${cleanSettings.sftpDefaultSortDescending}",
                     "sftpShowHiddenByDefault=${cleanSettings.sftpShowHiddenByDefault}",
                     "autoRefreshSeconds=${ServerStatusRefreshPolicy.normalize(cleanSettings.autoRefreshSeconds)}",
+                    "uptimeBackgroundMonitoringEnabled=${cleanSettings.uptimeBackgroundMonitoringEnabled}",
                     "appLockPinHash=${escape(cleanSettings.appLockPinHash.orEmpty())}",
                     "appLockPinSalt=${escape(cleanSettings.appLockPinSalt.orEmpty())}",
                     "appLockBiometricEnabled=${cleanSettings.appLockBiometricEnabled}",
@@ -759,6 +788,7 @@ class ChronoSSHRepository(private val context: Context) {
         saveTerminalSessions()
         saveSftpBookmarks()
         saveTransfers()
+        saveUptimeHistory()
         saveEvents()
     }
 
@@ -1902,11 +1932,13 @@ class ChronoSSHRepository(private val context: Context) {
 
     fun updateProbeResult(serverId: String, status: ServerStatus, latencyMs: Int?, message: String) {
         val current = snapshots[serverId] ?: seedSnapshot(serverId)
-        snapshots[serverId] = current.copy(
+        val next = current.copy(
             status = status,
             latencyMs = latencyMs,
             collectedAtEpochMillis = System.currentTimeMillis()
         )
+        snapshots[serverId] = next
+        recordMetricSnapshot(next)
         val level = when (status) {
             ServerStatus.Online -> ConnectionEventLevel.Success
             ServerStatus.Connecting -> ConnectionEventLevel.Info
@@ -1984,6 +2016,7 @@ class ChronoSSHRepository(private val context: Context) {
             samples = metricHistory[snapshot.serverId].orEmpty() + snapshot,
             nowEpochMillis = snapshot.collectedAtEpochMillis
         )
+        saveUptimeHistory()
     }
 
     fun exportBackupPreview(): String {
@@ -2064,7 +2097,8 @@ class ChronoSSHRepository(private val context: Context) {
                     settings.serverMetricMemoryColorHex.orEmpty(),
                     settings.serverMetricDiskColorHex.orEmpty(),
                     settings.serverMetricNetworkColorHex.orEmpty(),
-                    settings.serverMetricLatencyColorHex.orEmpty()
+                    settings.serverMetricLatencyColorHex.orEmpty(),
+                    settings.uptimeBackgroundMonitoringEnabled.toString()
                 ).joinToString("|") { escape(it) }
             )
             appendLine("[servers]")
@@ -2305,6 +2339,19 @@ class ChronoSSHRepository(private val context: Context) {
 
     private fun loadEvents(): List<ConnectionEvent> {
         return loadRecords(eventsFile, ::decodeEvent)
+    }
+
+    private fun saveUptimeHistory() {
+        val samples = metricHistory.values.flatten()
+            .filter { it.status == ServerStatus.Online || it.status == ServerStatus.Offline }
+            .let { MetricHistoryRetentionPolicy.retain(it, System.currentTimeMillis()) }
+        uptimeHistoryFile.writeText(samples.joinToString("\n") { UptimeHistoryPersistencePolicy.encode(it) })
+    }
+
+    private fun loadUptimeHistory(): List<MetricSnapshot> {
+        return loadRecords(uptimeHistoryFile) { line ->
+            UptimeHistoryPersistencePolicy.decode(line, ::unavailableSnapshot)
+        }
     }
 
     private fun saveCredentials() {
@@ -3061,6 +3108,7 @@ object BackupSettingsImportPolicy {
         val serverMetricDiskColorHexIndex = serverCardNetworkModeIndex + 11
         val serverMetricNetworkColorHexIndex = serverCardNetworkModeIndex + 12
         val serverMetricLatencyColorHexIndex = serverCardNetworkModeIndex + 13
+        val uptimeBackgroundMonitoringEnabledIndex = serverCardNetworkModeIndex + 14
         return AppSettings(
             themeModeName = safeSettingToken(fields[0], "System"),
             themeFamilyId = safeSettingToken(fields[1], "default"),
@@ -3092,6 +3140,7 @@ object BackupSettingsImportPolicy {
             serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(fields.getOrNull(serverDetailCardOrderIndex) ?: existing.serverDetailCardOrder),
             serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(fields.getOrNull(serverDetailHiddenCardsIndex) ?: existing.serverDetailHiddenCards),
             autoRefreshSeconds = ServerStatusRefreshPolicy.normalize(fields.getOrNull(autoRefreshIndex)?.toIntOrNull()),
+            uptimeBackgroundMonitoringEnabled = fields.getOrNull(uptimeBackgroundMonitoringEnabledIndex)?.toBooleanStrictOrNull() ?: existing.uptimeBackgroundMonitoringEnabled,
             appLockPinHash = existing.appLockPinHash,
             appLockPinSalt = existing.appLockPinSalt,
             appLockBiometricEnabled = fields.getOrNull(appLockBiometricIndex)?.toBooleanStrictOrNull() ?: existing.appLockBiometricEnabled,

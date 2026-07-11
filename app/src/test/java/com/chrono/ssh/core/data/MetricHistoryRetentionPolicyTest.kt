@@ -88,6 +88,17 @@ class MetricHistoryRetentionPolicyTest {
     }
 
     @Test
+    fun seedPolicyKeepsProbeOnlyUptimeSamples() {
+        val online = emptySnapshot(3_000L).copy(status = ServerStatus.Online, latencyMs = 12)
+
+        val seeded = MetricSnapshotSeedPolicy.seed("server", listOf(online)) { id ->
+            snapshot(4_000L, uptime = "--").copy(serverId = id)
+        }
+
+        assertEquals(online, seeded)
+    }
+
+    @Test
     fun retentionKeepsInventoryOnlySamples() {
         val inventoryOnly = snapshot(3_000L, uptime = "--").copy(
             cpu = CpuMetrics(0, 0, "Linux CPU", 0, 0, 0, 0, 0, 0f, 0f, 0f, emptyList()),

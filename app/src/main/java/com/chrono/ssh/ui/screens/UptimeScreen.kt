@@ -35,17 +35,21 @@ import com.chrono.ssh.core.model.ServerProfile
 import com.chrono.ssh.core.model.ServerStatus
 import com.chrono.ssh.ui.design.DeckCard
 import com.chrono.ssh.ui.design.DeckColors
-import kotlin.math.roundToInt
+import java.util.Locale
 
 @Composable
 fun UptimeScreen(
     servers: List<ServerProfile>,
     snapshots: Map<String, MetricSnapshot>,
+    metricHistory: Map<String, List<MetricSnapshot>>,
+    backgroundMonitoringEnabled: Boolean,
+    onBackgroundMonitoringChange: (Boolean) -> Unit,
+    onHostMonitoringChange: (ServerProfile, Boolean) -> Unit,
     onBack: () -> Unit,
     onServerClick: (ServerProfile) -> Unit,
     onRefresh: (ServerProfile) -> Unit
 ) {
-    val rows = uptimeRows(servers, snapshots)
+    val rows = uptimeRows(servers, snapshots, metricHistory)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,15 +61,27 @@ fun UptimeScreen(
             UptimeBackButton(onBack)
             Column(Modifier.weight(1f)) {
                 Text("Uptime", color = DeckColors.PrimaryText, fontSize = 34.sp, lineHeight = 36.sp, fontWeight = FontWeight.Black)
-                Text("${rows.size} hosts tracked from live snapshots", color = DeckColors.SecondaryText, fontSize = 13.sp, lineHeight = 15.sp)
+                Text("${rows.size} hosts tracked from collected checks", color = DeckColors.SecondaryText, fontSize = 13.sp, lineHeight = 15.sp)
             }
         }
         Spacer(Modifier.height(14.dp))
         UptimeSummaryRow(rows)
+        Spacer(Modifier.height(10.dp))
+        UptimeToggleRow(
+            title = "Background uptime checks",
+            detail = if (backgroundMonitoringEnabled) "Checks continue after leaving the app" else "Checks run while chronoSSH is open",
+            checked = backgroundMonitoringEnabled,
+            onCheckedChange = onBackgroundMonitoringChange
+        )
         Spacer(Modifier.height(14.dp))
         rows.forEachIndexed { index, row ->
             if (index > 0) Spacer(Modifier.height(12.dp))
-            UptimeHostCard(row, onClick = { onServerClick(row.server) }, onRefresh = { onRefresh(row.server) })
+            UptimeHostCard(
+                row = row,
+                onClick = { onServerClick(row.server) },
+                onRefresh = { onRefresh(row.server) },
+                onMonitoringChange = { onHostMonitoringChange(row.server, it) }
+            )
         }
         if (rows.isEmpty()) {
             DeckCard(modifier = Modifier.fillMaxWidth(), padding = PaddingValues(18.dp)) {
@@ -96,7 +112,7 @@ private fun UptimeChip(label: String, count: Int, color: Color, modifier: Modifi
 }
 
 @Composable
-private fun UptimeHostCard(row: UptimeRow, onClick: () -> Unit, onRefresh: () -> Unit) {
+private fun UptimeHostCard(row: UptimeRow, onClick: () -> Unit, onRefresh: () -> Unit, onMonitoringChange: (Boolean) -> Unit) {
     val color = uptimeStatusColor(row.status)
     DeckCard(
         modifier = Modifier
@@ -121,17 +137,53 @@ private fun UptimeHostCard(row: UptimeRow, onClick: () -> Unit, onRefresh: () ->
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     UptimeMeta("Status", row.statusLabel, color, Modifier.weight(1f))
-                    UptimeMeta("Uptime", row.uptimeLabel, DeckColors.Cyan, Modifier.weight(1f))
-                    UptimeMeta("Latency", row.latencyLabel, DeckColors.Purple, Modifier.weight(1f))
+                    UptimeMeta("24h", row.uptime24hLabel, DeckColors.Cyan, Modifier.weight(1f))
+                    UptimeMeta("7d", row.uptime7dLabel, DeckColors.Purple, Modifier.weight(1f))
                 }
             }
-            UptimeRefreshButton(onRefresh)
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                UptimeSwitch(row.monitoringEnabled, onMonitoringChange)
+                UptimeRefreshButton(onRefresh)
+            }
         }
     }
 }
 
 @Composable
-private fun UptimeBars(buckets: List<ServerStatus>) {
+private fun UptimeToggleRow(title: String, detail: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    DeckCard(modifier = Modifier.fillMaxWidth(), radius = 18.dp, padding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.weight(1f)) {
+                Text(title, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.Black)
+                Text(detail, color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            UptimeSwitch(checked, onCheckedChange)
+        }
+    }
+}
+
+@Composable
+private fun UptimeSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(width = 44.dp, height = 26.dp)
+            .clip(RoundedCornerShape(99.dp))
+            .background(if (checked) DeckColors.SurfaceRaised else DeckColors.SurfaceMuted)
+            .clickable { onCheckedChange(!checked) }
+            .padding(3.dp),
+        contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
+        Box(
+            Modifier
+                .size(20.dp)
+                .clip(RoundedCornerShape(99.dp))
+                .background(if (checked) DeckColors.Green else DeckColors.SecondaryText)
+        )
+    }
+}
+
+@Composable
+private fun UptimeBars(buckets: List<UptimeBucketStatus>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,7 +196,7 @@ private fun UptimeBars(buckets: List<ServerStatus>) {
                     .weight(1f)
                     .fillMaxSize()
                     .clip(RoundedCornerShape(4.dp))
-                    .background(uptimeStatusColor(status).copy(alpha = if (status == ServerStatus.Unknown) 0.22f else 0.9f))
+                    .background(uptimeBucketColor(status))
             )
         }
     }
@@ -200,50 +252,96 @@ internal data class UptimeRow(
     val server: ServerProfile,
     val status: ServerStatus,
     val statusLabel: String,
-    val uptimeLabel: String,
-    val latencyLabel: String,
-    val buckets: List<ServerStatus>
+    val monitoringEnabled: Boolean,
+    val uptime24hLabel: String,
+    val uptime7dLabel: String,
+    val buckets: List<UptimeBucketStatus>
 )
 
-internal fun uptimeRows(servers: List<ServerProfile>, snapshots: Map<String, MetricSnapshot>): List<UptimeRow> {
+internal fun uptimeRows(
+    servers: List<ServerProfile>,
+    snapshots: Map<String, MetricSnapshot>,
+    metricHistory: Map<String, List<MetricSnapshot>>
+): List<UptimeRow> {
     return servers.sortedBy { it.name.lowercase() }.map { server ->
         val snapshot = snapshots[server.id]
         val status = snapshot?.status ?: ServerStatus.Unknown
+        val samples = uptimeSamples(server.id, snapshots, metricHistory)
         UptimeRow(
             server = server,
             status = status,
-            statusLabel = status.name,
-            uptimeLabel = snapshot?.uptime?.takeIf { it.isNotBlank() && it != "--" }?.compactUptimeLabel() ?: "--",
-            latencyLabel = snapshot?.latencyMs?.let { "${it}ms" } ?: "--",
-            buckets = uptimeBuckets(status, snapshot?.uptime)
+            statusLabel = statusLabel(status),
+            monitoringEnabled = server.monitoringConfig.enabled,
+            uptime24hLabel = formatUptimePercent(uptimePercent(samples, UptimeWindow24hMillis)),
+            uptime7dLabel = formatUptimePercent(uptimePercent(samples, UptimeWindow7dMillis)),
+            buckets = uptimeBuckets(samples)
         )
     }
 }
 
-internal fun uptimeBuckets(status: ServerStatus, uptime: String?): List<ServerStatus> {
-    val count = 48
-    if (status != ServerStatus.Online) return List(count) { status }
-    val filled = uptimeBucketFill(uptime).coerceIn(1, count)
-    return List(count) { index -> if (index >= count - filled) ServerStatus.Online else ServerStatus.Unknown }
+internal enum class UptimeBucketStatus {
+    NoData,
+    Up,
+    Down,
+    Unverified
 }
 
-internal fun uptimeBucketFill(uptime: String?): Int {
-    val text = uptime.orEmpty().lowercase()
-    return when {
-        text.contains("day") -> 48
-        text.contains("hour") -> (text.substringBefore("hour").takeLastWhile { it.isDigit() || it.isWhitespace() }.trim().toIntOrNull() ?: 1).coerceIn(1, 24) * 2
-        text.contains("min") -> ((text.substringBefore("min").takeLastWhile { it.isDigit() || it.isWhitespace() }.trim().toIntOrNull() ?: 30) / 30f).roundToInt().coerceIn(1, 2)
-        else -> 24
+private const val UptimeWindow24hMillis = 24L * 60L * 60L * 1000L
+private const val UptimeWindow7dMillis = 7L * UptimeWindow24hMillis
+private const val UptimeBucketMillis = 30L * 60L * 1000L
+
+private fun uptimeSamples(
+    serverId: String,
+    snapshots: Map<String, MetricSnapshot>,
+    metricHistory: Map<String, List<MetricSnapshot>>
+): List<MetricSnapshot> {
+    val current = snapshots[serverId]
+    return (metricHistory[serverId].orEmpty() + listOfNotNull(current))
+        .distinctBy { it.collectedAtEpochMillis }
+        .sortedBy { it.collectedAtEpochMillis }
+}
+
+internal fun uptimeBuckets(samples: List<MetricSnapshot>): List<UptimeBucketStatus> {
+    if (samples.isEmpty()) return List(48) { UptimeBucketStatus.NoData }
+    val now = samples.maxOf { it.collectedAtEpochMillis }
+    val windowStart = now - UptimeWindow24hMillis
+    return List(48) { index ->
+        val bucketStart = windowStart + (index * UptimeBucketMillis)
+        val bucketEnd = bucketStart + UptimeBucketMillis
+        val bucketSamples = samples.filter { it.collectedAtEpochMillis > bucketStart && it.collectedAtEpochMillis <= bucketEnd }
+        when {
+            bucketSamples.isEmpty() -> UptimeBucketStatus.NoData
+            bucketSamples.any { it.status == ServerStatus.Online } -> UptimeBucketStatus.Up
+            bucketSamples.any { it.status == ServerStatus.Offline } -> UptimeBucketStatus.Down
+            else -> UptimeBucketStatus.Unverified
+        }
     }
 }
 
-private fun String.compactUptimeLabel(): String {
-    return replace(" days", "d")
-        .replace(" day", "d")
-        .replace(" hours", "h")
-        .replace(" hour", "h")
-        .replace(" minutes", "m")
-        .replace(" minute", "m")
+internal fun uptimePercent(samples: List<MetricSnapshot>, windowMillis: Long): Double? {
+    if (samples.isEmpty()) return null
+    val now = samples.maxOf { it.collectedAtEpochMillis }
+    val windowStart = now - windowMillis
+    val verified = samples.filter {
+        it.collectedAtEpochMillis >= windowStart &&
+            (it.status == ServerStatus.Online || it.status == ServerStatus.Offline)
+    }
+    if (verified.isEmpty()) return null
+    val up = verified.count { it.status == ServerStatus.Online }
+    return (up.toDouble() / verified.size.toDouble()) * 100.0
+}
+
+private fun formatUptimePercent(value: Double?): String {
+    return value?.let { String.format(Locale.US, "%.1f%%", it) } ?: "--"
+}
+
+private fun statusLabel(status: ServerStatus): String {
+    return when (status) {
+        ServerStatus.Online -> "Up"
+        ServerStatus.Offline -> "Down"
+        ServerStatus.Connecting -> "Checking"
+        ServerStatus.Unknown -> "Unknown"
+    }
 }
 
 private fun uptimeStatusColor(status: ServerStatus): Color = when (status) {
@@ -251,4 +349,11 @@ private fun uptimeStatusColor(status: ServerStatus): Color = when (status) {
     ServerStatus.Offline -> DeckColors.Red
     ServerStatus.Connecting -> DeckColors.Orange
     ServerStatus.Unknown -> DeckColors.SecondaryText
+}
+
+private fun uptimeBucketColor(status: UptimeBucketStatus): Color = when (status) {
+    UptimeBucketStatus.Up -> DeckColors.Green.copy(alpha = 0.9f)
+    UptimeBucketStatus.Down -> DeckColors.Red.copy(alpha = 0.9f)
+    UptimeBucketStatus.Unverified -> DeckColors.SecondaryText.copy(alpha = 0.42f)
+    UptimeBucketStatus.NoData -> DeckColors.SurfaceMuted
 }
