@@ -1,6 +1,7 @@
 package com.chrono.ssh.core.service
 
 import android.content.Intent
+import android.app.Service
 import com.chrono.ssh.ui.foregroundServiceConnectionCount
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -129,6 +130,12 @@ class TerminalSessionForegroundServiceTest {
                 registeredTerminalSessionCount = 0
             )
         )
+    }
+
+    @Test
+    fun foregroundServiceRestartsOnlyWhileConnectionsExist() {
+        assertEquals(Service.START_NOT_STICKY, TerminalSessionForegroundService.serviceRestartMode(0))
+        assertEquals(Service.START_STICKY, TerminalSessionForegroundService.serviceRestartMode(1))
     }
 }
 

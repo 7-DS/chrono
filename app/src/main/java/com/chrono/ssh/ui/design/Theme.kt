@@ -72,6 +72,22 @@ private data class MetricAccentSet(
     val latency: Color = memory
 )
 
+private val professionalLightMetrics = MetricAccentSet(
+    cpu = Color(0xFF005BBB),
+    memory = Color(0xFF148A43),
+    disk = Color(0xFF9A6400),
+    network = Color(0xFF8A3FFC),
+    latency = Color(0xFFC2185B)
+)
+
+private val professionalDarkMetrics = MetricAccentSet(
+    cpu = Color(0xFF54B4FF),
+    memory = Color(0xFF7BD88F),
+    disk = Color(0xFFF2A93B),
+    network = Color(0xFFC084FC),
+    latency = Color(0xFFFF5C70)
+)
+
 private data class SurfaceLines(
     val divider: Color,
     val cardStroke: Color
@@ -79,16 +95,17 @@ private data class SurfaceLines(
 
 private fun DeckPalette.polished(): DeckPalette {
     val lines = surfaceLines(surface, primaryText, dark)
+    val metrics = if (dark) professionalDarkMetrics else professionalLightMetrics
     return copy(
         divider = lines.divider,
         cardStroke = lines.cardStroke,
         cyan = visibleAccent(cyan, primaryText, surface, surfaceMuted),
         brandAlt = visibleAccent(brandAlt, primaryText, surface, surfaceMuted),
-        metricCpu = metricCpu,
-        metricMemory = metricMemory,
-        metricDisk = metricDisk,
-        metricNetwork = metricNetwork,
-        metricLatency = metricLatency
+        metricCpu = metrics.cpu,
+        metricMemory = metrics.memory,
+        metricDisk = metrics.disk,
+        metricNetwork = metrics.network,
+        metricLatency = metrics.latency
     )
 }
 
@@ -563,11 +580,11 @@ object DeckThemeCatalog {
             navSurface = lightSurface,
             brand = lightPrimaryText,
             brandAlt = visibleAccent(lightAccent, lightPrimaryText, lightSurface, lightSurfaceMuted),
-            metricCpu = lightMetrics.cpu,
-            metricMemory = lightMetrics.memory,
-            metricDisk = lightMetrics.disk,
-            metricNetwork = lightMetrics.network,
-            metricLatency = lightMetrics.latency
+            metricCpu = professionalLightMetrics.cpu,
+            metricMemory = professionalLightMetrics.memory,
+            metricDisk = professionalLightMetrics.disk,
+            metricNetwork = professionalLightMetrics.network,
+            metricLatency = professionalLightMetrics.latency
         ),
         dark = auroraDark.copy(
             id = "$id-dark",
@@ -593,11 +610,11 @@ object DeckThemeCatalog {
             navSurface = darkSurface,
             brand = darkPrimaryText,
             brandAlt = visibleAccent(darkAccent, darkPrimaryText, darkSurface, darkSurfaceMuted),
-            metricCpu = darkMetrics.cpu,
-            metricMemory = darkMetrics.memory,
-            metricDisk = darkMetrics.disk,
-            metricNetwork = darkMetrics.network,
-            metricLatency = darkMetrics.latency
+            metricCpu = professionalDarkMetrics.cpu,
+            metricMemory = professionalDarkMetrics.memory,
+            metricDisk = professionalDarkMetrics.disk,
+            metricNetwork = professionalDarkMetrics.network,
+            metricLatency = professionalDarkMetrics.latency
         )
         )
     }

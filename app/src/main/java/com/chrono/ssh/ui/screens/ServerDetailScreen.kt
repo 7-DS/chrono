@@ -83,8 +83,10 @@ import com.chrono.ssh.ui.design.DeckCard
 import com.chrono.ssh.ui.design.DeckColors
 import com.chrono.ssh.ui.design.InterfaceMetricCard
 import com.chrono.ssh.ui.design.MetricRing
+import com.chrono.ssh.ui.design.ServerCpuUsageColors
 import com.chrono.ssh.ui.design.ServerMetricColors
 import com.chrono.ssh.ui.design.ServerMetricColorOverrides
+import com.chrono.ssh.ui.design.cpuUsageColorsFor
 import com.chrono.ssh.ui.design.metricColorsFor
 import kotlin.math.ceil
 import kotlin.math.max
@@ -821,9 +823,10 @@ private fun DetailActionGlyph(icon: DetailTileIcon, color: Color, modifier: Modi
 
 @Composable
 private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
+    val cpuUsageColors = cpuUsageColorsFor(metricColors)
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 18.dp, vertical = 15.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            MetricTitle(icon = "chip", title = "CPU Usage", color = metricColors.cpu, compact = true)
+            MetricTitle(icon = "chip", title = "CPU Usage", color = cpuUsageColors.user, compact = true)
         }
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.fillMaxWidth()) {
@@ -842,7 +845,7 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
             )
         }
         Spacer(Modifier.height(10.dp))
-        CpuUsageRows(snapshot, metricColors)
+        CpuUsageRows(snapshot, cpuUsageColors)
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
@@ -851,12 +854,12 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
                 .background(DeckColors.Divider)
         )
         Spacer(Modifier.height(10.dp))
-        CpuStatFlow(snapshot, metricColors)
+        CpuStatFlow(snapshot, cpuUsageColors)
     }
 }
 
 @Composable
-private fun CpuStatFlow(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
+private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -865,11 +868,11 @@ private fun CpuStatFlow(snapshot: MetricSnapshot, metricColors: ServerMetricColo
         verticalAlignment = Alignment.Top
     ) {
         CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, Modifier.weight(1f))
-        CpuStat("User", "${snapshot.cpu.userPercent}%", metricColors.cpu, Modifier.weight(1f))
-        CpuStat("System", "${snapshot.cpu.systemPercent}%", DeckColors.Red, Modifier.weight(1f))
-        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", metricColors.memory, Modifier.weight(1f))
-        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", metricColors.latency, Modifier.weight(1f))
-        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", metricColors.disk, Modifier.weight(1f))
+        CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user, Modifier.weight(1f))
+        CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system, Modifier.weight(1f))
+        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice, Modifier.weight(1f))
+        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", cpuUsageColors.ioWait, Modifier.weight(1f))
+        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", cpuUsageColors.steal, Modifier.weight(1f))
     }
 }
 
@@ -899,7 +902,7 @@ private fun CpuUsagePercent(percent: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CpuUsageRows(snapshot: MetricSnapshot, metricColors: ServerMetricColors) {
+private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors) {
     val rows = snapshot.cpu.perCore.takeIf { it.isNotEmpty() } ?: List(snapshot.cpu.cores.coerceIn(1, 32)) { core ->
         CpuCoreMetrics(
             index = core,
@@ -949,12 +952,12 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, metricColors: ServerMetricCol
                 repeat(columns) { column ->
                     val color = when {
                         column >= filledCells -> DeckColors.Divider
-                        column < userCells.coerceAtLeast(if (filledCells > 0) 1 else 0) -> metricColors.cpu
-                        column < userCells + systemCells.coerceAtLeast(if (filledCells > 1) 1 else 0) -> DeckColors.Red
-                        column < userCells + systemCells + niceCells -> metricColors.memory
-                        column < userCells + systemCells + niceCells + ioWaitCells -> metricColors.latency
-                        column < userCells + systemCells + niceCells + ioWaitCells + stealCells -> metricColors.disk
-                        else -> metricColors.disk
+                        column < userCells.coerceAtLeast(if (filledCells > 0) 1 else 0) -> cpuUsageColors.user
+                        column < userCells + systemCells.coerceAtLeast(if (filledCells > 1) 1 else 0) -> cpuUsageColors.system
+                        column < userCells + systemCells + niceCells -> cpuUsageColors.nice
+                        column < userCells + systemCells + niceCells + ioWaitCells -> cpuUsageColors.ioWait
+                        column < userCells + systemCells + niceCells + ioWaitCells + stealCells -> cpuUsageColors.steal
+                        else -> cpuUsageColors.steal
                     }
                     drawRoundRect(
                         color = color,
@@ -1084,8 +1087,8 @@ private fun CpuLoadCard(snapshot: MetricSnapshot, metricHistory: List<MetricSnap
 @Composable
 private fun MetricTitle(icon: String, title: String, color: Color, compact: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp)) {
-        MetricGlyph(icon, color, Modifier.size(if (compact) 24.dp else 30.dp))
-        Text(title, color = color, fontSize = if (compact) 20.sp else 25.sp, fontWeight = FontWeight.SemiBold)
+        MetricGlyph(icon, color, Modifier.size(if (compact) 18.dp else 24.dp))
+        Text(title, color = color, fontSize = if (compact) 20.sp else 25.sp, lineHeight = if (compact) 22.sp else 28.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 

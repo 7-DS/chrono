@@ -12,6 +12,14 @@ data class ServerMetricColors(
     val latency: Color
 )
 
+data class ServerCpuUsageColors(
+    val user: Color,
+    val system: Color,
+    val nice: Color,
+    val ioWait: Color,
+    val steal: Color
+)
+
 data class ServerMetricColorOverrides(
     val cpuHex: String? = null,
     val memoryHex: String? = null,
@@ -43,50 +51,50 @@ fun metricColorsFor(
             cpu = DeckColors.Cyan,
             memory = DeckColors.Green,
             disk = DeckColors.Orange,
-            network = DeckColors.Cyan,
-            latency = DeckColors.Green
+            network = DeckColors.Purple,
+            latency = DeckColors.Red
         )
         ServerMetricColorPreset.Calm -> ServerMetricColors(
-            cpu = Color(0xff6f8fa8),
-            memory = Color(0xff78927a),
-            disk = Color(0xffa48864),
-            network = Color(0xff6f9298),
-            latency = Color(0xff78927a)
+            cpu = Color(0xff4f7fa6),
+            memory = Color(0xff5e8a63),
+            disk = Color(0xffa1764a),
+            network = Color(0xff7a669e),
+            latency = Color(0xffa45f5f)
         )
         ServerMetricColorPreset.Graphite -> ServerMetricColors(
-            cpu = Color(0xffa7b0bd),
-            memory = Color(0xff8fa3a3),
-            disk = Color(0xffb3a491),
-            network = Color(0xff93a4b7),
-            latency = Color(0xff8fa3a3)
+            cpu = Color(0xff5f86ad),
+            memory = Color(0xff6f9277),
+            disk = Color(0xffa88455),
+            network = Color(0xff826fa8),
+            latency = Color(0xffaa6670)
         )
         ServerMetricColorPreset.HighContrast -> ServerMetricColors(
             cpu = Color(0xff2f6fbb),
             memory = Color(0xff4d8f61),
             disk = Color(0xffb87534),
-            network = Color(0xff4a8aa8),
-            latency = Color(0xff4d8f61)
+            network = Color(0xff7958b7),
+            latency = Color(0xffb33a4a)
         )
         ServerMetricColorPreset.Ocean -> ServerMetricColors(
-            cpu = Color(0xff3f6f8f),
-            memory = Color(0xff4f8f7a),
-            disk = Color(0xffa77f4f),
-            network = Color(0xff4f8fa3),
-            latency = Color(0xff4f8f7a)
+            cpu = Color(0xff2f72a2),
+            memory = Color(0xff3f8b72),
+            disk = Color(0xffa77a45),
+            network = Color(0xff6e63a8),
+            latency = Color(0xffad5f68)
         )
         ServerMetricColorPreset.Forest -> ServerMetricColors(
-            cpu = Color(0xff6f814a),
-            memory = Color(0xff5f8062),
+            cpu = Color(0xff4f78a2),
+            memory = Color(0xff4f845c),
             disk = Color(0xff9a7a45),
-            network = Color(0xff5f8380),
-            latency = Color(0xff5f8062)
+            network = Color(0xff7562a0),
+            latency = Color(0xffa15f4f)
         )
         ServerMetricColorPreset.Ember -> ServerMetricColors(
             cpu = Color(0xffaa664d),
             memory = Color(0xff768a62),
             disk = Color(0xffa98245),
             network = Color(0xff7d8d9a),
-            latency = Color(0xff768a62)
+            latency = Color(0xffa0526b)
         )
         ServerMetricColorPreset.Aurora -> ServerMetricColors(
             cpu = Color(0xff7aa2f7),
@@ -106,36 +114,36 @@ fun metricColorsFor(
             cpu = Color(0xff5e81ac),
             memory = Color(0xffa3be8c),
             disk = Color(0xffd08770),
-            network = Color(0xff88c0d0),
-            latency = Color(0xffa3be8c)
+            network = Color(0xffb48ead),
+            latency = Color(0xffbf616a)
         )
         ServerMetricColorPreset.Solar -> ServerMetricColors(
             cpu = Color(0xff268bd2),
             memory = Color(0xff859900),
             disk = Color(0xffb58900),
             network = Color(0xff2aa198),
-            latency = Color(0xff2aa198)
+            latency = Color(0xffdc322f)
         )
         ServerMetricColorPreset.Circuit -> ServerMetricColors(
-            cpu = Color(0xff4d8b83),
-            memory = Color(0xff7d9461),
+            cpu = Color(0xff4d7fb0),
+            memory = Color(0xff6e945f),
             disk = Color(0xffa18445),
             network = Color(0xff6c75a8),
-            latency = Color(0xff7d9461)
+            latency = Color(0xffa35a64)
         )
         ServerMetricColorPreset.Harvest -> ServerMetricColors(
-            cpu = Color(0xff9a7046),
+            cpu = Color(0xff527fa3),
             memory = Color(0xff78804d),
             disk = Color(0xffa18445),
-            network = Color(0xff5f817a),
-            latency = Color(0xff78804d)
+            network = Color(0xff7c63a0),
+            latency = Color(0xffa45f55)
         )
         ServerMetricColorPreset.Lagoon -> ServerMetricColors(
             cpu = Color(0xff4b83a1),
             memory = Color(0xff4f8f7a),
             disk = Color(0xff8370a0),
             network = Color(0xff4f8fa3),
-            latency = Color(0xff4f8f7a)
+            latency = Color(0xffaa6570)
         )
         ServerMetricColorPreset.Metro -> ServerMetricColors(
             cpu = Color(0xff5d7fa8),
@@ -153,6 +161,15 @@ fun metricColorsFor(
         )
     }
 }
+
+fun cpuUsageColorsFor(colors: ServerMetricColors): ServerCpuUsageColors =
+    ServerCpuUsageColors(
+        user = colors.cpu,
+        system = colors.network,
+        nice = colors.memory,
+        ioWait = colors.latency,
+        steal = colors.disk
+    )
 
 fun metricColorHex(color: Color): String {
     return "#%02X%02X%02X".format(

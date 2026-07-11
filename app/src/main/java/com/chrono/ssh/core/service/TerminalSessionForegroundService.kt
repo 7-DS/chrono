@@ -24,13 +24,24 @@ class TerminalSessionForegroundService : Service() {
                 ?.getIntExtra(ExtraNonTerminalConnectionCount, 0),
             registeredTerminalSessionCount = TerminalSessionRegistry.activeCount()
         )
+        ensureChannel()
+        startForeground(NotificationId, notification(connectionCount.coerceAtLeast(1)))
         if (connectionCount <= 0) {
             stopSelf(startId)
             return START_NOT_STICKY
         }
-        ensureChannel()
-        startForeground(NotificationId, notification(connectionCount))
-        return START_NOT_STICKY
+        return serviceRestartMode(connectionCount)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val connectionCount = TerminalSessionRegistry.activeCount()
+        if (connectionCount > 0) {
+            ensureChannel()
+            startForeground(NotificationId, notification(connectionCount))
+        } else {
+            stopSelf()
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     private fun ensureChannel() {
@@ -106,6 +117,9 @@ class TerminalSessionForegroundService : Service() {
                 maxOf(intentConnectionCount.coerceAtLeast(0), registeredCount)
             }
         }
+
+        internal fun serviceRestartMode(connectionCount: Int): Int =
+            if (connectionCount > 0) START_STICKY else START_NOT_STICKY
 
         private fun terminalSessionNotificationIntent(context: Context): PendingIntent? {
             val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
