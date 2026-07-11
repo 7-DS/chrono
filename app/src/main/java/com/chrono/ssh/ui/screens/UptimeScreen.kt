@@ -303,17 +303,17 @@ private fun uptimeSamples(
 
 internal fun uptimeBuckets(samples: List<MetricSnapshot>): List<UptimeBucketStatus> {
     if (samples.isEmpty()) return List(48) { UptimeBucketStatus.NoData }
-    val now = samples.maxOf { it.collectedAtEpochMillis }
+    val sorted = samples.sortedBy { it.collectedAtEpochMillis }
+    val now = sorted.last().collectedAtEpochMillis
     val windowStart = now - UptimeWindow24hMillis
     return List(48) { index ->
-        val bucketStart = windowStart + (index * UptimeBucketMillis)
-        val bucketEnd = bucketStart + UptimeBucketMillis
-        val bucketSamples = samples.filter { it.collectedAtEpochMillis > bucketStart && it.collectedAtEpochMillis <= bucketEnd }
-        when {
-            bucketSamples.isEmpty() -> UptimeBucketStatus.NoData
-            bucketSamples.any { it.status == ServerStatus.Online } -> UptimeBucketStatus.Up
-            bucketSamples.any { it.status == ServerStatus.Offline } -> UptimeBucketStatus.Down
-            else -> UptimeBucketStatus.Unverified
+        val bucketEnd = windowStart + ((index + 1) * UptimeBucketMillis)
+        when (sorted.lastOrNull { it.collectedAtEpochMillis <= bucketEnd }?.status) {
+            ServerStatus.Online -> UptimeBucketStatus.Up
+            ServerStatus.Offline -> UptimeBucketStatus.Down
+            ServerStatus.Unknown,
+            ServerStatus.Connecting -> UptimeBucketStatus.Unverified
+            null -> UptimeBucketStatus.NoData
         }
     }
 }

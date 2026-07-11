@@ -452,24 +452,23 @@ private fun ServerOverviewCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            snapshot?.latencyMs?.let { latency ->
-                Box(
-                    modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
-                        .clickable(onClick = onProbeClick)
-                        .padding(horizontal = 4.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        "$latency ms",
-                        color = if (snapshot.status == ServerStatus.Online) DeckColors.Green else DeckColors.SecondaryText,
-                        fontSize = 12.sp,
-                        lineHeight = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        maxLines = 1
-                    )
-                }
-                Spacer(Modifier.width(2.dp))
+            Box(
+                modifier = Modifier
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    .clickable(onClick = onProbeClick)
+                    .padding(horizontal = 4.dp, vertical = 3.dp)
+            ) {
+                val latency = snapshot?.latencyMs
+                Text(
+                    latency?.let { "$it ms" } ?: "-- ms",
+                    color = if (latency != null && snapshot.status == ServerStatus.Online) DeckColors.Green else DeckColors.SecondaryText,
+                    fontSize = 11.sp,
+                    lineHeight = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1
+                )
             }
+            Spacer(Modifier.width(2.dp))
             StatusDot(snapshot?.status ?: ServerStatus.Unknown, Modifier.size(12.dp))
             Spacer(Modifier.width(6.dp))
             SshGlyphButton(onTerminalClick)

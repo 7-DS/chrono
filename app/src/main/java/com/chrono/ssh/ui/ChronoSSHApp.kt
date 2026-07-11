@@ -14,20 +14,15 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -1182,27 +1177,12 @@ fun ChronoSSHApp(
                         repository.servers.firstOrNull { it.id == entry.value }?.let { server -> entry.key to server }
                     }
                     Column(Modifier.fillMaxSize()) {
-                        AnimatedContent(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    targetState = surface,
-                    transitionSpec = {
-                        val from = initialState.rootTabIndex()
-                        val to = targetState.rootTabIndex()
-                        if (from != null && to != null) {
-                            val forward = to > from
-                            slideInHorizontally(tween(240, easing = LinearOutSlowInEasing)) { if (forward) it / 4 else -it / 4 } + fadeIn(tween(180, easing = LinearOutSlowInEasing)) togetherWith
-                                slideOutHorizontally(tween(240, easing = LinearOutSlowInEasing)) { if (forward) -it / 4 else it / 4 } + fadeOut(tween(180, easing = LinearOutSlowInEasing)) using
-                                SizeTransform(clip = true)
-                        } else {
-                            fadeIn(tween(220, easing = LinearOutSlowInEasing)) togetherWith fadeOut(tween(220, easing = LinearOutSlowInEasing)) using
-                                SizeTransform(clip = true)
-                        }
-                    },
-                    label = "surface"
-                ) { current ->
-                    when (current) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                    when (surface) {
                         AppSurface.Home -> HomeScreen(
                             servers = repository.servers,
                             snapshots = repository.snapshots,
@@ -1424,9 +1404,9 @@ fun ChronoSSHApp(
                             knownHosts = repository.knownHosts,
                             bookmarks = repository.sftpBookmarks,
                             transfers = repository.transfers,
-                            initialServerId = current.serverId,
+                            initialServerId = surface.serverId,
                             sftpWorkspaces = sftpWorkspaceServers,
-                            selectedSftpWorkspaceKey = current.workspaceKey,
+                            selectedSftpWorkspaceKey = surface.workspaceKey,
                             sftpRuntimes = sftpRuntimes,
                             onSelectSftpWorkspace = ::selectSftpWorkspace,
                             onCloseSftpWorkspace = ::closeSftpWorkspace,
@@ -1580,7 +1560,7 @@ fun ChronoSSHApp(
                         )
 
                         is AppSurface.PortForward -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) {
@@ -1626,7 +1606,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.VncViewer -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) { vncViewerFor = null }
@@ -1658,7 +1638,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.RdpViewer -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) { rdpViewerFor = null }
@@ -1690,7 +1670,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.ServerDetail -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) {
@@ -1818,7 +1798,7 @@ fun ChronoSSHApp(
                                     },
                                     metricColorPreset = appSettings.serverMetricColorPreset,
                                     metricColorOverrides = metricColorOverridesFrom(appSettings),
-                                    cpuUsagePillsEnabled = appSettings.cpuUsagePillsEnabled,
+                                    cpuUsageDisplayMode = appSettings.cpuUsageDisplayMode,
                                     serverDetailCardOrder = appSettings.serverDetailCardOrder,
                                     serverDetailHiddenCards = appSettings.serverDetailHiddenCards
                                 )
@@ -1826,7 +1806,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.ServerActivity -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) {
@@ -1842,7 +1822,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.Interfaces -> {
-                            val serverId = current.serverId
+                            val serverId = surface.serverId
                             val server = repository.servers.firstOrNull { it.id == serverId }
                             if (server == null) {
                                 LaunchedEffect(serverId) {
@@ -1873,7 +1853,7 @@ fun ChronoSSHApp(
                         }
 
                         is AppSurface.HostEditor -> {
-                            val editingServer = current.serverId?.let { id -> repository.servers.firstOrNull { it.id == id } }
+                            val editingServer = surface.serverId?.let { id -> repository.servers.firstOrNull { it.id == id } }
                             HostEditorScreen(
                                 server = editingServer,
                                 servers = repository.servers,

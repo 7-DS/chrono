@@ -20,8 +20,8 @@ class UptimeScreenTest {
     fun uptimeBucketsUseCollectedSamplesNotUptimeString() {
         val samples = listOf(
             snapshot(at = 0, status = ServerStatus.Online, uptime = "99 days"),
-            snapshot(at = 30 * 60 * 1000L, status = ServerStatus.Offline, uptime = "99 days"),
-            snapshot(at = 60 * 60 * 1000L, status = ServerStatus.Unknown, uptime = "99 days")
+            snapshot(at = 60 * 60 * 1000L, status = ServerStatus.Offline, uptime = "99 days"),
+            snapshot(at = 90 * 60 * 1000L, status = ServerStatus.Unknown, uptime = "99 days")
         )
 
         val buckets = uptimeBuckets(samples)

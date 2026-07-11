@@ -14,6 +14,7 @@ import com.chrono.ssh.core.model.CrashLogEntry
 import com.chrono.ssh.core.model.Credential
 import com.chrono.ssh.core.model.CredentialType
 import com.chrono.ssh.core.model.CpuMetrics
+import com.chrono.ssh.core.model.CpuUsageDisplayMode
 import com.chrono.ssh.core.model.DiskMetrics
 import com.chrono.ssh.core.model.DockerSummary
 import com.chrono.ssh.core.model.EternalTerminalConfig
@@ -559,7 +560,12 @@ class ChronoSSHRepository(private val context: Context) {
                 serverMetricNetworkColorHex = values["serverMetricNetworkColorHex"]?.ifBlank { null },
                 serverMetricLatencyColorHex = values["serverMetricLatencyColorHex"]?.ifBlank { null },
                 appAccentColorHex = values["appAccentColorHex"]?.ifBlank { null },
-                cpuUsagePillsEnabled = values["cpuUsagePillsEnabled"]?.toBooleanStrictOrNull() ?: true,
+                cpuUsageDisplayMode = values["cpuUsageDisplayMode"]
+                    ?.let { runCatching { CpuUsageDisplayMode.valueOf(it) }.getOrNull() }
+                    ?: values["cpuUsagePillsEnabled"]?.toBooleanStrictOrNull()?.let {
+                        if (it) CpuUsageDisplayMode.Pill else CpuUsageDisplayMode.Cube
+                    }
+                    ?: CpuUsageDisplayMode.Cube,
                 serverDetailCardOrder = ServerDetailCard.sanitizeOrderCsv(values["serverDetailCardOrder"].orEmpty()),
                 serverDetailHiddenCards = ServerDetailCard.sanitizeHiddenCsv(values["serverDetailHiddenCards"].orEmpty()),
                 homeHeadingFontPath = values["homeHeadingFontPath"]?.ifBlank { null },
@@ -617,7 +623,7 @@ class ChronoSSHRepository(private val context: Context) {
                     "serverMetricNetworkColorHex=${escape(cleanSettings.serverMetricNetworkColorHex.orEmpty())}",
                     "serverMetricLatencyColorHex=${escape(cleanSettings.serverMetricLatencyColorHex.orEmpty())}",
                     "appAccentColorHex=${escape(cleanSettings.appAccentColorHex.orEmpty())}",
-                    "cpuUsagePillsEnabled=${cleanSettings.cpuUsagePillsEnabled}",
+                    "cpuUsageDisplayMode=${escape(cleanSettings.cpuUsageDisplayMode.name)}",
                     "serverDetailCardOrder=${escape(ServerDetailCard.sanitizeOrderCsv(cleanSettings.serverDetailCardOrder))}",
                     "serverDetailHiddenCards=${escape(ServerDetailCard.sanitizeHiddenCsv(cleanSettings.serverDetailHiddenCards))}",
                     "homeHeadingFontPath=${escape(cleanSettings.homeHeadingFontPath.orEmpty())}",

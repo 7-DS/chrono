@@ -67,6 +67,7 @@ import com.chrono.ssh.core.model.ConnectionEvent
 import com.chrono.ssh.core.model.ConnectionEventLevel
 import com.chrono.ssh.core.model.CrashLogEntry
 import com.chrono.ssh.core.model.AppSettings
+import com.chrono.ssh.core.model.CpuUsageDisplayMode
 import com.chrono.ssh.core.model.ServerCardDiskMode
 import com.chrono.ssh.core.model.ServerCardNetworkMode
 import com.chrono.ssh.core.model.ServerDetailCard
@@ -798,11 +799,19 @@ private fun MonitoringSettings(
             onCheckedChange = { onSettingsChange(settings.copy(uptimeBackgroundMonitoringEnabled = it)) }
         )
         Spacer(Modifier.height(10.dp))
-        SettingsToggleRow(
-            title = "CPU usage pills",
-            checked = settings.cpuUsagePillsEnabled,
-            detail = "Use pill bars instead of the compact dot-style CPU rows",
-            onCheckedChange = { onSettingsChange(settings.copy(cpuUsagePillsEnabled = it)) }
+        SettingsRow(
+            title = "CPU usage shape",
+            detail = "Graph and legend markers",
+            badge = settings.cpuUsageDisplayMode.name
+        )
+        Spacer(Modifier.height(10.dp))
+        SegmentedPillControl(
+            items = listOf("Cube", "Dot", "Pill"),
+            selectedIndex = settings.cpuUsageDisplayMode.ordinal,
+            modifier = Modifier.fillMaxWidth(),
+            onSelected = {
+                onSettingsChange(settings.copy(cpuUsageDisplayMode = CpuUsageDisplayMode.entries[it]))
+            }
         )
         Spacer(Modifier.height(10.dp))
         SettingsStepperRow(

@@ -60,6 +60,7 @@ import com.chrono.ssh.core.model.ContainerImageMetric
 import com.chrono.ssh.core.model.ContainerMetric
 import com.chrono.ssh.core.model.ConnectionEvent
 import com.chrono.ssh.core.model.ConnectionEventLevel
+import com.chrono.ssh.core.model.CpuUsageDisplayMode
 import com.chrono.ssh.core.model.DockerSummary
 import com.chrono.ssh.core.model.GpuMetric
 import com.chrono.ssh.core.model.SensorMetric
@@ -113,7 +114,7 @@ fun ServerDetailScreen(
     onWake: (() -> Unit)? = null,
     metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
-    cpuUsagePillsEnabled: Boolean = true,
+    cpuUsageDisplayMode: CpuUsageDisplayMode = CpuUsageDisplayMode.Cube,
     serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     serverDetailHiddenCards: String = ""
 ) {
@@ -252,7 +253,7 @@ fun ServerDetailScreen(
                         snapshot = snapshot,
                         metricHistory = metricHistory,
                         metricColors = metricColors,
-                        cpuUsagePillsEnabled = cpuUsagePillsEnabled,
+                        cpuUsageDisplayMode = cpuUsageDisplayMode,
                         onInterfaces = onInterfaces,
                         onContainerAction = onContainerAction,
                         onProcessAction = onProcessAction,
@@ -282,7 +283,7 @@ private fun renderServerDetailCard(
     snapshot: MetricSnapshot,
     metricHistory: List<MetricSnapshot>,
     metricColors: ServerMetricColors,
-    cpuUsagePillsEnabled: Boolean,
+    cpuUsageDisplayMode: CpuUsageDisplayMode,
     onInterfaces: () -> Unit,
     onContainerAction: (ContainerMetric, String) -> Unit,
     onProcessAction: (ProcessMetric, String) -> Unit,
@@ -296,7 +297,7 @@ private fun renderServerDetailCard(
             true
         }
         ServerDetailCard.CpuUsage -> {
-            CpuUsageCard(snapshot, metricColors, cpuUsagePillsEnabled)
+            CpuUsageCard(snapshot, metricColors, cpuUsageDisplayMode)
             true
         }
         ServerDetailCard.CpuLoad -> {
@@ -825,7 +826,7 @@ private fun DetailActionGlyph(icon: DetailTileIcon, color: Color, modifier: Modi
 }
 
 @Composable
-private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors, cpuUsagePillsEnabled: Boolean) {
+private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricColors, cpuUsageDisplayMode: CpuUsageDisplayMode) {
     val cpuUsageColors = cpuUsageColorsFor(metricColors)
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 30.dp, padding = PaddingValues(horizontal = 18.dp, vertical = 15.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -848,7 +849,7 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
             )
         }
         Spacer(Modifier.height(10.dp))
-        CpuUsageRows(snapshot, cpuUsageColors, cpuUsagePillsEnabled)
+        CpuUsageRows(snapshot, cpuUsageColors, cpuUsageDisplayMode)
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
@@ -857,12 +858,12 @@ private fun CpuUsageCard(snapshot: MetricSnapshot, metricColors: ServerMetricCol
                 .background(DeckColors.Divider)
         )
         Spacer(Modifier.height(10.dp))
-        CpuStatFlow(snapshot, cpuUsageColors)
+        CpuStatFlow(snapshot, cpuUsageColors, cpuUsageDisplayMode)
     }
 }
 
 @Composable
-private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors) {
+private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors, cpuUsageDisplayMode: CpuUsageDisplayMode) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -870,12 +871,12 @@ private fun CpuStatFlow(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsage
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
-        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, showIndicator = false)
-        CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user)
-        CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system)
-        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice)
-        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", cpuUsageColors.ioWait)
-        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", cpuUsageColors.steal)
+        CpuStat("Cores", snapshot.cpu.cores.toString(), DeckColors.SecondaryText, cpuUsageDisplayMode, showIndicator = false)
+        CpuStat("User", "${snapshot.cpu.userPercent}%", cpuUsageColors.user, cpuUsageDisplayMode)
+        CpuStat("System", "${snapshot.cpu.systemPercent}%", cpuUsageColors.system, cpuUsageDisplayMode)
+        CpuStat("Nice", "${snapshot.cpu.nicePercent}%", cpuUsageColors.nice, cpuUsageDisplayMode)
+        CpuStat("IOWait", "${snapshot.cpu.ioWaitPercent}%", cpuUsageColors.ioWait, cpuUsageDisplayMode)
+        CpuStat("Steal", "${snapshot.cpu.stealPercent}%", cpuUsageColors.steal, cpuUsageDisplayMode)
     }
 }
 
@@ -905,7 +906,7 @@ private fun CpuUsagePercent(percent: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors, cpuUsagePillsEnabled: Boolean) {
+private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsageColors, cpuUsageDisplayMode: CpuUsageDisplayMode) {
     val rows = snapshot.cpu.perCore.takeIf { it.isNotEmpty() } ?: List(snapshot.cpu.cores.coerceIn(1, 32)) { core ->
         CpuCoreMetrics(
             index = core,
@@ -921,10 +922,9 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
     val coreCount = visibleRows.size.coerceAtLeast(1)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         val pillHeight = when {
-            !cpuUsagePillsEnabled && coreCount <= 8 -> 8.dp
-            !cpuUsagePillsEnabled && coreCount <= 16 -> 6.5.dp
-            cpuUsagePillsEnabled && coreCount <= 8 -> 9.dp
-            cpuUsagePillsEnabled && coreCount <= 16 -> 6.5.dp
+            cpuUsageDisplayMode == CpuUsageDisplayMode.Pill && coreCount <= 8 -> 9.dp
+            coreCount <= 8 -> 8.dp
+            coreCount <= 16 -> 6.5.dp
             else -> 5.dp
         }
         val rowGap = when {
@@ -947,7 +947,11 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
             val rowGapPx = rowGap.toPx()
             val cellWidth = ((size.width - gap * (columns - 1)) / columns).coerceAtLeast(3f)
             val cellHeight = pillHeight.toPx()
-            val radius = if (cpuUsagePillsEnabled) cellHeight / 2f else 1.5.dp.toPx()
+            val radius = when (cpuUsageDisplayMode) {
+                CpuUsageDisplayMode.Cube -> 1.5.dp.toPx()
+                CpuUsageDisplayMode.Dot,
+                CpuUsageDisplayMode.Pill -> cellHeight / 2f
+            }
             visibleRows.forEachIndexed { row, core ->
                 val filledCells = ((core.usagePercent / 100f) * columns).toInt().coerceIn(0, columns)
                 val userCells = ((core.userPercent / 100f) * columns).toInt().coerceIn(0, filledCells)
@@ -965,10 +969,12 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
                         column < userCells + systemCells + niceCells + ioWaitCells + stealCells -> cpuUsageColors.steal
                         else -> cpuUsageColors.steal
                     }
+                    val drawWidth = if (cpuUsageDisplayMode == CpuUsageDisplayMode.Dot) cellHeight else cellWidth
+                    val drawLeft = column * (cellWidth + gap) + if (cpuUsageDisplayMode == CpuUsageDisplayMode.Dot) (cellWidth - drawWidth) / 2f else 0f
                     drawRoundRect(
                         color = color,
-                        topLeft = androidx.compose.ui.geometry.Offset(column * (cellWidth + gap), row * (cellHeight + rowGapPx)),
-                        size = androidx.compose.ui.geometry.Size(cellWidth, cellHeight),
+                        topLeft = androidx.compose.ui.geometry.Offset(drawLeft, row * (cellHeight + rowGapPx)),
+                        size = androidx.compose.ui.geometry.Size(drawWidth, cellHeight),
                         cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
                         style = Fill
                     )
@@ -982,7 +988,12 @@ private fun CpuUsageRows(snapshot: MetricSnapshot, cpuUsageColors: ServerCpuUsag
                         modifier = Modifier.height(pillHeight),
                         contentAlignment = Alignment.CenterEnd
                     ) {
-                        Text("${core.usagePercent}%", color = DeckColors.PrimaryText, fontSize = 9.sp, lineHeight = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        val percentSize = when {
+                            pillHeight <= 5.dp -> 6.sp
+                            pillHeight <= 6.5.dp -> 7.sp
+                            else -> 8.sp
+                        }
+                        Text("${core.usagePercent}%", color = DeckColors.PrimaryText, fontSize = percentSize, lineHeight = percentSize, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
             }
@@ -1057,7 +1068,14 @@ private fun DrawScope.drawLoadArea(
 }
 
 @Composable
-private fun CpuStat(label: String, value: String, color: Color, modifier: Modifier = Modifier, showIndicator: Boolean = true) {
+private fun CpuStat(
+    label: String,
+    value: String,
+    color: Color,
+    cpuUsageDisplayMode: CpuUsageDisplayMode,
+    modifier: Modifier = Modifier,
+    showIndicator: Boolean = true
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.Top,
@@ -1067,8 +1085,17 @@ private fun CpuStat(label: String, value: String, color: Color, modifier: Modifi
             Box(
                 Modifier
                     .padding(top = 2.dp)
-                    .size(width = 5.dp, height = 10.dp)
-                    .clip(RoundedCornerShape(2.5.dp))
+                    .size(
+                        width = if (cpuUsageDisplayMode == CpuUsageDisplayMode.Pill) 5.dp else 8.dp,
+                        height = 8.dp
+                    )
+                    .clip(
+                        when (cpuUsageDisplayMode) {
+                            CpuUsageDisplayMode.Cube -> RoundedCornerShape(1.5.dp)
+                            CpuUsageDisplayMode.Dot -> RoundedCornerShape(50)
+                            CpuUsageDisplayMode.Pill -> RoundedCornerShape(2.5.dp)
+                        }
+                    )
                     .background(color)
             )
         }

@@ -132,6 +132,12 @@ enum class ServerDetailCard(val id: String, val label: String) {
     }
 }
 
+enum class CpuUsageDisplayMode {
+    Cube,
+    Dot,
+    Pill
+}
+
 data class AppSettings(
     val themeModeName: String,
     val themeFamilyId: String,
@@ -158,7 +164,7 @@ data class AppSettings(
     val serverMetricNetworkColorHex: String? = null,
     val serverMetricLatencyColorHex: String? = null,
     val appAccentColorHex: String? = null,
-    val cpuUsagePillsEnabled: Boolean = true,
+    val cpuUsageDisplayMode: CpuUsageDisplayMode = CpuUsageDisplayMode.Cube,
     val serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),
     val serverDetailHiddenCards: String = "",
     val homeHeadingFontPath: String? = null,
