@@ -163,6 +163,7 @@ data class AppSettings(
     val serverMetricDiskColorHex: String? = null,
     val serverMetricNetworkColorHex: String? = null,
     val serverMetricLatencyColorHex: String? = null,
+    val serverCardLatencyVisible: Boolean = true,
     val appAccentColorHex: String? = null,
     val cpuUsageDisplayMode: CpuUsageDisplayMode = CpuUsageDisplayMode.Cube,
     val serverDetailCardOrder: String = ServerDetailCard.defaultOrderCsv(),

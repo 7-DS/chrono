@@ -15,9 +15,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,7 +25,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -56,9 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -1191,6 +1187,7 @@ fun ChronoSSHApp(
                             diskMode = appSettings.serverCardDiskMode,
                             metricColorPreset = appSettings.serverMetricColorPreset,
                             metricColorOverrides = metricColorOverridesFrom(appSettings),
+                            serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                             onAddServer = { creatingServer = true },
                             onTrustHost = ::reviewHostKey,
                             onUptimeClick = { showUptime = true },
@@ -1573,7 +1570,8 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1617,7 +1615,8 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1649,7 +1648,8 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1683,7 +1683,8 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1835,7 +1836,8 @@ fun ChronoSSHApp(
                                     networkMode = appSettings.serverCardNetworkMode,
                                     diskMode = appSettings.serverCardDiskMode,
                                     metricColorPreset = appSettings.serverMetricColorPreset,
-                            metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    metricColorOverrides = metricColorOverridesFrom(appSettings),
+                                    serverCardLatencyVisible = appSettings.serverCardLatencyVisible,
                                     onAddServer = { creatingServer = true },
                                     onTrustHost = ::reviewHostKey,
                                     onUptimeClick = { showUptime = true },
@@ -1959,11 +1961,7 @@ fun ChronoSSHApp(
                         NotificationPermissionPrompt(::requestNotificationPermission)
                     }
 
-                    AnimatedVisibility(
-                        visible = showBottomTabs,
-                        enter = slideInVertically(tween(220, easing = LinearOutSlowInEasing)) { it / 2 } + fadeIn(tween(220, easing = LinearOutSlowInEasing)),
-                        exit = slideOutVertically(tween(220, easing = LinearOutSlowInEasing)) { it / 2 } + fadeOut(tween(220, easing = LinearOutSlowInEasing))
-                    ) {
+                    if (showBottomTabs) {
                         BottomTabs(
                             selectedTab = selectedTab,
                             onSelected = {
@@ -2279,27 +2277,16 @@ private fun BottomTabs(
         val selectedIndex = AppTab.entries.indexOf(selectedTab).coerceAtLeast(0)
         val indicatorWidth = 54.dp.coerceAtMost(tabWidth)
         val underlineWidth = 22.dp.coerceAtMost(tabWidth)
-        val animatedIndex by animateFloatAsState(
-            targetValue = selectedIndex.toFloat(),
-            animationSpec = tween(240, easing = LinearOutSlowInEasing),
-            label = "bottomTabIndex"
-        )
         Box(
             modifier = Modifier
-                .graphicsLayer {
-                    translationX = (tabWidth * animatedIndex + (tabWidth - indicatorWidth) / 2).toPx()
-                    translationY = 4.dp.toPx()
-                }
+                .offset(x = tabWidth * selectedIndex + (tabWidth - indicatorWidth) / 2, y = 4.dp)
                 .size(width = indicatorWidth, height = 31.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(DeckColors.Surface.copy(alpha = 0.68f))
         )
         Box(
             modifier = Modifier
-                .graphicsLayer {
-                    translationX = (tabWidth * animatedIndex + (tabWidth - underlineWidth) / 2).toPx()
-                    translationY = 55.dp.toPx()
-                }
+                .offset(x = tabWidth * selectedIndex + (tabWidth - underlineWidth) / 2, y = 55.dp)
                 .size(width = underlineWidth, height = 2.dp)
                 .clip(RoundedCornerShape(2.dp))
                 .background(DeckColors.PrimaryText.copy(alpha = 0.72f))
@@ -2312,26 +2299,11 @@ private fun BottomTabs(
             AppTab.entries.forEach { tab ->
                 val selected = tab == selectedTab
                 val interactionSource = remember(tab) { MutableInteractionSource() }
-                val pressed by interactionSource.collectIsPressedAsState()
-                val itemScale by animateFloatAsState(
-                    targetValue = if (pressed) 0.97f else 1f,
-                    animationSpec = tween(110),
-                    label = "bottomTabPress"
-                )
-                val iconColor by animateColorAsState(
-                    targetValue = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText,
-                    animationSpec = tween(160),
-                    label = "bottomTabIconColor"
-                )
-                val labelColor by animateColorAsState(
-                    targetValue = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText,
-                    animationSpec = tween(160),
-                    label = "bottomTabLabelColor"
-                )
+                val iconColor = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText
+                val labelColor = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .scale(itemScale)
                         .height(58.dp)
                         .clip(RoundedCornerShape(18.dp))
                         .semantics { contentDescription = tab.label }

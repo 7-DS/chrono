@@ -851,6 +851,13 @@ private fun MonitoringSettings(
                 )
             }
         }
+        Spacer(Modifier.height(10.dp))
+        SettingsToggleRow(
+            title = "Server card latency",
+            checked = settings.serverCardLatencyVisible,
+            detail = "Show ping latency on server cards",
+            onCheckedChange = { onSettingsChange(settings.copy(serverCardLatencyVisible = it)) }
+        )
         SettingsRow("Server card network display", "Uploaded/downloaded totals or live speed", "Network")
         Spacer(Modifier.height(10.dp))
         SegmentedPillControl(
@@ -1255,13 +1262,13 @@ private fun BackupSettings(
 ) {
     SettingsCard("Backups") {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SettingsActionButton("Export Backup", onExport, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Export Encrypted", onEncryptedExport, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Check Import", onCheckImport, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Import Link", onImportHostLink, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Import QR", onImportHostQr, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Import SSH Config", onImportSshConfig, modifier = Modifier.fillMaxWidth())
-            SettingsActionButton("Import", onImport, modifier = Modifier.fillMaxWidth())
+            SettingsActionButton("Export Backup", onExport, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Export Encrypted", onEncryptedExport, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Check Import", onCheckImport, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Import Link", onImportHostLink, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Import QR", onImportHostQr, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Import SSH Config", onImportSshConfig, modifier = Modifier.fillMaxWidth(), plain = true)
+            SettingsActionButton("Import", onImport, modifier = Modifier.fillMaxWidth(), plain = true)
         }
         backupStatus?.let { SettingsStatusMessage(it) }
     }
@@ -2246,13 +2253,14 @@ private fun SettingsActionButton(
     text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    plain: Boolean = false
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(if (enabled) DeckColors.Accent.copy(alpha = 0.10f) else DeckColors.Surface)
-            .border(1.dp, if (enabled) DeckColors.Accent.copy(alpha = 0.28f) else DeckColors.CardStroke, RoundedCornerShape(18.dp))
+            .background(if (plain || !enabled) DeckColors.Surface else DeckColors.Accent.copy(alpha = 0.10f))
+            .border(1.dp, if (plain || !enabled) DeckColors.CardStroke else DeckColors.Accent.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp)
     ) {

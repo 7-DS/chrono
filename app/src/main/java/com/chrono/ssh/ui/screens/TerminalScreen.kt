@@ -917,7 +917,6 @@ fun TerminalScreen(
                     ConnectionEventLevel.Error,
                     "Terminal connect failed: ${workspace.lastAction}"
                 )
-                onBack()
             }
         }
     }
@@ -968,7 +967,6 @@ fun TerminalScreen(
                     ConnectionEventLevel.Error,
                     "Terminal host-key review failed: ${workspace.lastAction}"
                 )
-                onBack()
             }
         }
     }
@@ -1064,8 +1062,11 @@ fun TerminalScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    val activeSessions = workspaceSummaries.filter { it.connected }.mapNotNull { summary ->
-        servers.firstOrNull { it.id == summary.serverId }?.let { server -> summary.key to server }
+    val activeSessions = buildList {
+        add(workspaceKey to selectedServer)
+        workspaceSummaries.filter { it.connected && it.key != workspaceKey }.mapNotNull { summary ->
+            servers.firstOrNull { it.id == summary.serverId }?.let { server -> summary.key to server }
+        }.forEach(::add)
     }
 
     Column(
@@ -1095,7 +1096,7 @@ fun TerminalScreen(
             },
             onSelect = { onSelectServer(it) },
             onSelectSftp = onSelectSftp,
-            onClose = { onCloseWorkspace(workspaceKey) },
+            onClose = { disconnectShell { onCloseWorkspace(workspaceKey) } },
             onReconnect = { connectOrReview(reconnectAttempt = 1) },
             onDuplicate = { onDuplicateServer(selectedServer) },
             onOpenSftp = { onOpenSftp(selectedServer) },

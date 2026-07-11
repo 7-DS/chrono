@@ -2,16 +2,10 @@ package com.chrono.ssh.ui.screens
 
 import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -49,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,6 +108,7 @@ fun HomeScreen(
     diskMode: ServerCardDiskMode = ServerCardDiskMode.Usage,
     metricColorPreset: ServerMetricColorPreset = ServerMetricColorPreset.Theme,
     metricColorOverrides: ServerMetricColorOverrides = ServerMetricColorOverrides(),
+    serverCardLatencyVisible: Boolean = true,
     onAddServer: () -> Unit,
     onTrustHost: (ServerProfile) -> Unit,
     onUptimeClick: () -> Unit = {},
@@ -143,15 +137,6 @@ fun HomeScreen(
         if (selectedFilter !in filters) selectedFilter = "All"
     }
     val listState = rememberLazyListState()
-    var showCompactTopBar by remember { mutableStateOf(false) }
-    LaunchedEffect(listState) {
-        var previousScroll = 0
-        snapshotFlow { listState.firstVisibleItemIndex * 100_000 + listState.firstVisibleItemScrollOffset }
-            .collect { scroll ->
-                showCompactTopBar = compactAddHostVisibility(showCompactTopBar, previousScroll, scroll)
-                previousScroll = scroll
-            }
-    }
 
     Box {
         LazyColumn(
@@ -187,6 +172,7 @@ fun HomeScreen(
                         networkMode = networkMode,
                         diskMode = diskMode,
                         metricColors = metricColorsFor(metricColorPreset, metricColorOverrides),
+                        serverCardLatencyVisible = serverCardLatencyVisible,
                         onClick = { onServerClick(server) },
                         onTerminalClick = { onTerminalClick(server) },
                         onProbeClick = { onProbeClick(server) }
@@ -194,14 +180,6 @@ fun HomeScreen(
                     Spacer(Modifier.height(14.dp))
                 }
             }
-        }
-        AnimatedVisibility(
-            visible = showCompactTopBar,
-            enter = slideInVertically(tween(260, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(220, easing = FastOutSlowInEasing)),
-            exit = slideOutVertically(tween(190, easing = FastOutSlowInEasing)) { -it / 4 } + fadeOut(tween(160, easing = FastOutSlowInEasing)),
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            HomeCompactTopBar(onAddServer = onAddServer)
         }
     }
 
@@ -426,6 +404,7 @@ private fun ServerOverviewCard(
     networkMode: ServerCardNetworkMode,
     diskMode: ServerCardDiskMode,
     metricColors: ServerMetricColors,
+    serverCardLatencyVisible: Boolean,
     onClick: () -> Unit,
     onTerminalClick: () -> Unit,
     onProbeClick: () -> Unit
@@ -452,23 +431,25 @@ private fun ServerOverviewCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-            Box(
-                modifier = Modifier
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
-                    .clickable(onClick = onProbeClick)
-                    .padding(horizontal = 4.dp, vertical = 3.dp)
-            ) {
-                val latency = snapshot?.latencyMs
-                Text(
-                    latency?.let { "$it ms" } ?: "-- ms",
-                    color = if (latency != null && snapshot.status == ServerStatus.Online) DeckColors.Green else DeckColors.SecondaryText,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                    maxLines = 1
-                )
+            if (serverCardLatencyVisible) {
+                Box(
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                        .clickable(onClick = onProbeClick)
+                        .padding(horizontal = 4.dp, vertical = 3.dp)
+                ) {
+                    val latency = snapshot?.latencyMs
+                    Text(
+                        latency?.let { "$it ms" } ?: "-- ms",
+                        color = if (latency != null && snapshot.status == ServerStatus.Online) metricColors.latency else DeckColors.SecondaryText,
+                        fontSize = 11.sp,
+                        lineHeight = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        maxLines = 1
+                    )
+                }
+                Spacer(Modifier.width(2.dp))
             }
-            Spacer(Modifier.width(2.dp))
             StatusDot(snapshot?.status ?: ServerStatus.Unknown, Modifier.size(12.dp))
             Spacer(Modifier.width(6.dp))
             SshGlyphButton(onTerminalClick)

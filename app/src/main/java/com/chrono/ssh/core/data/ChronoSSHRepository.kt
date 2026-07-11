@@ -559,6 +559,7 @@ class ChronoSSHRepository(private val context: Context) {
                 serverMetricDiskColorHex = values["serverMetricDiskColorHex"]?.ifBlank { null },
                 serverMetricNetworkColorHex = values["serverMetricNetworkColorHex"]?.ifBlank { null },
                 serverMetricLatencyColorHex = values["serverMetricLatencyColorHex"]?.ifBlank { null },
+                serverCardLatencyVisible = values["serverCardLatencyVisible"]?.toBooleanStrictOrNull() ?: true,
                 appAccentColorHex = values["appAccentColorHex"]?.ifBlank { null },
                 cpuUsageDisplayMode = values["cpuUsageDisplayMode"]
                     ?.let { runCatching { CpuUsageDisplayMode.valueOf(it) }.getOrNull() }
@@ -622,6 +623,7 @@ class ChronoSSHRepository(private val context: Context) {
                     "serverMetricDiskColorHex=${escape(cleanSettings.serverMetricDiskColorHex.orEmpty())}",
                     "serverMetricNetworkColorHex=${escape(cleanSettings.serverMetricNetworkColorHex.orEmpty())}",
                     "serverMetricLatencyColorHex=${escape(cleanSettings.serverMetricLatencyColorHex.orEmpty())}",
+                    "serverCardLatencyVisible=${cleanSettings.serverCardLatencyVisible}",
                     "appAccentColorHex=${escape(cleanSettings.appAccentColorHex.orEmpty())}",
                     "cpuUsageDisplayMode=${escape(cleanSettings.cpuUsageDisplayMode.name)}",
                     "serverDetailCardOrder=${escape(ServerDetailCard.sanitizeOrderCsv(cleanSettings.serverDetailCardOrder))}",
