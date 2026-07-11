@@ -64,7 +64,7 @@ class TerminalSessionForegroundService : Service() {
             else -> "Keeping $connectionCount active connections running in the background."
         }
         return NotificationCompat.Builder(this, ChannelId)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_chrono)
             .setContentTitle("chronoSSH connections active")
             .setContentText(connectionLabel)
             .setContentIntent(terminalSessionNotificationIntent(this))

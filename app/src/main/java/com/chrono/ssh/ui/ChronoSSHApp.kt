@@ -773,8 +773,8 @@ fun ChronoSSHApp(
         }
     }
 
-    fun openConnectionWorkspace(server: ServerProfile, duplicate: Boolean = false): TerminalWorkspaceState {
-        val workspaceKey = if (duplicate) "${server.id}|${System.currentTimeMillis()}" else server.id
+    fun openConnectionWorkspace(server: ServerProfile, duplicate: Boolean = false, workspaceKeyOverride: String? = null): TerminalWorkspaceState {
+        val workspaceKey = workspaceKeyOverride ?: if (duplicate) "${server.id}|${System.currentTimeMillis()}" else server.id
         selectedConnectionServerId = workspaceKey
         return terminalWorkspaces.getOrPut(workspaceKey) {
             TerminalWorkspaceState(
@@ -830,6 +830,27 @@ fun ChronoSSHApp(
                 workspace.tmuxRestorableSessionName = restorable?.tmuxSessionName
                 workspace.tmuxRestorableWindowIndex = restorable?.tmuxWindowIndex
             }
+        }
+    }
+
+    LaunchedEffect(repository.servers.size, registeredTerminalSessionCount) {
+        val serversById = repository.servers.associateBy { it.id }
+        val snapshots = TerminalSessionRegistry.snapshots()
+        snapshots.forEach { snapshot ->
+            if (snapshot.workspaceId !in terminalWorkspaces) {
+                serversById[snapshot.serverId]?.let { server ->
+                    openConnectionWorkspace(server, workspaceKeyOverride = snapshot.workspaceId).apply {
+                        status = "Restoring"
+                        lastAction = "Restoring background shell"
+                        startedAtEpochMillis = snapshot.attachedAtEpochMillis
+                    }
+                }
+            }
+        }
+        if (snapshots.isNotEmpty() && !terminalVisible) {
+            selectedConnectionServerId = snapshots.first().workspaceId
+            selectedTab = AppTab.Connections
+            terminalVisible = true
         }
     }
 

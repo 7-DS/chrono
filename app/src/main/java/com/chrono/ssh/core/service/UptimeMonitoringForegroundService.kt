@@ -97,7 +97,7 @@ class UptimeMonitoringForegroundService : Service() {
 
     private fun notification(): Notification {
         return NotificationCompat.Builder(this, ChannelId)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_chrono)
             .setContentTitle("chronoSSH uptime monitoring")
             .setContentText("Checking enabled hosts in the background.")
             .setContentIntent(notificationIntent(this))
