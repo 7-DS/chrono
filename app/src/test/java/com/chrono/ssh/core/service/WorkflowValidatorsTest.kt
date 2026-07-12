@@ -2602,6 +2602,7 @@ class WorkflowValidatorsTest {
             id = "identity-1",
             label = "root@example.test",
             type = CredentialType.Password,
+            publicKeyPreview = null,
             encryptedPayloadRef = "secret-pass",
             createdAtEpochMillis = 1L
         )

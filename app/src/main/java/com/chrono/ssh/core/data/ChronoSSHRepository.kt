@@ -2206,12 +2206,44 @@ class ChronoSSHRepository(private val context: Context) {
         mergeStats += mergeDecoded(sections["credentials"].orEmpty(), ::decodeCredential) { record ->
             val sanitized = BackupCredentialPolicy.sanitizeImportedMetadata(record)
                 ?: return@mergeDecoded BackupMergeStats(skipped = 1)
-            stagedCredentials.upsertByIdWithStats(sanitized.id, sanitized) { it.id }
+            // Backups intentionally exclude secret material, so an imported credential only
+            // carries metadata. When it matches an existing identity, keep the live secret
+            // and passphrase refs instead of clobbering them with the import-required sentinel
+            // (which would strand the stored secret and break auth after restart).
+            val existing = stagedCredentials.firstOrNull { it.id == sanitized.id }
+            val merged = if (existing != null) {
+                sanitized.copy(
+                    encryptedPayloadRef = existing.encryptedPayloadRef,
+                    passphraseRef = existing.passphraseRef,
+                    lastUsedEpochMillis = existing.lastUsedEpochMillis
+                )
+            } else {
+                sanitized
+            }
+            stagedCredentials.upsertByIdWithStats(merged.id, merged) { it.id }
         }
         mergeStats += mergeDecoded(sections["knownHosts"].orEmpty(), ::decodeKnownHost) { record ->
             val sanitized = BackupKnownHostPolicy.sanitizeImportedMetadata(record)
                 ?: return@mergeDecoded BackupMergeStats(skipped = 1)
-            stagedKnownHosts.upsertByIdWithStats(sanitized.id, sanitized) { it.id }
+            // Don't re-prompt for host keys this device already trusts. If we already hold a
+            // trusted entry for the same host/port with an identical fingerprint, keep that
+            // trust rather than downgrading it to Unknown (which spams trust prompts on a
+            // same-device export/import round-trip).
+            val existingTrusted = stagedKnownHosts.firstOrNull {
+                it.trusted &&
+                    it.host == sanitized.host &&
+                    it.port == sanitized.port &&
+                    it.fingerprint == sanitized.fingerprint
+            }
+            val merged = if (existingTrusted != null) {
+                existingTrusted.copy(
+                    algorithm = sanitized.algorithm.ifBlank { existingTrusted.algorithm },
+                    lastSeenEpochMillis = maxOf(existingTrusted.lastSeenEpochMillis, sanitized.lastSeenEpochMillis)
+                )
+            } else {
+                sanitized
+            }
+            stagedKnownHosts.upsertByIdWithStats(existingTrusted?.id ?: merged.id, merged) { it.id }
         }
         mergeStats += mergeDecoded(sections["snippets"].orEmpty(), ::decodeSnippet) { record ->
             val sanitized = BackupSnippetPolicy.sanitizeImportedMetadata(record)
