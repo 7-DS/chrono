@@ -23,6 +23,16 @@ class HostEditorScreenTest {
     }
 
     @Test
+    fun moshPortsAllowBlankSingleOrRange() {
+        assertTrue(hostEditorMoshPortsValid(""))
+        assertTrue(hostEditorMoshPortsValid("60001"))
+        assertTrue(hostEditorMoshPortsValid("60000:61000"))
+        assertFalse(hostEditorMoshPortsValid("61000:60000"))
+        assertFalse(hostEditorMoshPortsValid("60000:"))
+        assertFalse(hostEditorMoshPortsValid("65536"))
+    }
+
+    @Test
     fun portValidationRequiresTcpRange() {
         assertFalse(hostEditorPortValid(null))
         assertFalse(hostEditorPortValid(0))

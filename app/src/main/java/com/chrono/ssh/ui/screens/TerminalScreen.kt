@@ -7,15 +7,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -29,7 +22,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -1127,11 +1119,7 @@ fun TerminalScreen(
             onToggleFullscreen = { fullscreen = !fullscreen },
             transcriptActionsEnabled = workspace.session != null
         )
-        AnimatedVisibility(
-            visible = workspace.pendingHostKey != null,
-            enter = fadeIn(tween(120)) + expandVertically(tween(180)),
-            exit = fadeOut(tween(120)) + shrinkVertically(tween(160))
-        ) {
+        if (workspace.pendingHostKey != null) {
             workspace.pendingHostKey?.let { prompt ->
                 HostKeyReviewStrip(
                     prompt = prompt,
@@ -1639,11 +1627,7 @@ private fun SquircleSessionChip(
     menuContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
-    val background by animateColorAsState(
-        targetValue = terminalTabFillColor(terminalBackground),
-        animationSpec = tween(160, easing = LinearOutSlowInEasing),
-        label = "sessionChipBackground"
-    )
+    val background = terminalTabFillColor(terminalBackground)
     Row(
         modifier = Modifier
             .then(modifier)
@@ -1772,15 +1756,8 @@ private fun TerminalTopAction(
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
-        animationSpec = tween(120, easing = LinearOutSlowInEasing),
-        label = "terminalTopActionPress"
-    )
     Box(
         modifier = Modifier
-            .scale(scale)
             .size(34.dp)
             .clip(RoundedCornerShape(9.dp))
             .background(terminalTabFillColor(terminalBackground))
@@ -2286,20 +2263,9 @@ private fun TerminalRoundAction(
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.92f else 1f,
-        animationSpec = tween(110, easing = LinearOutSlowInEasing),
-        label = "terminalRoundActionScale"
-    )
-    val iconColor by animateColorAsState(
-        targetValue = if (enabled) DeckColors.PrimaryText else DeckColors.SecondaryText,
-        animationSpec = tween(160, easing = LinearOutSlowInEasing),
-        label = "terminalRoundActionIcon"
-    )
+    val iconColor = if (enabled) DeckColors.PrimaryText else DeckColors.SecondaryText
     Box(
         modifier = Modifier
-            .scale(scale)
             .size(38.dp)
             .semantics { contentDescription = action.contentDescription() }
             .clip(CircleShape)
@@ -2378,11 +2344,7 @@ private fun TerminalButton(
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val animatedColor by animateColorAsState(
-        targetValue = if (enabled) color else Color.White.copy(alpha = 0.38f),
-        animationSpec = tween(180),
-        label = "terminalButtonColor"
-    )
+    val textColor = if (enabled) color else Color.White.copy(alpha = 0.38f)
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -2392,7 +2354,7 @@ private fun TerminalButton(
             .padding(horizontal = 14.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text, color = animatedColor, fontSize = 13.sp, fontWeight = FontWeight.Black)
+        Text(text, color = textColor, fontSize = 13.sp, fontWeight = FontWeight.Black)
     }
 }
 

@@ -2330,6 +2330,33 @@ private fun MetricGlyph(icon: String, color: Color, modifier: Modifier = Modifie
                 }
                 drawPath(path, color, style = stroke)
             }
+            "chip" -> {
+                val chip = size.minDimension * 0.24f
+                val pinStart = size.minDimension * 0.07f
+                val pinEnd = size.minDimension * 0.17f
+                val chipStroke = 1.65.dp.toPx()
+                drawRoundRect(
+                    color = color,
+                    topLeft = androidx.compose.ui.geometry.Offset(chip, chip),
+                    size = androidx.compose.ui.geometry.Size(size.width - chip * 2, size.height - chip * 2),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.5.dp.toPx(), 3.5.dp.toPx()),
+                    style = Stroke(width = chipStroke, cap = StrokeCap.Round)
+                )
+                listOf(0.32f, 0.50f, 0.68f).forEach { slot ->
+                    val pos = size.minDimension * slot
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, pinStart), androidx.compose.ui.geometry.Offset(pos, pinEnd), strokeWidth = chipStroke, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height - pinStart), androidx.compose.ui.geometry.Offset(pos, size.height - pinEnd), strokeWidth = chipStroke, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pinStart, pos), androidx.compose.ui.geometry.Offset(pinEnd, pos), strokeWidth = chipStroke, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width - pinStart, pos), androidx.compose.ui.geometry.Offset(size.width - pinEnd, pos), strokeWidth = chipStroke, cap = StrokeCap.Butt)
+                }
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), strokeWidth = chipStroke, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), strokeWidth = chipStroke, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.48f), strokeWidth = chipStroke, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.62f), strokeWidth = chipStroke, cap = StrokeCap.Round)
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), style = Stroke(width = chipStroke))
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), style = Stroke(width = chipStroke))
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), style = Stroke(width = chipStroke))
+            }
             "disk" -> {
                 val pad = size.minDimension * 0.16f
                 drawRoundRect(

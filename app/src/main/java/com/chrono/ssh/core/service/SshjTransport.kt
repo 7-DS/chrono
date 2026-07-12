@@ -7,6 +7,7 @@ import com.chrono.ssh.core.model.CredentialType
 import com.chrono.ssh.core.model.ConnectionProtocol
 import com.chrono.ssh.core.model.HostKeyTrustState
 import com.chrono.ssh.core.model.KnownHost
+import com.chrono.ssh.core.model.MoshPortRange
 import com.chrono.ssh.core.model.PortForwardRule
 import com.chrono.ssh.core.model.ServerProfile
 import com.chrono.ssh.core.service.rclone.RcloneFileShareClient
@@ -522,7 +523,8 @@ class SshjTransport(
             startupCommand = profile.startupCommand,
             serverCommand = profile.moshConfig.serverCommand,
             locale = profile.moshConfig.locale,
-            colors = profile.moshConfig.colors
+            colors = profile.moshConfig.colors,
+            portRange = MoshPortRange.tryParse(profile.moshConfig.portRange)
         )
         client.startSession().use { session ->
             val cmd = session.exec(command)

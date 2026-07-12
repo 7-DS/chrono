@@ -239,8 +239,29 @@ data class MoshConfig(
     val serverCommand: String = "mosh-server",
     val locale: String = "en_US.UTF-8",
     val colors: Int = 256,
-    val predictionMode: String = "adaptive"
+    val predictionMode: String = "adaptive",
+    val portRange: String = ""
 )
+
+data class MoshPortRange(val first: Int, val last: Int) {
+    init {
+        require(first in 1..65535 && last in first..65535)
+    }
+
+    fun commandValue(): String = if (first == last) first.toString() else "$first:$last"
+
+    companion object {
+        fun tryParse(value: String): MoshPortRange? {
+            val raw = value.trim()
+            if (raw.isEmpty()) return null
+            val parts = raw.split(":")
+            if (parts.size !in 1..2 || parts.any { it.isBlank() }) return null
+            val first = parts[0].toIntOrNull() ?: return null
+            val last = parts.getOrNull(1)?.toIntOrNull() ?: first
+            return runCatching { MoshPortRange(first, last) }.getOrNull()
+        }
+    }
+}
 
 data class EternalTerminalConfig(
     val sshBootstrapPort: Int = 22,

@@ -8,6 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.chrono.ssh.core.model.MoshPortRange
 import sh.haven.mosh.MoshLogger
 import sh.haven.mosh.transport.MoshTransport
 import java.nio.charset.StandardCharsets
@@ -121,13 +122,19 @@ internal object MoshBootstrapCommand {
         startupCommand: String,
         serverCommand: String = "mosh-server",
         locale: String = "en_US.UTF-8",
-        colors: Int = 256
+        colors: Int = 256,
+        portRange: MoshPortRange? = null
     ): String {
         require(colors in 8..256) { "Mosh colors must be 8-256." }
         val command = startupCommand.trim()
         return buildString {
             append(serverCommand.trim().ifBlank { "mosh-server" }.shellQuote())
-            append(" new -s -c ")
+            append(" new -s")
+            if (portRange != null) {
+                append(" -p ")
+                append(portRange.commandValue())
+            }
+            append(" -c ")
             append(colors)
             append(" -l LANG=")
             append(locale.trim().ifBlank { "en_US.UTF-8" }.shellQuote())

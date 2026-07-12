@@ -1,5 +1,6 @@
 package com.chrono.ssh.core.service
 
+import com.chrono.ssh.core.model.MoshPortRange
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -50,14 +51,25 @@ class MoshShellSessionTest {
     @Test
     fun moshServerCommandUsesProfileKnobs() {
         assertEquals(
-            "'/usr/local/bin/mosh-server' new -s -c 16 -l LANG='C.UTF-8' -- sh -lc 'screen -x'",
+            "'/usr/local/bin/mosh-server' new -s -p 60000:61000 -c 16 -l LANG='C.UTF-8' -- sh -lc 'screen -x'",
             MoshBootstrapCommand.build(
                 startupCommand = "screen -x",
                 serverCommand = "/usr/local/bin/mosh-server",
                 locale = "C.UTF-8",
-                colors = 16
+                colors = 16,
+                portRange = MoshPortRange(60000, 61000)
             )
         )
+    }
+
+    @Test
+    fun moshPortRangeParsesSingleAndRange() {
+        assertEquals("60001", MoshPortRange.tryParse(" 60001 ")?.commandValue())
+        assertEquals("60000:61000", MoshPortRange.tryParse("60000:61000")?.commandValue())
+        assertNull(MoshPortRange.tryParse(""))
+        assertNull(MoshPortRange.tryParse("61000:60000"))
+        assertNull(MoshPortRange.tryParse("60000:"))
+        assertNull(MoshPortRange.tryParse("65536"))
     }
 
     @Test(expected = IllegalArgumentException::class)

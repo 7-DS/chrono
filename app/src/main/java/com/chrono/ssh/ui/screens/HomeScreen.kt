@@ -1084,21 +1084,31 @@ private fun MetricIcon(symbol: MetricSymbol, color: Color, modifier: Modifier = 
         val stroke = Stroke(width = 1.25.dp.toPx(), cap = StrokeCap.Round)
         when (symbol) {
             MetricSymbol.Cpu -> {
-                val pad = size.minDimension * 0.28f
+                val chip = size.minDimension * 0.24f
+                val pinStart = size.minDimension * 0.07f
+                val pinEnd = size.minDimension * 0.17f
+                val strokeWidth = 1.35.dp.toPx()
                 drawRoundRect(
                     color = color,
-                    topLeft = androidx.compose.ui.geometry.Offset(pad, pad),
-                    size = androidx.compose.ui.geometry.Size(size.width - pad * 2, size.height - pad * 2),
+                    topLeft = androidx.compose.ui.geometry.Offset(chip, chip),
+                    size = androidx.compose.ui.geometry.Size(size.width - chip * 2, size.height - chip * 2),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                    style = stroke
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
-                repeat(4) { i ->
-                    val pos = size.minDimension * (0.2f + i * 0.2f)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height * 0.1f), androidx.compose.ui.geometry.Offset(pos, pad * 0.86f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height * 0.9f), androidx.compose.ui.geometry.Offset(pos, size.height - pad * 0.86f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.1f, pos), androidx.compose.ui.geometry.Offset(pad * 0.86f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.9f, pos), androidx.compose.ui.geometry.Offset(size.width - pad * 0.86f, pos), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                listOf(0.32f, 0.50f, 0.68f).forEach { slot ->
+                    val pos = size.minDimension * slot
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, pinStart), androidx.compose.ui.geometry.Offset(pos, pinEnd), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height - pinStart), androidx.compose.ui.geometry.Offset(pos, size.height - pinEnd), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(pinStart, pos), androidx.compose.ui.geometry.Offset(pinEnd, pos), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
+                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width - pinStart, pos), androidx.compose.ui.geometry.Offset(size.width - pinEnd, pos), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
                 }
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.48f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.62f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), style = Stroke(width = strokeWidth))
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), style = Stroke(width = strokeWidth))
+                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), style = Stroke(width = strokeWidth))
             }
             MetricSymbol.Memory -> {
                 val y = size.height * 0.32f

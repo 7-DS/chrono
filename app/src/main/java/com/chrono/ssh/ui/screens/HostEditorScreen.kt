@@ -3,10 +3,9 @@ package com.chrono.ssh.ui.screens
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,6 +67,7 @@ import com.chrono.ssh.core.model.ConnectionProtocol
 import com.chrono.ssh.core.model.EternalTerminalConfig
 import com.chrono.ssh.core.model.FileProtocolConfig
 import com.chrono.ssh.core.model.MoshConfig
+import com.chrono.ssh.core.model.MoshPortRange
 import com.chrono.ssh.core.model.MonitoringConfig
 import com.chrono.ssh.core.model.ProotProfileConfig
 import com.chrono.ssh.core.model.RdpProfileConfig
@@ -186,6 +186,7 @@ fun HostEditorScreen(
     var moshLocale by remember(server?.id) { mutableStateOf(server?.moshConfig?.locale ?: "en_US.UTF-8") }
     var moshColors by remember(server?.id) { mutableStateOf((server?.moshConfig?.colors ?: 256).toString()) }
     var moshPredictionMode by remember(server?.id) { mutableStateOf(server?.moshConfig?.predictionMode ?: "adaptive") }
+    var moshPortRange by remember(server?.id) { mutableStateOf(server?.moshConfig?.portRange.orEmpty()) }
     var etSshBootstrapPort by remember(server?.id) { mutableStateOf((server?.eternalTerminalConfig?.sshBootstrapPort ?: 22).toString()) }
     var etServerPort by remember(server?.id) { mutableStateOf((server?.eternalTerminalConfig?.etServerPort ?: 2022).toString()) }
     var etTerminalType by remember(server?.id) { mutableStateOf(server?.eternalTerminalConfig?.terminalType ?: "xterm-256color") }
@@ -475,6 +476,7 @@ fun HostEditorScreen(
             parsedKeepAlive == null || parsedKeepAlive !in 10..120 -> error = "Keepalive must be between 10 and 120 seconds."
             parsedReconnectAttempts == null || parsedReconnectAttempts !in 0..10 -> error = "Reconnect attempts must be between 0 and 10."
             !hostEditorMoshColorsValid(parsedMoshColors) -> error = "Mosh colors must be 8-256."
+            !hostEditorMoshPortsValid(moshPortRange) -> error = "Mosh UDP ports must be a port or range like 60000:61000."
             !hostEditorPortValid(parsedEtSshBootstrapPort) || !hostEditorPortValid(parsedEtServerPort) -> error = "ET ports must be between 1 and 65535."
             parsedVncColorDepth == null || parsedVncTargetFps == null -> error = "VNC display values must be valid numbers."
             vncTunnelOverSsh && (parsedVncSshBootstrapPort == null || parsedVncSshBootstrapPort !in 1..65535) -> error = "VNC SSH port must be between 1 and 65535."
@@ -549,7 +551,8 @@ fun HostEditorScreen(
                         serverCommand = moshServerCommand,
                         locale = moshLocale,
                         colors = saveMoshColors,
-                        predictionMode = moshPredictionMode
+                        predictionMode = moshPredictionMode,
+                        portRange = MoshPortRange.tryParse(moshPortRange)?.commandValue().orEmpty()
                     ),
                     EternalTerminalConfig(
                         sshBootstrapPort = saveEtSshBootstrapPort,
@@ -757,8 +760,8 @@ fun HostEditorScreen(
             }
             AnimatedVisibility(
                 visible = credentialType == CredentialType.PrivateKey,
-                enter = fadeIn(tween(110)) + expandVertically(expandFrom = Alignment.Top, animationSpec = tween(150)),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(120)) + fadeOut(tween(80))
+                enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(140)),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(110))
             ) {
                 Column(Modifier.fillMaxWidth()) {
                 Spacer(Modifier.height(12.dp))
@@ -847,8 +850,8 @@ fun HostEditorScreen(
             }
             AnimatedVisibility(
                 visible = customLogoUri != null,
-                enter = fadeIn() + expandVertically(),
-                exit = shrinkVertically() + fadeOut()
+                enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(120)),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(100))
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(8.dp))
@@ -938,12 +941,12 @@ fun HostEditorScreen(
                     }
                     Text(if (protocolOptionsOpen) "-" else "+", color = DeckColors.SecondaryText, fontSize = 22.sp, fontWeight = FontWeight.Black)
                 }
-                AnimatedVisibility(
-                    visible = protocolOptionsOpen,
-                    enter = fadeIn(tween(80)) + expandVertically(expandFrom = Alignment.Top, animationSpec = tween(100)),
-                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(80)) + fadeOut(tween(40))
-                ) {
-                    Column(Modifier.fillMaxWidth()) {
+                if (protocolOptionsOpen) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .animateContentSize(tween(140))
+                    ) {
                         Spacer(Modifier.height(12.dp))
                         when (protocol) {
                             ConnectionProtocol.Mosh -> {
@@ -952,6 +955,10 @@ fun HostEditorScreen(
                                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                                     DeckTextField("Locale", moshLocale, "en_US.UTF-8", Modifier.weight(1f)) { moshLocale = it.trim().take(48) }
                                     DeckTextField("Colors", moshColors, "256", Modifier.weight(0.55f), KeyboardType.Number) { moshColors = it.filter(Char::isDigit).take(3) }
+                                }
+                                Spacer(Modifier.height(12.dp))
+                                DeckTextField("Mosh UDP ports", moshPortRange, "60000:61000", keyboardType = KeyboardType.Text) {
+                                    moshPortRange = it.filter { char -> char.isDigit() || char == ':' }.take(11)
                                 }
                             }
                             ConnectionProtocol.EternalTerminal -> {
@@ -1114,8 +1121,8 @@ fun HostEditorScreen(
             }
             AnimatedVisibility(
                 visible = manualOsOpen,
-                enter = fadeIn(tween(80)) + expandVertically(expandFrom = Alignment.Top, animationSpec = tween(100)),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(80)) + fadeOut(tween(40))
+                enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(120)),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(90))
             ) {
                 Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(12.dp))
@@ -1143,8 +1150,8 @@ fun HostEditorScreen(
             }
             AnimatedVisibility(
                 visible = advancedSshOpen,
-                enter = fadeIn(tween(80)) + expandVertically(expandFrom = Alignment.Top, animationSpec = tween(100)),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(80)) + fadeOut(tween(40))
+                enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(120)),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(90))
             ) {
                 Column(Modifier.fillMaxWidth()) {
                 Spacer(Modifier.height(16.dp))
@@ -1259,8 +1266,8 @@ fun HostEditorScreen(
         Spacer(Modifier.height(16.dp))
         AnimatedVisibility(
             visible = error != null || externalError != null,
-            enter = fadeIn() + expandVertically(),
-            exit = shrinkVertically() + fadeOut()
+            enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(120)),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(90))
         ) {
             Column(Modifier.fillMaxWidth()) {
                 Text((error ?: externalError).orEmpty(), color = DeckColors.Red, fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -1284,8 +1291,8 @@ fun HostEditorScreen(
                 }
                 AnimatedVisibility(
                     visible = deleteSectionOpen,
-                    enter = fadeIn(tween(110)) + expandVertically(expandFrom = Alignment.Top, animationSpec = tween(150)),
-                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(120)) + fadeOut(tween(80))
+                    enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(140)),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(110))
                 ) {
                     Column(Modifier.fillMaxWidth()) {
                     Spacer(Modifier.height(12.dp))
@@ -2018,6 +2025,10 @@ internal fun fileAdvancedControlsVisible(protocol: ConnectionProtocol): Boolean 
 
 internal fun hostEditorMoshColorsValid(colors: Int?): Boolean {
     return colors in 8..256
+}
+
+internal fun hostEditorMoshPortsValid(value: String): Boolean {
+    return value.isBlank() || MoshPortRange.tryParse(value) != null
 }
 
 internal fun hostEditorPortValid(port: Int?): Boolean {

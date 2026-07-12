@@ -25,6 +25,7 @@ import com.chrono.ssh.core.model.MemoryMetrics
 import com.chrono.ssh.core.model.MetricSnapshot
 import com.chrono.ssh.core.model.MonitoringConfig
 import com.chrono.ssh.core.model.MoshConfig
+import com.chrono.ssh.core.model.MoshPortRange
 import com.chrono.ssh.core.model.NetworkHistory
 import com.chrono.ssh.core.model.NetworkInterfaceMetric
 import com.chrono.ssh.core.model.NetworkMetrics
@@ -3227,7 +3228,8 @@ private fun MoshConfig.normalized(): MoshConfig = copy(
     serverCommand = serverCommand.trim().ifBlank { "mosh-server" },
     locale = locale.trim().ifBlank { "en_US.UTF-8" },
     colors = colors.coerceIn(8, 256),
-    predictionMode = predictionMode.trim().lowercase().ifBlank { "adaptive" }
+    predictionMode = predictionMode.trim().lowercase().ifBlank { "adaptive" },
+    portRange = MoshPortRange.tryParse(portRange)?.commandValue().orEmpty()
 )
 
 private fun EternalTerminalConfig.normalized(): EternalTerminalConfig = copy(
@@ -3268,7 +3270,7 @@ private fun ProotProfileConfig.normalized(): ProotProfileConfig = copy(
 )
 
 private fun encodeMoshConfig(config: MoshConfig): String = with(config.normalized()) {
-    listOf(serverCommand, locale, colors.toString(), predictionMode).joinToString(",") { escape(it) }
+    listOf(serverCommand, locale, colors.toString(), predictionMode, portRange).joinToString(",") { escape(it) }
 }
 
 private fun decodeMoshConfig(value: String?): MoshConfig {
@@ -3277,7 +3279,8 @@ private fun decodeMoshConfig(value: String?): MoshConfig {
         serverCommand = fields.getOrNull(0).orEmpty().ifBlank { "mosh-server" },
         locale = fields.getOrNull(1).orEmpty().ifBlank { "en_US.UTF-8" },
         colors = fields.getOrNull(2)?.toIntOrNull() ?: 256,
-        predictionMode = fields.getOrNull(3).orEmpty().ifBlank { "adaptive" }
+        predictionMode = fields.getOrNull(3).orEmpty().ifBlank { "adaptive" },
+        portRange = fields.getOrNull(4).orEmpty()
     ).normalized()
 }
 
