@@ -2242,11 +2242,25 @@ object HostUniquenessPolicy {
 }
 
 object CredentialUniquenessPolicy {
-    const val DuplicateLabelMessage = "An identity with this name already exists."
+    const val DuplicateLabelMessage = "A key with this name already exists."
 
-    fun hasDuplicateLabel(existing: List<Credential>, label: String, credentialId: String? = null): Boolean {
+    // Names only need to be unique for keys. Password identities are named after their
+    // host/login target and are allowed to collide freely.
+    fun nameMattersFor(type: CredentialType): Boolean = type != CredentialType.Password
+
+    fun hasDuplicateLabel(
+        existing: List<Credential>,
+        label: String,
+        credentialId: String? = null,
+        type: CredentialType = CredentialType.PrivateKey
+    ): Boolean {
+        if (!nameMattersFor(type)) return false
         val normalized = label.trim().lowercase()
-        return normalized.isNotBlank() && existing.any { it.id != credentialId && it.label.trim().lowercase() == normalized }
+        return normalized.isNotBlank() && existing.any {
+            it.id != credentialId &&
+                nameMattersFor(it.type) &&
+                it.label.trim().lowercase() == normalized
+        }
     }
 }
 

@@ -2592,8 +2592,34 @@ class WorkflowValidatorsTest {
             createdAtEpochMillis = 1L
         )
 
-        assertTrue(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", null))
-        assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", existing.id))
+        assertTrue(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", null, CredentialType.PrivateKey))
+        assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", existing.id, CredentialType.PrivateKey))
+    }
+
+    @Test
+    fun credentialUniquenessIgnoresPasswordNames() {
+        val existingPassword = Credential(
+            id = "identity-1",
+            label = "root@example.test",
+            type = CredentialType.Password,
+            encryptedPayloadRef = "secret-pass",
+            createdAtEpochMillis = 1L
+        )
+        val existingKey = Credential(
+            id = "identity-2",
+            label = "root@example.test",
+            type = CredentialType.PrivateKey,
+            publicKeyPreview = "ssh-ed25519 AAAA",
+            encryptedPayloadRef = "secret-key",
+            createdAtEpochMillis = 1L
+        )
+
+        // A new password identity may reuse any name (host label, another password's name, even a key's name).
+        assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existingPassword), "root@example.test", null, CredentialType.Password))
+        assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existingKey), "root@example.test", null, CredentialType.Password))
+        // A new key must not collide with an existing key name, but ignores same-named password identities.
+        assertTrue(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existingKey), "root@example.test", null, CredentialType.PrivateKey))
+        assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existingPassword), "root@example.test", null, CredentialType.PrivateKey))
     }
 
     private fun server(username: String): ServerProfile {

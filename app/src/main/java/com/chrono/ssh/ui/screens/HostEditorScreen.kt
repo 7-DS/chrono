@@ -454,7 +454,8 @@ fun HostEditorScreen(
         val duplicateCredentialLabel = CredentialUniquenessPolicy.hasDuplicateLabel(
             credentials,
             effectiveCredentialLabel,
-            selectedCredentialId
+            selectedCredentialId,
+            credentialType
         )
         when {
             HostEndpointValidator.errorFor(host) != null -> error = HostEndpointValidator.errorFor(host)
