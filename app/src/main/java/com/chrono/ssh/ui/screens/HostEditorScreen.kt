@@ -456,16 +456,6 @@ fun HostEditorScreen(
             effectiveCredentialLabel,
             selectedCredentialId
         )
-        val replacementPrivateKeyPreview = if (credentialType == CredentialType.PrivateKey && credentialSecret.isNotBlank()) {
-            KeyMaterialInspector.publicPreviewForSecret(credentialType.name, credentialSecret)
-        } else {
-            null
-        }
-        val duplicatePrivateKey = CredentialUniquenessPolicy.hasDuplicatePrivateKey(
-            credentials,
-            replacementPrivateKeyPreview,
-            selectedCredentialId
-        )
         when {
             HostEndpointValidator.errorFor(host) != null -> error = HostEndpointValidator.errorFor(host)
             duplicateHost -> error = HostUniquenessPolicy.DuplicateMessage
@@ -503,7 +493,6 @@ fun HostEditorScreen(
                 label = effectiveCredentialLabel
             ).message
             duplicateCredentialLabel -> error = CredentialUniquenessPolicy.DuplicateLabelMessage
-            duplicatePrivateKey -> error = CredentialUniquenessPolicy.DuplicatePrivateKeyMessage
             else -> {
                 val savePort = parsedPort!!
                 val saveMoshColors = parsedMoshColors!!

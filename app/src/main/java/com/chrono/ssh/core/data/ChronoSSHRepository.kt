@@ -1089,14 +1089,12 @@ class ChronoSSHRepository(private val context: Context) {
             favorite = existing?.favorite ?: false,
             importedAtEpochMillis = existing?.importedAtEpochMillis ?: 0L
         )
-        requireUniqueCredentialMaterial(credential)
         upsertCredential(credential)
         return credential
     }
 
     fun upsertCredential(credential: Credential) {
         requireUniqueCredentialLabel(credential.label, credential.id)
-        requireUniqueCredentialMaterial(credential)
         val index = credentials.indexOfFirst { it.id == credential.id }
         if (index >= 0) {
             credentials[index] = credential
@@ -1120,13 +1118,6 @@ class ChronoSSHRepository(private val context: Context) {
         val normalized = label.trim().lowercase()
         require(normalized.isNotBlank()) { "Identity name cannot be blank." }
         require(!CredentialUniquenessPolicy.hasDuplicateLabel(credentials, normalized, credentialId)) { CredentialUniquenessPolicy.DuplicateLabelMessage }
-    }
-
-    private fun requireUniqueCredentialMaterial(credential: Credential) {
-        if (credential.type != CredentialType.PrivateKey) return
-        require(!CredentialUniquenessPolicy.hasDuplicatePrivateKey(credentials, credential.publicKeyPreview, credential.id)) {
-            CredentialUniquenessPolicy.DuplicatePrivateKeyMessage
-        }
     }
 
     fun unlinkCredentialFromHosts(credentialId: String): Int {

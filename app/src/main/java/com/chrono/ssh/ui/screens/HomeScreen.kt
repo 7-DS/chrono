@@ -72,6 +72,7 @@ import com.chrono.ssh.ui.design.DeckColors
 import com.chrono.ssh.ui.design.HeadingFontTarget
 import com.chrono.ssh.ui.design.LocalHeadingFontFamilies
 import com.chrono.ssh.ui.design.ChronoOsLogo
+import com.chrono.ssh.ui.design.drawCpuChipGlyph
 import com.chrono.ssh.ui.design.MetricRing
 import com.chrono.ssh.ui.design.ServerMetricColors
 import com.chrono.ssh.ui.design.ServerMetricColorOverrides
@@ -1084,31 +1085,7 @@ private fun MetricIcon(symbol: MetricSymbol, color: Color, modifier: Modifier = 
         val stroke = Stroke(width = 1.25.dp.toPx(), cap = StrokeCap.Round)
         when (symbol) {
             MetricSymbol.Cpu -> {
-                val chip = size.minDimension * 0.24f
-                val pinStart = size.minDimension * 0.07f
-                val pinEnd = size.minDimension * 0.17f
-                val strokeWidth = 1.35.dp.toPx()
-                drawRoundRect(
-                    color = color,
-                    topLeft = androidx.compose.ui.geometry.Offset(chip, chip),
-                    size = androidx.compose.ui.geometry.Size(size.width - chip * 2, size.height - chip * 2),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx(), 3.dp.toPx()),
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                )
-                listOf(0.32f, 0.50f, 0.68f).forEach { slot ->
-                    val pos = size.minDimension * slot
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, pinStart), androidx.compose.ui.geometry.Offset(pos, pinEnd), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pos, size.height - pinStart), androidx.compose.ui.geometry.Offset(pos, size.height - pinEnd), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(pinStart, pos), androidx.compose.ui.geometry.Offset(pinEnd, pos), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width - pinStart, pos), androidx.compose.ui.geometry.Offset(size.width - pinEnd, pos), strokeWidth = strokeWidth, cap = StrokeCap.Butt)
-                }
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.32f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.40f), androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.48f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.62f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
-                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.48f), style = Stroke(width = strokeWidth))
-                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.32f), style = Stroke(width = strokeWidth))
-                drawCircle(color, radius = size.minDimension * 0.045f, center = androidx.compose.ui.geometry.Offset(size.width * 0.57f, size.height * 0.62f), style = Stroke(width = strokeWidth))
+                drawCpuChipGlyph(color)
             }
             MetricSymbol.Memory -> {
                 val y = size.height * 0.32f

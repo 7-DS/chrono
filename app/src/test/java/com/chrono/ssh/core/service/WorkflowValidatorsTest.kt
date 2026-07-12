@@ -2596,22 +2596,6 @@ class WorkflowValidatorsTest {
         assertFalse(CredentialUniquenessPolicy.hasDuplicateLabel(listOf(existing), " production key ", existing.id))
     }
 
-    @Test
-    fun credentialUniquenessRejectsDuplicatePrivateKeyMaterial() {
-        val existing = Credential(
-            id = "identity-1",
-            label = "Production Key",
-            type = CredentialType.PrivateKey,
-            publicKeyPreview = "OpenSSH key (SHA256:abc)",
-            encryptedPayloadRef = "secret-key",
-            createdAtEpochMillis = 1L
-        )
-
-        assertTrue(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), " OpenSSH key (SHA256:abc) ", null))
-        assertFalse(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), "OpenSSH key (SHA256:abc)", existing.id))
-        assertFalse(CredentialUniquenessPolicy.hasDuplicatePrivateKey(listOf(existing), "OpenSSH key (SHA256:other)", null))
-    }
-
     private fun server(username: String): ServerProfile {
         return ServerProfile(
             id = "server-1",

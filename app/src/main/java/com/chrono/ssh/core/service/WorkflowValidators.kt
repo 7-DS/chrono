@@ -2243,21 +2243,10 @@ object HostUniquenessPolicy {
 
 object CredentialUniquenessPolicy {
     const val DuplicateLabelMessage = "An identity with this name already exists."
-    const val DuplicatePrivateKeyMessage = "This private key is already saved."
 
     fun hasDuplicateLabel(existing: List<Credential>, label: String, credentialId: String? = null): Boolean {
         val normalized = label.trim().lowercase()
         return normalized.isNotBlank() && existing.any { it.id != credentialId && it.label.trim().lowercase() == normalized }
-    }
-
-    fun hasDuplicatePrivateKey(existing: List<Credential>, publicKeyPreview: String?, credentialId: String? = null): Boolean {
-        val normalized = publicKeyPreview?.trim().orEmpty()
-        if (normalized.isBlank()) return false
-        return existing.any { credential ->
-            credential.id != credentialId &&
-                credential.type == CredentialType.PrivateKey &&
-                credential.publicKeyPreview?.trim() == normalized
-        }
     }
 }
 
