@@ -251,7 +251,7 @@ fun HostsScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 LargeScreenTitle(
-                    if (mode == "files") "SFTP" else if (mode == "vault") "Vault" else title,
+                    if (mode == "files") "Files" else if (mode == "vault") "Vault" else title,
                     headingTarget = if (mode == "files") HeadingFontTarget.Files else if (mode == "vault") HeadingFontTarget.Vault else null
                 )
                 if (mode != "files" && mode != "vault") {
@@ -271,7 +271,7 @@ fun HostsScreen(
         ) {
             sections.forEach { section ->
                 SoftPill(
-                    text = if (section == "Files") "SFTP" else section,
+                    text = section,
                     selected = section == selectedSection,
                     color = if (section == "Tunnels" || section == "Files") DeckColors.Cyan else DeckColors.BrandAlt
                 ) { selectedSection = section }
@@ -448,7 +448,7 @@ fun SftpBrowserScreen(
                 .padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CircleIconButton("<", "Back", modifier = Modifier.size(46.dp), onClick = { backRequestSerial += 1 })
+            CircleIconButton("<", "Back", modifier = Modifier.size(46.dp), onClick = onBack)
         }
         Spacer(Modifier.height(10.dp))
         if (sftpWorkspaces.isNotEmpty()) {
@@ -2043,6 +2043,11 @@ private fun TransferSection(
             showHiddenFiles = showHiddenFiles,
             onPathClick = { path -> selectedServer?.let { openPath(it, path) } },
             onRefresh = { selectedServer?.let { openPath(it, currentPath, allowFallback = false) } },
+            onHome = {
+                selectedServer?.let { server ->
+                    openPath(server, fileBrowserStartPath(server, bookmarks), allowFallback = true)
+                }
+            },
             onSort = { selectedSort ->
                 val nextDescending = if (selectedSort == sortMode) {
                     !sortDescending
@@ -2639,9 +2644,11 @@ private fun SftpParentDirectoryRow(
             .border(1.dp, DeckColors.CardStroke.copy(alpha = 0.58f), RoundedCornerShape(14.dp))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text("..", color = DeckColors.PrimaryText, fontSize = 18.sp, lineHeight = 18.sp, fontWeight = FontWeight.Black)
+        SftpToolbarGlyph("up", DeckColors.Cyan, Modifier.size(18.dp))
+        Text("Up to parent folder", color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 16.sp, fontWeight = FontWeight.Black)
     }
     Spacer(Modifier.height(8.dp))
 }
@@ -2702,6 +2709,7 @@ private fun SftpToolbar(
     showHiddenFiles: Boolean,
     onPathClick: (String) -> Unit,
     onRefresh: () -> Unit,
+    onHome: () -> Unit,
     onSort: (SftpSortMode) -> Unit,
     onToggleHidden: () -> Unit,
     onPin: () -> Unit,
@@ -2738,6 +2746,7 @@ private fun SftpToolbar(
         ) {
             when {
                 connected -> {
+                    SftpToolbarAction("home", "Home", DeckColors.Cyan, compact = true, onClick = onHome)
                     SftpToolbarAction("refresh", "Refresh", DeckColors.Cyan, compact = true, onClick = onRefresh)
                     SftpSortMenu(sortMode, sortDescending, onSort)
                     SftpToolbarAction(if (showHiddenFiles) "eye-on" else "eye-off", "Hidden", DeckColors.PrimaryText, compact = true, onClick = onToggleHidden)
@@ -3619,6 +3628,8 @@ private fun FileRowAction(
 private val sftpGlyphSymbols = setOf(
     "sftp-open",
     "refresh",
+    "home",
+    "up",
     "eye-on",
     "eye-off",
     "bookmark",
@@ -3645,6 +3656,24 @@ private fun SftpToolbarGlyph(symbol: String, color: Color, modifier: Modifier = 
         val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
         when (symbol) {
             "sftp-open" -> drawSftpOpenGlyph(color, stroke)
+            "home" -> {
+                val path = Path().apply {
+                    moveTo(size.width * 0.50f, size.height * 0.18f)
+                    lineTo(size.width * 0.82f, size.height * 0.46f)
+                    lineTo(size.width * 0.72f, size.height * 0.46f)
+                    lineTo(size.width * 0.72f, size.height * 0.80f)
+                    lineTo(size.width * 0.28f, size.height * 0.80f)
+                    lineTo(size.width * 0.28f, size.height * 0.46f)
+                    lineTo(size.width * 0.18f, size.height * 0.46f)
+                    close()
+                }
+                drawPath(path, color, style = stroke)
+            }
+            "up" -> {
+                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.78f), androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.44f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.44f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+            }
             "refresh" -> {
                 drawArc(color, startAngle = 35f, sweepAngle = 285f, useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.18f), size = androidx.compose.ui.geometry.Size(size.width * 0.64f, size.height * 0.64f), style = stroke)
                 drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.74f, size.height * 0.20f), androidx.compose.ui.geometry.Offset(size.width * 0.84f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
@@ -3690,12 +3719,17 @@ private fun SftpToolbarGlyph(symbol: String, color: Color, modifier: Modifier = 
                 drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.39f, size.height * 0.57f), androidx.compose.ui.geometry.Offset(size.width * 0.61f, size.height * 0.57f), strokeWidth = stroke.width, cap = StrokeCap.Round)
             }
             "scp" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.38f), androidx.compose.ui.geometry.Offset(size.width * 0.76f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.26f), androidx.compose.ui.geometry.Offset(size.width * 0.76f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.50f), androidx.compose.ui.geometry.Offset(size.width * 0.76f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.36f, size.height * 0.50f), androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.36f, size.height * 0.74f), androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                // Two opposing arrows = transfer (send up / receive down)
+                val leftX = size.width * 0.36f
+                val rightX = size.width * 0.64f
+                // left arrow points up
+                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(leftX - size.width * 0.11f, size.height * 0.40f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(leftX + size.width * 0.11f, size.height * 0.40f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                // right arrow points down
+                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(rightX - size.width * 0.11f, size.height * 0.60f), strokeWidth = stroke.width, cap = StrokeCap.Round)
+                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(rightX + size.width * 0.11f, size.height * 0.60f), strokeWidth = stroke.width, cap = StrokeCap.Round)
             }
             "sort-up", "sort-down" -> {
                 listOf(0.32f, 0.50f, 0.68f).forEachIndexed { index, y ->
@@ -3816,7 +3850,22 @@ private fun FileGlyph(entry: SftpEntry) {
 }
 
 private fun Long.fileSizeLabel(): String {
-    return MetricFormatters.bytesLabel(this)
+    val bytes = this.coerceAtLeast(0L)
+    if (bytes < 1024L) return "$bytes B"
+    val units = arrayOf("KB", "MB", "GB", "TB", "PB")
+    var value = bytes.toDouble() / 1024.0
+    var unitIndex = 0
+    while (value >= 1024.0 && unitIndex < units.size - 1) {
+        value /= 1024.0
+        unitIndex++
+    }
+    // 1 decimal below 10 (e.g. 1.5 MB), 1 decimal below 100, whole numbers above (e.g. 512 MB)
+    val formatted = when {
+        value >= 100.0 -> "%.0f".format(Locale.US, value)
+        value >= 10.0 -> "%.1f".format(Locale.US, value)
+        else -> "%.2f".format(Locale.US, value)
+    }
+    return "$formatted ${units[unitIndex]}"
 }
 
 private fun SftpEntry.fileManagerMeta(): String {
@@ -4228,7 +4277,7 @@ private fun CredentialsSection(
                             "Rename" -> HostAction(action) { pendingRenameCredential = credential }
                             "Organize" -> HostAction(action) { pendingMetadataCredential = credential }
                             "Unlink" -> HostAction(action) { pendingUnlinkCredential = credential }
-                            "Replace" -> HostAction(action) { pendingReplaceCredential = credential }
+                            "Edit" -> HostAction(action) { pendingReplaceCredential = credential }
                             "Copy Link" -> HostAction(action) { onCopyCredentialLink(credential) }
                             "Share Link" -> HostAction(action) { onShareCredentialLink(credential) }
                             "QR" -> HostAction(action) { onShowCredentialQr(credential) }
@@ -4348,6 +4397,11 @@ private fun CredentialsSection(
             onConfirm = { secret, passphrase, savePassphrase ->
                 pendingReplaceCredential = null
                 onReplaceCredentialSecret(credential, secret, passphrase, savePassphrase)
+            },
+            onLoadInitialSecret = if (credential.secretBacked) {
+                { onLoadCredentialPayload(credential) }
+            } else {
+                null
             }
         )
     }
@@ -4654,7 +4708,7 @@ private fun CredentialDetailDialog(
                     HostAction("Rename") { onRename() }
                     HostAction("Organize") { onOrganize() }
                     HostAction("Unlink") { onUnlink() }
-                    HostAction("Replace") { onReplace() }
+                    HostAction("Edit") { onReplace() }
                     HostAction("Export") { onExport() }
                     HostAction("Share") { onShare() }
                     HostAction("Delete") { onDelete() }
@@ -4707,23 +4761,33 @@ private fun UnlinkCredentialDialog(
 private fun ReplaceCredentialSecretDialog(
     credential: Credential,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, Boolean) -> Unit
+    onConfirm: (String, String, Boolean) -> Unit,
+    onLoadInitialSecret: (suspend () -> String)? = null
 ) {
     var secret by remember(credential.id) { mutableStateOf("") }
     var passphrase by remember(credential.id) { mutableStateOf("") }
     var savePassphrase by remember(credential.id) { mutableStateOf(credential.passphraseRef != null) }
     var error by remember(credential.id) { mutableStateOf<String?>(null) }
+    // For password identities, prefill the existing value so this is a true edit, not a blank re-entry.
+    LaunchedEffect(credential.id) {
+        if (credential.type == CredentialType.Password && onLoadInitialSecret != null) {
+            runCatching { onLoadInitialSecret() }.onSuccess { existing ->
+                if (existing.isNotEmpty() && secret.isEmpty()) secret = existing
+            }
+        }
+    }
     val cleanSecret = secret.trim()
+    val isPassword = credential.type == CredentialType.Password
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Replace secret", color = DeckColors.PrimaryText, fontWeight = FontWeight.Black) },
+        title = { Text(if (isPassword) "Edit password" else "Edit private key", color = DeckColors.PrimaryText, fontWeight = FontWeight.Black) },
         text = {
             Column {
                 Text(
                     if (credential.type == CredentialType.PrivateKey) {
                         "Paste the full private key. A public key or file path will be rejected."
                     } else {
-                        "Enter the replacement password."
+                        "Update the saved password, then save."
                     },
                     color = DeckColors.SecondaryText,
                     fontSize = 13.sp,
@@ -4790,7 +4854,7 @@ private fun ReplaceCredentialSecretDialog(
                     onConfirm(cleanSecret, passphrase, savePassphrase)
                 }
             ) {
-                Text("Replace", color = if (cleanSecret.isBlank()) DeckColors.SecondaryText else DeckColors.Cyan, fontWeight = FontWeight.Black)
+                Text("Save", color = if (cleanSecret.isBlank()) DeckColors.SecondaryText else DeckColors.Cyan, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {
@@ -6087,7 +6151,7 @@ internal fun expandedCredentialActionLabels(credential: Credential): List<String
             add("Export")
             add("Share")
         }
-        addAll(listOf("Rename", "Organize", "Unlink", "Replace", "Copy Link", "Share Link", "QR", "Remove"))
+        addAll(listOf("Rename", "Organize", "Unlink", "Edit", "Copy Link", "Share Link", "QR", "Remove"))
     }
 }
 

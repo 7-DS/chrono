@@ -278,7 +278,7 @@ fun SegmentedPillControl(
                     .clip(RoundedCornerShape(24.dp))
                     .background(tabBackground)
                     .clickable { onSelected(index) }
-                    .padding(vertical = 10.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

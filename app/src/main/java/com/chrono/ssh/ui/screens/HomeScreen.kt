@@ -121,12 +121,23 @@ fun HomeScreen(
     var dismissedTrustPromptFor by remember { mutableStateOf<Set<String>>(emptySet()) }
     var trustPromptServer by remember { mutableStateOf<ServerProfile?>(null) }
     val filters = homeFleetFilters(servers)
-    val serverRows = homeServerRows(servers, snapshots, selectedFilter)
-    val onlineCount = servers.count { snapshots[it.id]?.status == ServerStatus.Online }
-    val offlineCount = servers.count { snapshots[it.id]?.status == ServerStatus.Offline }
-    val untrustedServer = servers.firstOrNull { server ->
-        knownHosts.none { it.host == server.host && it.port == server.port && it.trusted } &&
-            server.id !in dismissedTrustPromptFor
+    val serverRows = remember(servers, snapshots, selectedFilter) {
+        homeServerRows(servers, snapshots, selectedFilter)
+    }
+    val onlineCount = remember(servers, snapshots) {
+        servers.count { snapshots[it.id]?.status == ServerStatus.Online }
+    }
+    val offlineCount = remember(servers, snapshots) {
+        servers.count { snapshots[it.id]?.status == ServerStatus.Offline }
+    }
+    val untrustedServer = remember(servers, knownHosts, dismissedTrustPromptFor) {
+        servers.firstOrNull { server ->
+            knownHosts.none { it.host == server.host && it.port == server.port && it.trusted } &&
+                server.id !in dismissedTrustPromptFor
+        }
+    }
+    val metricColors = remember(metricColorPreset, metricColorOverrides) {
+        metricColorsFor(metricColorPreset, metricColorOverrides)
     }
 
     LaunchedEffect(untrustedServer?.id) {
@@ -172,7 +183,7 @@ fun HomeScreen(
                         snapshot = snapshot,
                         networkMode = networkMode,
                         diskMode = diskMode,
-                        metricColors = metricColorsFor(metricColorPreset, metricColorOverrides),
+                        metricColors = metricColors,
                         serverCardLatencyVisible = serverCardLatencyVisible,
                         onClick = { onServerClick(server) },
                         onTerminalClick = { onTerminalClick(server) },

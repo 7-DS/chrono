@@ -15,7 +15,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -54,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -2014,6 +2020,11 @@ fun ChronoSSHApp(
         repository.startAutoStartForwards()
     }
 
+    LaunchedEffect(Unit) {
+        // Fold byte-for-byte identical password identities into a single entry on launch.
+        runCatching { repository.mergeDuplicatePasswordCredentials() }
+    }
+
     hostInfoDialog?.let { (title, body) ->
         AlertDialog(
             onDismissRequest = { hostInfoDialog = null },
@@ -2298,16 +2309,26 @@ private fun BottomTabs(
         val selectedIndex = AppTab.entries.indexOf(selectedTab).coerceAtLeast(0)
         val indicatorWidth = 54.dp.coerceAtMost(tabWidth)
         val underlineWidth = 22.dp.coerceAtMost(tabWidth)
+        val indicatorX by animateDpAsState(
+            targetValue = tabWidth * selectedIndex + (tabWidth - indicatorWidth) / 2,
+            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+            label = "navIndicatorX"
+        )
+        val underlineX by animateDpAsState(
+            targetValue = tabWidth * selectedIndex + (tabWidth - underlineWidth) / 2,
+            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+            label = "navUnderlineX"
+        )
         Box(
             modifier = Modifier
-                .offset(x = tabWidth * selectedIndex + (tabWidth - indicatorWidth) / 2, y = 4.dp)
+                .offset(x = indicatorX, y = 4.dp)
                 .size(width = indicatorWidth, height = 31.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(DeckColors.Surface.copy(alpha = 0.68f))
         )
         Box(
             modifier = Modifier
-                .offset(x = tabWidth * selectedIndex + (tabWidth - underlineWidth) / 2, y = 55.dp)
+                .offset(x = underlineX, y = 55.dp)
                 .size(width = underlineWidth, height = 2.dp)
                 .clip(RoundedCornerShape(2.dp))
                 .background(DeckColors.PrimaryText.copy(alpha = 0.72f))
@@ -2320,8 +2341,21 @@ private fun BottomTabs(
             AppTab.entries.forEach { tab ->
                 val selected = tab == selectedTab
                 val interactionSource = remember(tab) { MutableInteractionSource() }
-                val iconColor = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText
-                val labelColor = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText
+                val iconColor by animateColorAsState(
+                    targetValue = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText,
+                    animationSpec = tween(220, easing = LinearOutSlowInEasing),
+                    label = "navIconColor"
+                )
+                val labelColor by animateColorAsState(
+                    targetValue = if (selected) DeckColors.PrimaryText else DeckColors.SecondaryText,
+                    animationSpec = tween(220, easing = LinearOutSlowInEasing),
+                    label = "navLabelColor"
+                )
+                val iconScale by animateFloatAsState(
+                    targetValue = if (selected) 1.08f else 1f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium),
+                    label = "navIconScale"
+                )
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -2343,7 +2377,9 @@ private fun BottomTabs(
                             imageVector = tab.icon(),
                             contentDescription = null,
                             tint = iconColor,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier
+                                .size(20.dp)
+                                .scale(iconScale)
                         )
                     }
                     Spacer(Modifier.height(3.dp))

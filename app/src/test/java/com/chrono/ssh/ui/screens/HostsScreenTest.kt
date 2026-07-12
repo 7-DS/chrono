@@ -331,7 +331,7 @@ class HostsScreenTest {
                 "Rename",
                 "Organize",
                 "Unlink",
-                "Replace",
+                "Edit",
                 "Copy Link",
                 "Share Link",
                 "QR",
@@ -340,7 +340,7 @@ class HostsScreenTest {
             expandedCredentialActionLabels(key)
         )
         assertEquals(
-            listOf("Details", "Validate", "Rename", "Organize", "Unlink", "Replace", "Copy Link", "Share Link", "QR", "Remove"),
+            listOf("Details", "Validate", "Rename", "Organize", "Unlink", "Edit", "Copy Link", "Share Link", "QR", "Remove"),
             expandedCredentialActionLabels(metadataOnlyKey)
         )
     }

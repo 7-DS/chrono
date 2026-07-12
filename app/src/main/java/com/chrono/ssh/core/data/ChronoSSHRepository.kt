@@ -1155,6 +1155,70 @@ class ChronoSSHRepository(private val context: Context) {
         return server.credentialId?.let { id -> credentials.firstOrNull { it.id == id } }
     }
 
+    /**
+     * Merges password identities whose content is byte-for-byte identical (same descriptive
+     * fields AND same stored secret) into a single entry. The earliest-created copy survives;
+     * any host still pointing at a removed duplicate is re-pointed to the survivor, and the
+     * duplicate's secret material is deleted. Nothing unique is lost. Returns the number of
+     * duplicate entries removed.
+     */
+    suspend fun mergeDuplicatePasswordCredentials(): Int {
+        val passwordCreds = credentials.filter {
+            it.type == CredentialType.Password && it.encryptedPayloadRef.startsWith("secret-")
+        }
+        if (passwordCreds.size < 2) return 0
+        val groups = LinkedHashMap<String, MutableList<Credential>>()
+        for (cred in passwordCreds) {
+            val secret = try {
+                secretStore.loadSecret(cred.encryptedPayloadRef).toString(Charsets.UTF_8)
+            } catch (_: Exception) {
+                continue // Can't read the payload — never merge on an unverified secret.
+            }
+            val signature = buildString {
+                append(cred.label.trim()); append(' ')
+                append(cred.username.trim()); append(' ')
+                append(cred.group.trim()); append(' ')
+                append(cred.tags.map { it.trim() }.filter { it.isNotEmpty() }.sorted().joinToString(",")); append(' ')
+                append(cred.notes.trim()); append(' ')
+                append(if (cred.favorite) "1" else "0"); append(' ')
+                append(secret)
+            }
+            groups.getOrPut(signature) { mutableListOf() }.add(cred)
+        }
+        var mergedCount = 0
+        var credentialsChanged = false
+        var serversChanged = false
+        for (group in groups.values) {
+            if (group.size < 2) continue
+            val survivor = group.minByOrNull { it.createdAtEpochMillis } ?: group.first()
+            for (dup in group) {
+                if (dup.id == survivor.id) continue
+                servers.forEachIndexed { index, server ->
+                    if (server.credentialId == dup.id) {
+                        servers[index] = server.copy(credentialId = survivor.id)
+                        serversChanged = true
+                    }
+                }
+                dup.encryptedPayloadRef.takeIf { it.startsWith("secret-") }?.let {
+                    try {
+                        secretStore.deleteSecret(it)
+                    } catch (_: Exception) {
+                    }
+                }
+                dup.passphraseRef?.deleteSecretQuietly()
+                credentials.removeAll { it.id == dup.id }
+                credentialsChanged = true
+                mergedCount++
+            }
+        }
+        if (credentialsChanged) saveCredentials()
+        if (serversChanged) saveServers()
+        if (mergedCount > 0) {
+            appendEvent("vault", ConnectionEventLevel.Info, "Merged $mergedCount duplicate password ${if (mergedCount == 1) "identity" else "identities"}.")
+        }
+        return mergedCount
+    }
+
     fun markCredentialUsedFor(server: ServerProfile, atEpochMillis: Long = System.currentTimeMillis()) {
         val credentialId = server.credentialId ?: return
         val index = credentials.indexOfFirst { it.id == credentialId }

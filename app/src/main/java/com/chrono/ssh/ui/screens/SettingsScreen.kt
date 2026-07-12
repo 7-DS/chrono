@@ -1010,7 +1010,7 @@ private fun MetricColorPreview(
                     .clip(RoundedCornerShape(13.dp))
                     .background(DeckColors.SurfaceRaised)
                     .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(13.dp))
-                    .padding(horizontal = 8.dp, vertical = 9.dp),
+                    .padding(horizontal = 10.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -2094,7 +2094,7 @@ private fun SettingsRow(title: String, detail: String, badge: String, showBadge:
                     .clip(RoundedCornerShape(14.dp))
                     .background(DeckColors.SurfaceMuted)
                     .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 9.dp, vertical = 5.dp)
+                    .padding(horizontal = 11.dp, vertical = 5.dp)
             ) {
                 Text(badge, color = DeckColors.PrimaryText, fontSize = 11.sp, fontWeight = FontWeight.Black)
             }
