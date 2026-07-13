@@ -2031,7 +2031,7 @@ private fun TransferSection(
     DeckCard(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(tween(180)),
+            .then(if (fullPage) Modifier else Modifier.animateContentSize(tween(180))),
         radius = if (fullPage) 8.dp else 24.dp,
         padding = PaddingValues(if (fullPage) 12.dp else 14.dp)
     ) {

@@ -1029,8 +1029,15 @@ fun ChronoSSHApp(
         onInboundHostShareLinkConsumed(payload)
     }
 
-    fun selectSftpWorkspace(workspaceKey: String) {
-        val serverId = sftpWorkspaces[workspaceKey] ?: return
+    fun registerSftpWorkspaceForConnections(server: ServerProfile) {
+        // Make a Files-tab SFTP connection persist and surface in the Connections tab.
+        if (sftpWorkspaces.any { it.value == server.id }) return
+        val key = "sftp:${server.id}"
+        sftpWorkspaces[key] = server.id
+        if (sftpRuntimes[key] == null) sftpRuntimes[key] = SftpWorkspaceRuntime()
+    }
+
+    fun selectSftpWorkspace(workspaceKey: String) {        val serverId = sftpWorkspaces[workspaceKey] ?: return
         sftpReturnTarget = if (terminalVisible) {
             ReturnTarget.Terminal(selectedConnectionServerId, transientReturnTarget)
         } else if (sftpBrowserServerId == null) {
@@ -1418,7 +1425,10 @@ fun ChronoSSHApp(
                             onClearFinishedTransfers = { repository.clearFinishedTransfers() },
                             onSftpBookmarkChanged = { repository.upsertSftpBookmark(it) },
                             onSftpBookmarkDeleted = { repository.deleteSftpBookmark(it.id) },
-                            onSftpConnected = { repository.markCredentialUsedFor(it) },
+                            onSftpConnected = {
+                                repository.markCredentialUsedFor(it)
+                                registerSftpWorkspaceForConnections(it)
+                            },
                             sshTransport = repository.sshTransport,
                             backupPreview = repository.exportBackupPreview()
                         )
