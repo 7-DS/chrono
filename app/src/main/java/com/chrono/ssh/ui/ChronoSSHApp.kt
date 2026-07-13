@@ -544,6 +544,7 @@ fun ChronoSSHApp(
     }
     var themeFamilyId by remember { mutableStateOf(initialSettings.themeFamilyId) }
     var appSettings by remember { mutableStateOf(initialSettings) }
+    var inputFontId by remember { mutableStateOf(InputFontPreference.load(context)) }
     var appLocked by remember { mutableStateOf(appLockPinUsable(initialSettings)) }
     var appWasBackgrounded by remember { mutableStateOf(false) }
     var hostInfoDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -1173,7 +1174,7 @@ fun ChronoSSHApp(
             settings = headingFontFamilyFromPath(appSettings.settingsHeadingFontPath)
         )
     }
-    ChronoSSHTheme(palette = palette, headingFonts = headingFonts, accentOverrideHex = appSettings.appAccentColorHex) {
+    ChronoSSHTheme(palette = palette, headingFonts = headingFonts, accentOverrideHex = appSettings.appAccentColorHex, inputFontId = inputFontId) {
         AppBackground {
             Box(Modifier.fillMaxSize()) {
                 if (appLocked && appLockPinUsable(appSettings)) {
@@ -1563,6 +1564,11 @@ fun ChronoSSHApp(
                             onThemeFamilyChange = {
                                 themeFamilyId = it
                                 persistTheme(nextFamily = it)
+                            },
+                            inputFontId = inputFontId,
+                            onInputFontChange = { nextId ->
+                                inputFontId = nextId
+                                InputFontPreference.save(context, nextId)
                             },
                             onSettingsChange = ::persistSettings,
                             onLockNow = { appLocked = appLockStateAfterLockNow(appLockPinUsable(appSettings)) },

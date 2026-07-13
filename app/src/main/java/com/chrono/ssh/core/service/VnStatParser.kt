@@ -251,7 +251,16 @@ object VnStatParser {
     }
 
     private fun String.plainVnStatCountersAreKib(): Boolean {
-        return contains("\"jsonversion\"") || contains("\"vnstatversion\"") || contains("\"vnstatVersion\"")
+        // vnStat's JSON output reports rx/tx traffic in BYTES. Per vnstat(1): "all traffic
+        // values in the output are in bytes unless otherwise indicated by the name of the
+        // key". This holds for vnStat v2 (jsonversion 1 and 2) which is what `vnstat --json`
+        // emits today. The previous heuristic flagged plain counters as KiB whenever a
+        // version field was present, so on real v2 hosts every rx/tx was multiplied by 1024,
+        // inflating all day/week/month/year totals by 1024x. Plain scalar counters are
+        // therefore treated as bytes; KiB/MiB/GiB scaling is still applied only when the JSON
+        // explicitly names the unit (rxk/txk remainders or nested {unit,value} objects,
+        // handled in trafficNumber before this fallback is reached).
+        return false
     }
 
     private fun String.trafficNumber(key: String, plainCountersAreKib: Boolean): Long {

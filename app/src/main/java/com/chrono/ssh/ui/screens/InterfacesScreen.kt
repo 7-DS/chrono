@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -100,12 +100,6 @@ fun InterfacesScreen(
                     )
                 }
             } else {
-                VnStatPeriodGrid(
-                    usages = ranges.mapNotNull { current -> vnStat.forRange(current)?.let { current to it } },
-                    selectedRange = selectedRange,
-                    onSelected = { range = it.ordinal }
-                )
-                Spacer(Modifier.height(14.dp))
                 if (usage == null) {
                     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 32.dp, padding = PaddingValues(20.dp)) {
                         Text("No ${selectedRange.name.lowercase()} total", color = DeckColors.PrimaryText, fontSize = 22.sp, fontWeight = FontWeight.Black)
@@ -126,78 +120,6 @@ fun InterfacesScreen(
 }
 
 @Composable
-private fun VnStatPeriodGrid(
-    usages: List<Pair<VnStatRange, VnStatPeriodUsage>>,
-    selectedRange: VnStatRange,
-    onSelected: (VnStatRange) -> Unit
-) {
-    if (usages.isEmpty()) return
-    val maxBytes = max(1L, usages.maxOf { it.second.totalBytes })
-    DeckCard(modifier = Modifier.fillMaxWidth(), radius = 28.dp, padding = PaddingValues(12.dp)) {
-        Column {
-            usages.chunked(2).forEachIndexed { index, row ->
-                Row(Modifier.fillMaxWidth()) {
-                    row.forEach { (range, usage) ->
-                        VnStatPeriodTile(
-                            range = range,
-                            usage = usage,
-                            selected = range == selectedRange,
-                            maxBytes = maxBytes,
-                            modifier = Modifier.weight(1f),
-                            onClick = { onSelected(range) }
-                        )
-                    }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
-                }
-                if (index != usages.chunked(2).lastIndex) Spacer(Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun VnStatPeriodTile(
-    range: VnStatRange,
-    usage: VnStatPeriodUsage,
-    selected: Boolean,
-    maxBytes: Long,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val fill = (usage.totalBytes.toFloat() / maxBytes.toFloat()).coerceIn(0.04f, 1f)
-    Column(
-        modifier = modifier
-            .padding(4.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(if (selected) DeckColors.SurfaceRaised else DeckColors.SurfaceMuted)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 11.dp)
-            .then(Modifier),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(range.name, color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, fontWeight = FontWeight.Black)
-        Spacer(Modifier.height(5.dp))
-        Text(usage.totalBytes.bytesLabelUi(), color = DeckColors.PrimaryText, fontSize = 21.sp, lineHeight = 23.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(DeckColors.Divider)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(fill)
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(if (selected) DeckColors.MetricNetwork else DeckColors.SecondaryText.copy(alpha = 0.45f))
-            )
-        }
-    }
-}
-
-@Composable
 private fun VnStatUsageCard(range: VnStatRange, usage: VnStatPeriodUsage) {
     DeckCard(modifier = Modifier.fillMaxWidth(), radius = 32.dp, padding = PaddingValues(20.dp)) {
         Text("${range.name} usage", color = DeckColors.SecondaryText, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -206,9 +128,46 @@ private fun VnStatUsageCard(range: VnStatRange, usage: VnStatPeriodUsage) {
         Spacer(Modifier.height(9.dp))
         Text(usage.totalBytes.bytesLabelUi(), color = DeckColors.PrimaryText, fontSize = 46.sp, lineHeight = 48.sp, fontWeight = FontWeight.Black)
         Spacer(Modifier.height(16.dp))
+        VnStatSplitBar(
+            downloadBytes = usage.receivedBytes,
+            uploadBytes = usage.transmittedBytes
+        )
+        Spacer(Modifier.height(16.dp))
         VnStatLine("Upload", usage.transmittedBytes, usage.totalBytes, DeckColors.MetricDisk)
         Spacer(Modifier.height(9.dp))
         VnStatLine("Download", usage.receivedBytes, usage.totalBytes, DeckColors.MetricNetwork)
+    }
+}
+
+@Composable
+private fun VnStatSplitBar(downloadBytes: Long, uploadBytes: Long) {
+    val total = max(0L, downloadBytes) + max(0L, uploadBytes)
+    // Proportional download-vs-upload weights. VnStatUsage exposes only a single total per
+    // range (no sub-bucket time series), so a two-segment proportional bar is the graphical
+    // representation of the period. Download uses MetricNetwork, upload uses MetricDisk to
+    // match the per-direction lines below.
+    val downloadWeight = if (total <= 0L) 1f else (downloadBytes.toFloat() / total.toFloat()).coerceIn(0.02f, 0.98f)
+    val uploadWeight = (1f - downloadWeight).coerceIn(0.02f, 0.98f)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(16.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(DeckColors.Divider)
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(downloadWeight)
+                .fillMaxHeight()
+                .background(DeckColors.MetricNetwork)
+        )
+        Spacer(Modifier.size(2.dp))
+        Box(
+            modifier = Modifier
+                .weight(uploadWeight)
+                .fillMaxHeight()
+                .background(DeckColors.MetricDisk)
+        )
     }
 }
 

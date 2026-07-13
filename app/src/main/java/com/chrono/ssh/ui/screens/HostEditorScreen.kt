@@ -97,6 +97,7 @@ import com.chrono.ssh.core.service.WakeOnLanPolicy
 import com.chrono.ssh.ui.design.CircleIconButton
 import com.chrono.ssh.ui.design.DeckCard
 import com.chrono.ssh.ui.design.DeckColors
+import com.chrono.ssh.ui.design.LocalInputFontFamily
 import com.chrono.ssh.ui.design.SoftPill
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -1075,7 +1076,12 @@ fun HostEditorScreen(
                 onDismissRequest = { prootCatalogOpen = false },
                 title = { Text("Download PRoot Rootfs") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 420.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         LocalProotRuntime.RootfsCatalog.forEach { entry ->
                             DeckCard(modifier = Modifier.fillMaxWidth(), radius = 16.dp, padding = PaddingValues(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
@@ -1586,7 +1592,12 @@ private fun HostIdentityDialog(
         onDismissRequest = onDismiss,
         title = { Text("Identity", color = DeckColors.PrimaryText, fontWeight = FontWeight.Black) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 460.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 SecondaryDeckButton("No saved identity", Modifier.fillMaxWidth()) { onSelect(null) }
                 if (credentials.isEmpty()) {
                     Text(
@@ -1705,7 +1716,7 @@ private fun DeckTextField(
                 color = DeckColors.PrimaryText,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = if (label == "Private Key") FontFamily.Monospace else null
+                fontFamily = if (label == "Private Key") FontFamily.Monospace else LocalInputFontFamily.current
             ),
             cursorBrush = SolidColor(DeckColors.BrandAlt),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
@@ -1741,7 +1752,7 @@ private fun PasswordVisibilityToggle(
 ) {
     IconButton(
         onClick = onToggle,
-        modifier = Modifier.size(24.dp)
+        modifier = Modifier.size(40.dp)
     ) {
         Icon(
             imageVector = if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
@@ -1760,7 +1771,7 @@ private fun SecondaryDeckButton(text: String, modifier: Modifier = Modifier, onC
             .background(DeckColors.SurfaceMuted)
             .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 13.dp),
+            .padding(horizontal = 14.dp, vertical = 13.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(text, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.Black)
@@ -1782,7 +1793,7 @@ private fun CredentialTypePill(
             .background(if (selected) DeckColors.SurfaceRaised else DeckColors.SurfaceMuted)
             .border(1.dp, if (selected) DeckColors.CardStroke else DeckColors.Divider.copy(alpha = 0.35f), RoundedCornerShape(17.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
@@ -1851,7 +1862,7 @@ private fun DangerDeckButton(text: String, modifier: Modifier = Modifier, onClic
             .background(DeckColors.Red.copy(alpha = 0.14f))
             .border(1.dp, DeckColors.Red.copy(alpha = 0.32f), RoundedCornerShape(22.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 15.dp),
+            .padding(horizontal = 16.dp, vertical = 15.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(text, color = DeckColors.Red, fontSize = 16.sp, fontWeight = FontWeight.Black)

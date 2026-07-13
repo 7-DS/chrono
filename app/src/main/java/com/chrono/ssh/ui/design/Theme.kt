@@ -1,12 +1,14 @@
 package com.chrono.ssh.ui.design
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -1960,6 +1962,48 @@ object DeckColors {
     }
 }
 
+/**
+ * Selectable font for text boxes / input fields and general UI body text.
+ * "nunito" is the default so text boxes match the rest of the app out of the box.
+ * "system" opts back into the platform default typeface.
+ */
+enum class InputFontChoice(val id: String, val label: String) {
+    Nunito("nunito", "Nunito"),
+    System("system", "System"),
+    JetBrainsMono("jetbrains_mono", "JetBrains Mono"),
+    FiraCode("fira_code", "Fira Code");
+
+    companion object {
+        val DEFAULT = Nunito
+
+        fun fromId(id: String?): InputFontChoice =
+            entries.firstOrNull { it.id == id } ?: DEFAULT
+    }
+}
+
+/**
+ * Resolved [FontFamily] applied to input fields (and body text). Any text field that sets an
+ * explicit `textStyle` without a `fontFamily` can read this local to stay in sync with the
+ * user's choice, and Material's [LocalTextStyle] is also seeded with it inside [ChronoSSHTheme].
+ * `null` means "use the platform default typeface" (the System choice).
+ */
+val LocalInputFontFamily = staticCompositionLocalOf<FontFamily?> { null }
+
+/** Builds the [FontFamily] for a given [InputFontChoice], or `null` for the platform default. */
+fun inputFontFamilyFor(choice: InputFontChoice): FontFamily? = when (choice) {
+    InputFontChoice.System -> null
+    InputFontChoice.Nunito -> FontFamily(
+        Font(R.font.nunito_regular, FontWeight.Normal, FontStyle.Normal),
+        Font(R.font.nunito_medium, FontWeight.Medium, FontStyle.Normal),
+        Font(R.font.nunito_semibold, FontWeight.SemiBold, FontStyle.Normal),
+        Font(R.font.nunito_bold, FontWeight.Bold, FontStyle.Normal),
+        Font(R.font.nunito_extrabold, FontWeight.ExtraBold, FontStyle.Normal),
+        Font(R.font.nunito_black, FontWeight.Black, FontStyle.Normal)
+    )
+    InputFontChoice.JetBrainsMono -> FontFamily(Font(R.font.jetbrains_mono_regular))
+    InputFontChoice.FiraCode -> FontFamily(Font(R.font.fira_code_regular))
+}
+
 @Composable
 fun ChronoSSHTheme(
     palette: DeckPalette = DeckThemeCatalog.paletteFor(
@@ -1969,6 +2013,7 @@ fun ChronoSSHTheme(
     ),
     headingFonts: HeadingFontFamilies? = null,
     accentOverrideHex: String? = null,
+    inputFontId: String? = InputFontChoice.DEFAULT.id,
     content: @Composable () -> Unit
 ) {
     DeckColors.apply(palette)
@@ -2011,6 +2056,11 @@ fun ChronoSSHTheme(
         Font(R.font.nunito_black, FontWeight.Black, FontStyle.Normal)
     )
 
+    // Resolve the user-selected input font. Defaults to Nunito so text boxes match the app out
+    // of the box; `null` means the platform default typeface (the "System" choice).
+    val inputFontChoice = InputFontChoice.fromId(inputFontId)
+    val inputFontFamily: FontFamily? = inputFontFamilyFor(inputFontChoice)
+
     val appTypography = Typography().let { base ->
         base.copy(
             displayLarge = base.displayLarge.copy(fontFamily = chronoHeadingFont, fontWeight = FontWeight.Black),
@@ -2022,21 +2072,33 @@ fun ChronoSSHTheme(
             titleLarge = base.titleLarge.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.SemiBold),
             titleMedium = base.titleMedium.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.SemiBold),
             titleSmall = base.titleSmall.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Medium),
-            bodyLarge = base.bodyLarge.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Normal),
-            bodyMedium = base.bodyMedium.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Normal),
-            bodySmall = base.bodySmall.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Normal),
-            labelLarge = base.labelLarge.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.SemiBold),
+            bodyLarge = base.bodyLarge.copy(fontFamily = inputFontFamily, fontWeight = FontWeight.Normal),
+            bodyMedium = base.bodyMedium.copy(fontFamily = inputFontFamily, fontWeight = FontWeight.Normal),
+            bodySmall = base.bodySmall.copy(fontFamily = inputFontFamily, fontWeight = FontWeight.Normal),
+            labelLarge = base.labelLarge.copy(fontFamily = inputFontFamily, fontWeight = FontWeight.SemiBold),
             labelMedium = base.labelMedium.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Medium),
             labelSmall = base.labelSmall.copy(fontFamily = chronoUiFont, fontWeight = FontWeight.Medium)
         )
     }
 
-    CompositionLocalProvider(LocalHeadingFontFamilies provides (headingFonts?.copy(fallback = chronoHeadingFont) ?: HeadingFontFamilies(chronoHeadingFont))) {
+    // Text fields (OutlinedTextField/TextField) default their `textStyle` to LocalTextStyle.current,
+    // which Material3 otherwise leaves as an empty TextStyle (no fontFamily) — so they fall back to
+    // the platform typeface even though typography.bodyLarge is Nunito. Seed LocalTextStyle with the
+    // chosen font family so text boxes (and any default-styled Text) inherit it. Only the family is
+    // provided to avoid overriding per-widget font sizes/spacing. For the "System" choice this is a
+    // null family, i.e. back to the platform default.
+    val inputTextStyle = androidx.compose.ui.text.TextStyle(fontFamily = inputFontFamily)
+
+    CompositionLocalProvider(
+        LocalHeadingFontFamilies provides (headingFonts?.copy(fallback = chronoHeadingFont) ?: HeadingFontFamilies(chronoHeadingFont)),
+        LocalInputFontFamily provides inputFontFamily
+    ) {
         MaterialTheme(
             colorScheme = scheme,
-            typography = appTypography,
-            content = content
-        )
+            typography = appTypography
+        ) {
+            CompositionLocalProvider(LocalTextStyle provides inputTextStyle, content = content)
+        }
     }
 }
 

@@ -86,6 +86,7 @@ import com.chrono.ssh.ui.design.DeckThemeCatalog
 import com.chrono.ssh.ui.design.DeckThemeFamily
 import com.chrono.ssh.ui.design.DeckThemeMode
 import com.chrono.ssh.ui.design.HeadingFontTarget
+import com.chrono.ssh.ui.design.InputFontChoice
 import com.chrono.ssh.ui.design.LargeScreenTitle
 import com.chrono.ssh.ui.design.SegmentedPillControl
 import com.chrono.ssh.ui.design.ServerMetricColorOverrides
@@ -108,6 +109,8 @@ fun SettingsScreen(
     onSelectionPageChange: (SettingsSelectionPage?) -> Unit,
     onThemeModeChange: (DeckThemeMode) -> Unit,
     onThemeFamilyChange: (String) -> Unit,
+    inputFontId: String = InputFontChoice.DEFAULT.id,
+    onInputFontChange: (String) -> Unit = {},
     onSettingsChange: (AppSettings) -> Unit,
     onLockNow: () -> Unit = {},
     backgroundUsageAllowed: Boolean = false,
@@ -295,6 +298,8 @@ fun SettingsScreen(
                     themeFamilyId = themeFamilyId,
                     settings = settings,
                     fontStatus = headingFontStatus,
+                    inputFontId = inputFontId,
+                    onInputFontChange = onInputFontChange,
                     onThemeModeChange = onThemeModeChange,
                     onSettingsChange = onSettingsChange,
                     onSelectionPageChange = onSelectionPageChange,
@@ -533,6 +538,8 @@ private fun AppearanceSettings(
     themeFamilyId: String,
     settings: AppSettings,
     fontStatus: String?,
+    inputFontId: String = InputFontChoice.DEFAULT.id,
+    onInputFontChange: (String) -> Unit = {},
     onThemeModeChange: (DeckThemeMode) -> Unit,
     onSettingsChange: (AppSettings) -> Unit,
     onSelectionPageChange: (SettingsSelectionPage?) -> Unit,
@@ -590,6 +597,20 @@ private fun AppearanceSettings(
                 }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        val selectedInputFont = InputFontChoice.fromId(inputFontId)
+        SettingsRow(
+            title = "Text box font",
+            detail = "Font used in text fields and body text",
+            badge = selectedInputFont.label
+        )
+        Spacer(Modifier.height(10.dp))
+        SegmentedPillControl(
+            items = InputFontChoice.entries.map { it.label },
+            selectedIndex = InputFontChoice.entries.indexOf(selectedInputFont),
+            modifier = Modifier.fillMaxWidth(),
+            onSelected = { onInputFontChange(InputFontChoice.entries[it].id) }
+        )
         fontStatus?.let { SettingsStatusMessage(it) }
     }
 }

@@ -100,7 +100,7 @@ class VnStatParserTest {
     }
 
     @Test
-    fun treatsModernVnStatJsonPlainCountersAsKib() {
+    fun treatsModernVnStatJsonPlainCountersAsBytes() {
         val json = """
             {
               "vnstatversion": "2.10",
@@ -124,10 +124,11 @@ class VnStatParserTest {
 
         val usage = VnStatParser.parse(json)!!
 
-        assertEquals(3L * 1024 * 1024, usage.forRange(VnStatRange.Day)!!.totalBytes)
-        assertEquals(3L * 1024 * 1024, usage.forRange(VnStatRange.Week)!!.totalBytes)
-        assertEquals(6L * 1024 * 1024, usage.forRange(VnStatRange.Month)!!.totalBytes)
-        assertEquals(12L * 1024 * 1024, usage.forRange(VnStatRange.Year)!!.totalBytes)
+        // vnStat v2 JSON reports rx/tx in bytes; plain counters must NOT be scaled by 1024.
+        assertEquals(3072L, usage.forRange(VnStatRange.Day)!!.totalBytes)
+        assertEquals(3072L, usage.forRange(VnStatRange.Week)!!.totalBytes)
+        assertEquals(6144L, usage.forRange(VnStatRange.Month)!!.totalBytes)
+        assertEquals(12288L, usage.forRange(VnStatRange.Year)!!.totalBytes)
     }
 
     @Test
@@ -183,8 +184,10 @@ class VnStatParserTest {
 
         val usage = VnStatParser.parse(json)!!
 
-        assertEquals(4L * 1024 * 1024, usage.forRange(VnStatRange.Day)!!.totalBytes)
-        assertEquals(4L * 1024 * 1024, usage.forRange(VnStatRange.Week)!!.totalBytes)
+        // rx/tx are plain byte counters (jsonversion 2). eth0 + eth1 share the same day
+        // bucket, so the totals sum: (1024 + 1024) * 2 interfaces = 4096 bytes.
+        assertEquals(4096L, usage.forRange(VnStatRange.Day)!!.totalBytes)
+        assertEquals(4096L, usage.forRange(VnStatRange.Week)!!.totalBytes)
     }
 
     @Test
@@ -467,8 +470,10 @@ class VnStatParserTest {
 
         val usage = VnStatParser.parse("$modernJson\n$explicitBytesFallback")!!
 
+        // Day resolves to the most recent bucket (day 29, explicit bytes) = 2 MiB.
         assertEquals(2L * 1024 * 1024, usage.forRange(VnStatRange.Day)!!.totalBytes)
-        assertEquals(4L * 1024 * 1024, usage.forRange(VnStatRange.Week)!!.totalBytes)
+        // Week aggregates recent days: modern plain bytes (1024+1024) + explicit bytes (2 MiB).
+        assertEquals(2L * 1024 * 1024 + 2048L, usage.forRange(VnStatRange.Week)!!.totalBytes)
     }
 
     @Test

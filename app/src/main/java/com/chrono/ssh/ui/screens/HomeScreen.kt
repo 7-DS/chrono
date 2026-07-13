@@ -121,19 +121,24 @@ fun HomeScreen(
     var dismissedTrustPromptFor by remember { mutableStateOf<Set<String>>(emptySet()) }
     var trustPromptServer by remember { mutableStateOf<ServerProfile?>(null) }
     val filters = homeFleetFilters(servers)
-    val serverRows = remember(servers, snapshots, selectedFilter) {
-        homeServerRows(servers, snapshots, selectedFilter)
+    // derivedStateOf tracks the individual snapshot/server reads inside each block and
+    // recomputes only when those specific values change. Plain remember(snapshots) would
+    // freeze, because a SnapshotStateMap keeps the same reference when its values update.
+    val serverRows by remember {
+        derivedStateOf { homeServerRows(servers, snapshots, selectedFilter) }
     }
-    val onlineCount = remember(servers, snapshots) {
-        servers.count { snapshots[it.id]?.status == ServerStatus.Online }
+    val onlineCount by remember {
+        derivedStateOf { servers.count { snapshots[it.id]?.status == ServerStatus.Online } }
     }
-    val offlineCount = remember(servers, snapshots) {
-        servers.count { snapshots[it.id]?.status == ServerStatus.Offline }
+    val offlineCount by remember {
+        derivedStateOf { servers.count { snapshots[it.id]?.status == ServerStatus.Offline } }
     }
-    val untrustedServer = remember(servers, knownHosts, dismissedTrustPromptFor) {
-        servers.firstOrNull { server ->
-            knownHosts.none { it.host == server.host && it.port == server.port && it.trusted } &&
-                server.id !in dismissedTrustPromptFor
+    val untrustedServer by remember {
+        derivedStateOf {
+            servers.firstOrNull { server ->
+                knownHosts.none { it.host == server.host && it.port == server.port && it.trusted } &&
+                    server.id !in dismissedTrustPromptFor
+            }
         }
     }
     val metricColors = remember(metricColorPreset, metricColorOverrides) {

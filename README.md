@@ -22,6 +22,8 @@
   &bull;
   <a href="#features">Features</a>
   &bull;
+  <a href="#connection-types">Connection Types</a>
+  &bull;
   <a href="#build-from-source">Build</a>
   &bull;
   <a href="#credits">Credits</a>
@@ -106,6 +108,113 @@ chrono is designed as a mobile server cockpit rather than a simple SSH launcher.
 - Per-section heading font imports for Home, Connections, Files, Vault, and Settings.
 - OS and distribution visual treatment for Linux, BSD, Windows, Proxmox-style hosts, and common distributions.
 - Compose-based mobile UI with status-bar and keyboard-aware screens.
+
+## Connection Types
+
+chrono supports eight connection types. Choose the type when adding a host, then fill in the fields described below. Terminal types (SSH, Mosh, Eternal Terminal, PRoot) open a shell; VNC and RDP open a desktop viewer; SMB and rclone open the file browser.
+
+### SSH
+
+Encrypted terminal to a Linux/Unix server. The default and most compatible option.
+
+- **Prerequisites:** an OpenSSH server on the host (port 22 by default); a username plus either a password or a private key.
+- **Steps:**
+  1. Enter the host address (IP or domain) and port (usually 22).
+  2. Enter the username you log in as (e.g. `root` or your account).
+  3. Add credentials: type a password, or attach a private key from the Vault.
+  4. Save the host, then open it once to review and trust the SSH host-key fingerprint.
+  5. Tap the host for a terminal, or open Files for SFTP.
+- **Tips:** private keys are more secure than passwords — generate or import one in the Vault. If the server uses a non-standard port, set it in the port field, not the address.
+
+### Mosh (Mobile Shell)
+
+A roaming-friendly terminal that survives network changes and high latency. It bootstraps over SSH, then uses UDP.
+
+- **Prerequisites:** `mosh-server` installed on the host; working SSH access (Mosh logs in over SSH first); the UDP port range reachable through the host firewall.
+- **Steps:**
+  1. Set the host, SSH port, and username exactly as for SSH.
+  2. Add your SSH password or private key — Mosh uses it for the initial handshake.
+  3. Leave *Mosh Server* as `mosh-server` unless it lives at a custom path.
+  4. Set the UDP port range (default `60000:61000`) to match what is open on the host.
+  5. Optionally set locale (`en_US.UTF-8`) and colors (`256`), then save and connect.
+- **Tips:** open the UDP range on the server firewall or Mosh hangs after the SSH step. Ideal for spotty mobile connections — the session reconnects automatically.
+
+### Eternal Terminal (ET)
+
+A persistent terminal that reconnects automatically and keeps your session alive across drops. Bootstraps over SSH.
+
+- **Prerequisites:** `etserver` installed and running on the host; working SSH access for the bootstrap; the ET port (default 2022) reachable through the firewall.
+- **Steps:**
+  1. Enter the host and username as for SSH.
+  2. Set *SSH Port* (bootstrap, usually 22) and *ET Port* (default 2022).
+  3. Add your SSH credential (password or key) for the bootstrap login.
+  4. Leave *Terminal* as `xterm-256color` and *ET Command* as `etterminal` unless customized.
+  5. Save, trust the host key, then connect.
+- **Tips:** ET shines on unreliable links — session state is preserved server-side. Confirm `etserver` is enabled as a service so it is always listening.
+
+### VNC (Remote Desktop)
+
+View and control a graphical Linux/Unix desktop. Optionally tunnelled securely over SSH.
+
+- **Prerequisites:** a VNC server on the host (e.g. TigerVNC, x11vnc), usually on port 5900 + display; a VNC password, and for tunnelling, working SSH access.
+- **Steps:**
+  1. Enter the host and the VNC port (5900 for display `:0`, 5901 for `:1`, etc.).
+  2. Put the VNC password in the password field.
+  3. Set color *Depth* (24) and target *FPS* (30) to taste.
+  4. For security, enable *Tunnel over SSH* and set the SSH port so VNC never crosses the network in the clear.
+  5. Use *View Only* to watch without controlling, or *Shared* to join an existing session. Save and connect.
+- **Tips:** always tunnel over SSH on untrusted networks — raw VNC is unencrypted. Lower depth/FPS on slow links for a smoother picture.
+
+### RDP (Windows Remote Desktop)
+
+Connect to a Windows desktop or server over the Remote Desktop Protocol. Optionally tunnelled over SSH.
+
+- **Prerequisites:** Remote Desktop enabled on the Windows host (port 3389); a Windows username and password (and domain, if applicable).
+- **Steps:**
+  1. Enter the host and RDP port (default 3389).
+  2. Enter the Windows username and password.
+  3. Set the resolution (*Width* × *Height*), color *Depth*, and *Domain* (`WORKGROUP` if none).
+  4. Leave *NLA* on for Network Level Authentication unless the host requires it off.
+  5. Optionally enable *Tunnel over SSH*, then save and connect.
+- **Tips:** for a domain account, fill in the Domain field or use `DOMAIN\user` as the username. Match the resolution to your device screen for the crispest result.
+
+### SMB File Share
+
+Browse and transfer files on a Windows/Samba network share.
+
+- **Prerequisites:** an SMB/CIFS share exposed by the host (port 445); a username and password with access to the share.
+- **Steps:**
+  1. Enter the host and port (445).
+  2. Enter the username and password for the share.
+  3. Set *Root Path* to the share, e.g. `//server/share`.
+  4. Save, then open Files to browse the share and transfer files.
+- **Tips:** use the `//host/share` form for Root Path, not a Windows drive letter. If access is denied, confirm the account has share + NTFS permissions.
+
+### Cloud / rclone
+
+Browse and transfer files on any of rclone's 70+ cloud backends (Google Drive, S3, Dropbox, etc.).
+
+- **Prerequisites:** an existing `rclone.conf` that defines your remote (created with `rclone config` on a computer); the remote name from that config (e.g. `gdrive:`).
+- **Steps:**
+  1. Choose the Cloud/rclone type.
+  2. Tap *Import rclone.conf* and pick your config file.
+  3. Tap *Choose Remote* and select the remote from the imported config.
+  4. Set *Root Path* to the starting folder, e.g. `remote:/` or `remote:backups`.
+  5. Optionally expand advanced controls for Concurrency, Resume, and Checksums, then save and open Files.
+- **Tips:** generate `rclone.conf` on a desktop first — token/OAuth setup is easiest there. Enable *Verify Checksums* for important transfers when the backend supports it.
+
+### Local PRoot (on-device Linux)
+
+Run a full Linux userland on this device with no server or network required.
+
+- **Prerequisites:** enough free storage for the distro rootfs (typically 150–400 MB); no host, credentials, or internet needed after the rootfs is installed.
+- **Steps:**
+  1. Choose the Local PRoot type.
+  2. Pick a distro (e.g. `alpine-3.21`) in the Distro field.
+  3. Tap *Download Rootfs* to fetch it, or *Import Rootfs* to load a `.tar.gz` you already have.
+  4. Leave *Mount Home* on to share chrono's home folder into the shell.
+  5. Save, then tap the host to open a local Linux terminal.
+- **Tips:** PRoot runs entirely on-device — good for offline scripting and learning Linux. Use *Clear Rootfs* to reclaim space or start clean.
 
 ## Build From Source
 

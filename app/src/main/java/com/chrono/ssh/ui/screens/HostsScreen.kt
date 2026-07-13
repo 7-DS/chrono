@@ -42,6 +42,40 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ContentCopy
+import androidx.compose.material.icons.rounded.CreateNewFolder
+import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.DriveFileMove
+import androidx.compose.material.icons.rounded.DriveFileRenameOutline
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.InsertDriveFile
+import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.SdStorage
+import androidx.compose.material.icons.rounded.Straighten
+import androidx.compose.material.icons.rounded.SwapVert
+import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.VerifiedUser
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.rounded.VpnKey
+import androidx.compose.material.icons.rounded.Upload
+import androidx.compose.material3.Icon
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
@@ -3545,32 +3579,35 @@ private fun SftpEntryActionSheet(
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
                 if (!entry.navigable && SftpTextFilePolicy.canEdit(entry)) {
-                    SftpSheetAction("Open text", DeckColors.Cyan, onOpenText)
+                    SftpSheetAction("Open text", DeckColors.Cyan, onOpenText, icon = "open-text")
                 }
-                SftpSheetAction(if (entry.navigable) "Open" else "Download", DeckColors.Cyan, onPrimary)
+                SftpSheetAction(if (entry.navigable) "Open" else "Download", DeckColors.Cyan, onPrimary, icon = if (entry.navigable) "sftp-open" else "download")
                 if (entry.type == SftpEntryType.Symlink) {
-                    SftpSheetAction("Download", DeckColors.PrimaryText, onDownload)
+                    SftpSheetAction("Download", DeckColors.PrimaryText, onDownload, icon = "download")
                 }
-                SftpSheetAction(if (entry.navigable) "Upload here" else "Upload alongside", DeckColors.Green, onUpload)
+                SftpSheetAction(if (entry.navigable) "Upload here" else "Upload alongside", DeckColors.Green, onUpload, icon = "upload")
                 if (SftpHostTransferPolicy.canCopy(entry)) {
-                    SftpSheetAction("Copy to host", DeckColors.PrimaryText, onCopyToHost)
+                    SftpSheetAction("Copy to host", DeckColors.PrimaryText, onCopyToHost, icon = "copy-to-host")
                 }
                 if (rcloneAdvancedAvailable) {
-                    SftpSheetAction("Public link", DeckColors.Cyan, onPublicLink)
+                    SftpSheetAction("Public link", DeckColors.Cyan, onPublicLink, icon = "link")
                     if (entry.directory) {
-                        SftpSheetAction("Directory size", DeckColors.PrimaryText, onDirectorySize)
+                        SftpSheetAction("Directory size", DeckColors.PrimaryText, onDirectorySize, icon = "size")
                     }
-                    SftpSheetAction("Remote space", DeckColors.PrimaryText, onRemoteSpace)
+                    SftpSheetAction("Remote space", DeckColors.PrimaryText, onRemoteSpace, icon = "space")
                 }
-                SftpSheetAction("Copy path", DeckColors.PrimaryText, onCopyPath)
+                SftpSheetAction("Copy path", DeckColors.PrimaryText, onCopyPath, icon = "copy")
                 if (chmodAvailable) {
-                    SftpSheetAction("Permissions", DeckColors.PrimaryText, onChmod)
+                    SftpSheetAction("Permissions", DeckColors.PrimaryText, onChmod, icon = "permissions")
                 }
-                SftpSheetAction("Rename", DeckColors.PrimaryText, onRename)
-                SftpSheetAction("Delete", DeckColors.Red, onDelete)
-                SftpSheetAction("Cancel", DeckColors.SecondaryText, onDismiss)
+                SftpSheetAction("Rename", DeckColors.PrimaryText, onRename, icon = "rename")
+                SftpSheetAction("Delete", DeckColors.Red, onDelete, icon = "delete")
+                SftpSheetAction("Cancel", DeckColors.SecondaryText, onDismiss, icon = "remove")
             }
         },
         containerColor = DeckColors.Surface,
@@ -3583,7 +3620,8 @@ private fun SftpEntryActionSheet(
 private fun SftpSheetAction(
     label: String,
     color: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    icon: String? = null
 ) {
     Row(
         modifier = Modifier
@@ -3592,11 +3630,14 @@ private fun SftpSheetAction(
             .background(DeckColors.SurfaceMuted)
             .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(label, color = color, fontSize = 14.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
-        SftpToolbarGlyph("chevron-right", color, Modifier.size(15.dp))
+        if (icon != null) {
+            SftpToolbarGlyph(icon, color, Modifier.size(19.dp))
+        }
+        Text(label, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
     }
 }
 
@@ -3652,200 +3693,65 @@ private val sftpGlyphSymbols = setOf(
 
 @Composable
 private fun SftpToolbarGlyph(symbol: String, color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
-        when (symbol) {
-            "sftp-open" -> drawSftpOpenGlyph(color, stroke)
-            "home" -> {
-                val path = Path().apply {
-                    moveTo(size.width * 0.50f, size.height * 0.18f)
-                    lineTo(size.width * 0.82f, size.height * 0.46f)
-                    lineTo(size.width * 0.72f, size.height * 0.46f)
-                    lineTo(size.width * 0.72f, size.height * 0.80f)
-                    lineTo(size.width * 0.28f, size.height * 0.80f)
-                    lineTo(size.width * 0.28f, size.height * 0.46f)
-                    lineTo(size.width * 0.18f, size.height * 0.46f)
-                    close()
-                }
-                drawPath(path, color, style = stroke)
-            }
-            "up" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.78f), androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.44f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.24f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.44f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "refresh" -> {
-                drawArc(color, startAngle = 35f, sweepAngle = 285f, useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.18f), size = androidx.compose.ui.geometry.Size(size.width * 0.64f, size.height * 0.64f), style = stroke)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.74f, size.height * 0.20f), androidx.compose.ui.geometry.Offset(size.width * 0.84f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.74f, size.height * 0.20f), androidx.compose.ui.geometry.Offset(size.width * 0.56f, size.height * 0.25f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "eye-on", "eye-off" -> {
-                drawOval(color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.12f, size.height * 0.30f), size = androidx.compose.ui.geometry.Size(size.width * 0.76f, size.height * 0.40f), style = stroke)
-                drawCircle(color, radius = size.minDimension * 0.08f, center = center)
-                if (symbol == "eye-off") {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.20f, size.height * 0.80f), androidx.compose.ui.geometry.Offset(size.width * 0.80f, size.height * 0.20f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-            "bookmark", "bookmark-on" -> {
-                val path = Path().apply {
-                    moveTo(size.width * 0.30f, size.height * 0.17f)
-                    lineTo(size.width * 0.70f, size.height * 0.17f)
-                    lineTo(size.width * 0.70f, size.height * 0.84f)
-                    lineTo(size.width * 0.50f, size.height * 0.68f)
-                    lineTo(size.width * 0.30f, size.height * 0.84f)
-                    close()
-                }
-                if (symbol == "bookmark-on") drawPath(path, color.copy(alpha = 0.22f), style = Fill)
-                drawPath(path, color, style = stroke)
-                if (symbol == "bookmark-on") {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.40f, size.height * 0.44f), androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.52f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.52f), androidx.compose.ui.geometry.Offset(size.width * 0.62f, size.height * 0.36f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-            "upload", "download" -> {
-                val upward = symbol == "upload"
-                val shaftTop = if (upward) size.height * 0.22f else size.height * 0.18f
-                val shaftBottom = if (upward) size.height * 0.78f else size.height * 0.74f
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, shaftTop), androidx.compose.ui.geometry.Offset(center.x, shaftBottom), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                val headY = if (upward) shaftTop else shaftBottom
-                val wingY = if (upward) headY + size.height * 0.16f else headY - size.height * 0.16f
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, headY), androidx.compose.ui.geometry.Offset(size.width * 0.34f, wingY), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, headY), androidx.compose.ui.geometry.Offset(size.width * 0.66f, wingY), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "new-folder" -> {
-                drawRoundRect(color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.12f, size.height * 0.34f), size = androidx.compose.ui.geometry.Size(size.width * 0.76f, size.height * 0.44f), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style = stroke)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * 0.34f), androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.24f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(center.x, size.height * 0.46f), androidx.compose.ui.geometry.Offset(center.x, size.height * 0.68f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.39f, size.height * 0.57f), androidx.compose.ui.geometry.Offset(size.width * 0.61f, size.height * 0.57f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "scp" -> {
-                // Two opposing arrows = transfer (send up / receive down)
-                val leftX = size.width * 0.36f
-                val rightX = size.width * 0.64f
-                // left arrow points up
-                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(leftX - size.width * 0.11f, size.height * 0.40f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(leftX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(leftX + size.width * 0.11f, size.height * 0.40f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                // right arrow points down
-                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.24f), androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(rightX - size.width * 0.11f, size.height * 0.60f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(rightX, size.height * 0.76f), androidx.compose.ui.geometry.Offset(rightX + size.width * 0.11f, size.height * 0.60f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "sort-up", "sort-down" -> {
-                listOf(0.32f, 0.50f, 0.68f).forEachIndexed { index, y ->
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.18f, size.height * y), androidx.compose.ui.geometry.Offset(size.width * (0.52f + index * 0.10f), size.height * y), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-                val x = size.width * 0.78f
-                val top = if (symbol == "sort-up") size.height * 0.26f else size.height * 0.74f
-                val bottom = if (symbol == "sort-up") size.height * 0.74f else size.height * 0.26f
-                drawLine(color, androidx.compose.ui.geometry.Offset(x, bottom), androidx.compose.ui.geometry.Offset(x, top), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                val wingY = if (symbol == "sort-up") top + size.height * 0.13f else top - size.height * 0.13f
-                drawLine(color, androidx.compose.ui.geometry.Offset(x, top), androidx.compose.ui.geometry.Offset(x - size.width * 0.10f, wingY), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(x, top), androidx.compose.ui.geometry.Offset(x + size.width * 0.10f, wingY), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "terminal" -> {
-                drawRoundRect(color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.14f, size.height * 0.22f), size = androidx.compose.ui.geometry.Size(size.width * 0.72f, size.height * 0.56f), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style = stroke)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.42f), androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.50f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.58f), androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.50f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.54f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "identity", "trust" -> {
-                drawRoundRect(color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.42f), size = androidx.compose.ui.geometry.Size(size.width * 0.52f, size.height * 0.34f), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style = stroke)
-                drawArc(color, startAngle = 205f, sweepAngle = 130f, useCenter = false, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.33f, size.height * 0.18f), size = androidx.compose.ui.geometry.Size(size.width * 0.34f, size.height * 0.42f), style = stroke)
-                if (symbol == "trust") {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.38f, size.height * 0.58f), androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.67f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.48f, size.height * 0.67f), androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.50f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                }
-            }
-            "remove" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.30f), androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.70f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.70f, size.height * 0.30f), androidx.compose.ui.geometry.Offset(size.width * 0.30f, size.height * 0.70f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "more" -> listOf(0.30f, 0.50f, 0.70f).forEach { x ->
-                drawCircle(color, radius = size.minDimension * 0.075f, center = androidx.compose.ui.geometry.Offset(size.width * x, center.y))
-            }
-            "chevron-right" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.38f, size.height * 0.24f), androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.50f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.64f, size.height * 0.50f), androidx.compose.ui.geometry.Offset(size.width * 0.38f, size.height * 0.76f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "chevron-up" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.62f), androidx.compose.ui.geometry.Offset(size.width * 0.50f, size.height * 0.36f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.50f, size.height * 0.36f), androidx.compose.ui.geometry.Offset(size.width * 0.76f, size.height * 0.62f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-            "chevron-down" -> {
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.24f, size.height * 0.38f), androidx.compose.ui.geometry.Offset(size.width * 0.50f, size.height * 0.64f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.50f, size.height * 0.64f), androidx.compose.ui.geometry.Offset(size.width * 0.76f, size.height * 0.38f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-        }
+    val icon = when (symbol) {
+        "sftp-open" -> Icons.Rounded.FolderOpen
+        "refresh" -> Icons.Rounded.Refresh
+        "home" -> Icons.Rounded.Home
+        "up" -> Icons.Rounded.ArrowUpward
+        "eye-on" -> Icons.Rounded.Visibility
+        "eye-off" -> Icons.Rounded.VisibilityOff
+        "bookmark" -> Icons.Rounded.BookmarkBorder
+        "bookmark-on" -> Icons.Rounded.Bookmark
+        "upload" -> Icons.Rounded.Upload
+        "download" -> Icons.Rounded.Download
+        "new-folder" -> Icons.Rounded.CreateNewFolder
+        "scp" -> Icons.Rounded.SwapVert
+        "sort-up" -> Icons.Rounded.ArrowUpward
+        "sort-down" -> Icons.Rounded.ArrowDownward
+        "terminal" -> Icons.Rounded.Terminal
+        "identity" -> Icons.Rounded.VpnKey
+        "trust" -> Icons.Rounded.VerifiedUser
+        "remove" -> Icons.Rounded.Close
+        "more" -> Icons.Rounded.MoreVert
+        "chevron-right" -> Icons.Rounded.ChevronRight
+        "chevron-up" -> Icons.Rounded.ExpandLess
+        "chevron-down" -> Icons.Rounded.ExpandMore
+        "rename" -> Icons.Rounded.DriveFileRenameOutline
+        "delete" -> Icons.Rounded.DeleteOutline
+        "copy" -> Icons.Rounded.ContentCopy
+        "permissions" -> Icons.Rounded.Tune
+        "link" -> Icons.Rounded.Link
+        "size" -> Icons.Rounded.Straighten
+        "space" -> Icons.Rounded.SdStorage
+        "open-text" -> Icons.Rounded.Description
+        "copy-to-host" -> Icons.Rounded.DriveFileMove
+        else -> Icons.Rounded.ChevronRight
     }
-}
-
-@Composable
-private fun SftpOpenGlyph(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.7.dp.toPx(), cap = StrokeCap.Round)
-        drawSftpOpenGlyph(color, stroke)
-    }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSftpOpenGlyph(
-    color: Color,
-    stroke: androidx.compose.ui.graphics.drawscope.Stroke
-) {
-    val path = Path().apply {
-        moveTo(size.width * 0.50f, size.height * 0.16f)
-        lineTo(size.width * 0.80f, size.height * 0.33f)
-        lineTo(size.width * 0.80f, size.height * 0.67f)
-        lineTo(size.width * 0.50f, size.height * 0.84f)
-        lineTo(size.width * 0.20f, size.height * 0.67f)
-        lineTo(size.width * 0.20f, size.height * 0.33f)
-        close()
-    }
-    drawPath(path, color, style = stroke)
+    Icon(imageVector = icon, contentDescription = null, tint = color, modifier = modifier)
 }
 
 @Composable
 private fun FileGlyph(directory: Boolean) {
     val color = if (directory) DeckColors.Cyan else DeckColors.Green
-    Canvas(Modifier.size(26.dp)) {
-        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-        if (directory) {
-            drawRoundRect(
-                color = color,
-                topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.08f, size.height * 0.28f),
-                size = androidx.compose.ui.geometry.Size(size.width * 0.84f, size.height * 0.56f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(5.dp.toPx(), 5.dp.toPx()),
-                style = stroke
-            )
-            drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.13f, size.height * 0.28f), androidx.compose.ui.geometry.Offset(size.width * 0.38f, size.height * 0.28f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.25f, size.height * 0.18f), androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.28f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-        } else {
-            drawRoundRect(
-                color = color,
-                topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.22f, size.height * 0.12f),
-                size = androidx.compose.ui.geometry.Size(size.width * 0.56f, size.height * 0.76f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-                style = stroke
-            )
-            drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.42f), androidx.compose.ui.geometry.Offset(size.width * 0.66f, size.height * 0.42f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.58f), androidx.compose.ui.geometry.Offset(size.width * 0.60f, size.height * 0.58f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-        }
-    }
+    Icon(
+        imageVector = if (directory) Icons.Rounded.Folder else Icons.Rounded.InsertDriveFile,
+        contentDescription = null,
+        tint = color,
+        modifier = Modifier.size(24.dp)
+    )
 }
 
 @Composable
 private fun FileGlyph(entry: SftpEntry) {
-    Box {
+    if (entry.type == SftpEntryType.Symlink) {
+        Icon(
+            imageVector = Icons.Rounded.Link,
+            contentDescription = null,
+            tint = DeckColors.Orange,
+            modifier = Modifier.size(24.dp)
+        )
+    } else {
         FileGlyph(directory = entry.directory)
-        if (entry.type == SftpEntryType.Symlink) {
-            Canvas(Modifier.size(26.dp)) {
-                val color = DeckColors.Orange
-                val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.20f, size.height * 0.78f), androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.20f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.61f, size.height * 0.20f), androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.20f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.20f), androidx.compose.ui.geometry.Offset(size.width * 0.82f, size.height * 0.42f), strokeWidth = stroke.width, cap = StrokeCap.Round)
-            }
-        }
     }
 }
 
@@ -4221,67 +4127,98 @@ private fun CredentialsSection(
                 Spacer(Modifier.height(10.dp))
                 Text(credential.publicKeyPreview ?: "Saved credential", color = DeckColors.SecondaryText, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(10.dp))
+                val exportablePublicKey = VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview)
+                val runCredentialAction: (String) -> Unit = { action ->
+                    when (action) {
+                        "Details" -> {
+                            selectedCredential = credential
+                            revealedPayload = null
+                            payloadError = null
+                        }
+                        "Validate" -> loadPayload(credential)
+                        "Copy" -> {
+                            val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Copy)
+                            if (policy.requiresConfirmation) {
+                                pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Copy)
+                            } else {
+                                loadPayload(credential) { payload -> clipboard.setText(AnnotatedString(payload)) }
+                            }
+                        }
+                        "Copy Pub" -> exportablePublicKey?.let { clipboard.setText(AnnotatedString(it)) }
+                        "Export Pub" -> exportablePublicKey?.let { publicKey ->
+                            val name = "${credential.label.safeFileName()}.pub"
+                            pendingExportPayload = name to publicKey
+                            exportLauncher.launch(name)
+                        }
+                        "Export" -> {
+                            val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Export)
+                            if (policy.requiresConfirmation) {
+                                pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Export)
+                            } else {
+                                exportSecret(credential)
+                            }
+                        }
+                        "Share" -> {
+                            val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Share)
+                            if (policy.requiresConfirmation) {
+                                pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Share)
+                            } else {
+                                shareSecret(credential)
+                            }
+                        }
+                        "Rename" -> pendingRenameCredential = credential
+                        "Organize" -> pendingMetadataCredential = credential
+                        "Unlink" -> pendingUnlinkCredential = credential
+                        "Edit" -> pendingReplaceCredential = credential
+                        "Copy Link" -> onCopyCredentialLink(credential)
+                        "Share Link" -> onShareCredentialLink(credential)
+                        "QR" -> onShowCredentialQr(credential)
+                        "Remove" -> confirmDelete = true
+                    }
+                }
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val exportablePublicKey = VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview)
-                    MiniTag(if (credential.passphraseRef != null) "Passphrase saved" else "No saved passphrase", if (credential.passphraseRef != null) DeckColors.Green else DeckColors.SecondaryText)
+                    if (credential.passphraseRef != null) MiniTag("Passphrase saved", DeckColors.Green)
                     if (!credential.secretBacked) MiniTag("Needs secret", DeckColors.Orange)
                     if (credential.favorite) MiniTag("Favorite", DeckColors.Orange)
                     credential.group.trim().takeIf { it.isNotBlank() }?.let { MiniTag(it, DeckColors.Purple) }
                     credential.tags.take(2).forEach { tag -> MiniTag(tag, DeckColors.SecondaryText) }
-                    expandedCredentialActionLabels(credential).forEach { action ->
-                        when (action) {
-                            "Details" -> HostAction(action) {
-                                selectedCredential = credential
-                                revealedPayload = null
-                                payloadError = null
-                            }
-                            "Validate" -> HostAction(action) { loadPayload(credential) }
-                            "Copy" -> HostAction(action) {
-                                val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Copy)
-                                if (policy.requiresConfirmation) {
-                                    pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Copy)
-                                } else {
-                                    loadPayload(credential) { payload -> clipboard.setText(AnnotatedString(payload)) }
+                }
+                Spacer(Modifier.height(10.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    credentialPrimaryActionLabels(credential).forEach { action ->
+                        HostAction(action) { runCredentialAction(action) }
+                    }
+                    val secondaryActions = credentialSecondaryActionLabels(credential)
+                    if (secondaryActions.isNotEmpty()) {
+                        var moreOpen by remember(credential.id) { mutableStateOf(false) }
+                        Box {
+                            HostAction("More") { moreOpen = true }
+                            SftpDropdownMenu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
+                                secondaryActions.forEach { action ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                action,
+                                                color = if (action == "Remove") DeckColors.Red else DeckColors.PrimaryText,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        },
+                                        onClick = {
+                                            moreOpen = false
+                                            runCredentialAction(action)
+                                        }
+                                    )
                                 }
                             }
-                            "Copy Pub" -> HostAction(action) {
-                                exportablePublicKey?.let { clipboard.setText(AnnotatedString(it)) }
-                            }
-                            "Export Pub" -> HostAction(action) {
-                                exportablePublicKey?.let { publicKey ->
-                                    val name = "${credential.label.safeFileName()}.pub"
-                                    pendingExportPayload = name to publicKey
-                                    exportLauncher.launch(name)
-                                }
-                            }
-                            "Export" -> HostAction(action) {
-                                val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Export)
-                                if (policy.requiresConfirmation) {
-                                    pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Export)
-                                } else {
-                                    exportSecret(credential)
-                                }
-                            }
-                            "Share" -> HostAction(action) {
-                                val policy = VaultSecretExportPolicy.policyFor(credential, VaultSecretAction.Share)
-                                if (policy.requiresConfirmation) {
-                                    pendingSecretAction = PendingVaultSecretAction(credential, VaultSecretAction.Share)
-                                } else {
-                                    shareSecret(credential)
-                                }
-                            }
-                            "Rename" -> HostAction(action) { pendingRenameCredential = credential }
-                            "Organize" -> HostAction(action) { pendingMetadataCredential = credential }
-                            "Unlink" -> HostAction(action) { pendingUnlinkCredential = credential }
-                            "Edit" -> HostAction(action) { pendingReplaceCredential = credential }
-                            "Copy Link" -> HostAction(action) { onCopyCredentialLink(credential) }
-                            "Share Link" -> HostAction(action) { onShareCredentialLink(credential) }
-                            "QR" -> HostAction(action) { onShowCredentialQr(credential) }
-                            "Remove" -> HostAction(action) { confirmDelete = true }
                         }
                     }
                 }
@@ -5655,6 +5592,7 @@ internal fun ForwardEditorPage(
     var group by remember(initial.id) { mutableStateOf(initial.group) }
     var favorite by remember(initial.id) { mutableStateOf(initial.favorite) }
     var error by remember(initial.id) { mutableStateOf<String?>(null) }
+    var showHostPicker by remember(initial.id) { mutableStateOf(false) }
     val draft = PortForwardRule(
         id = initial.id.ifBlank { "forward-${System.currentTimeMillis()}" },
         serverId = selectedServerId,
@@ -5707,17 +5645,11 @@ internal fun ForwardEditorPage(
         DeckCard(modifier = Modifier.fillMaxWidth(), radius = 28.dp, padding = PaddingValues(18.dp)) {
             Text("Host", color = DeckColors.SecondaryText, fontSize = 12.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(8.dp))
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                servers.forEach { server ->
-                    SoftPill(server.name, selected = server.id == selectedServerId, color = DeckColors.Cyan) {
-                        selectedServerId = server.id
-                    }
-                }
-            }
+            CompactHostSelector(
+                selectedServer = servers.firstOrNull { it.id == selectedServerId },
+                enabled = servers.size > 1,
+                onClick = { showHostPicker = true }
+            )
             Spacer(Modifier.height(16.dp))
             Text("Type", color = DeckColors.SecondaryText, fontSize = 12.sp, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(8.dp))
@@ -5787,6 +5719,115 @@ internal fun ForwardEditorPage(
             }
         }
     }
+    if (showHostPicker) {
+        HostPickerDialog(
+            servers = servers,
+            selectedServerId = selectedServerId,
+            onDismiss = { showHostPicker = false },
+            onSelect = {
+                selectedServerId = it
+                showHostPicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun CompactHostSelector(
+    selectedServer: ServerProfile?,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DeckColors.SurfaceMuted)
+            .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(16.dp))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        selectedServer?.let { ChronoOsLogo(it.osName, Modifier.size(26.dp)) }
+        Column(Modifier.weight(1f)) {
+            Text(
+                selectedServer?.name ?: "No host",
+                color = if (selectedServer != null) DeckColors.PrimaryText else DeckColors.Orange,
+                fontSize = 16.sp,
+                lineHeight = 18.sp,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            selectedServer?.let {
+                Text(
+                    "${it.username}@${it.host}",
+                    color = DeckColors.SecondaryText,
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        if (enabled) {
+            Text("Change", color = DeckColors.Cyan, fontSize = 13.sp, fontWeight = FontWeight.Black)
+            SftpToolbarGlyph("chevron-right", DeckColors.Cyan, Modifier.size(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun HostPickerDialog(
+    servers: List<ServerProfile>,
+    selectedServerId: String,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = DeckColors.SecondaryText, fontWeight = FontWeight.Bold)
+            }
+        },
+        title = { Text("Choose host", color = DeckColors.PrimaryText, fontWeight = FontWeight.Black) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                servers.forEach { server ->
+                    val selected = server.id == selectedServerId
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (selected) DeckColors.SurfaceRaised else DeckColors.SurfaceMuted)
+                            .border(1.dp, if (selected) DeckColors.Cyan.copy(alpha = 0.6f) else DeckColors.CardStroke, RoundedCornerShape(14.dp))
+                            .clickable { onSelect(server.id) }
+                            .padding(horizontal = 12.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp)
+                    ) {
+                        ChronoOsLogo(server.osName, Modifier.size(24.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(server.name, color = DeckColors.PrimaryText, fontSize = 15.sp, lineHeight = 17.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text("${server.username}@${server.host}", color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        if (selected) {
+                            SftpToolbarGlyph("trust", DeckColors.Cyan, Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+        },
+        containerColor = DeckColors.Surface,
+        titleContentColor = DeckColors.PrimaryText,
+        textContentColor = DeckColors.SecondaryText
+    )
 }
 
 @Composable
@@ -6139,19 +6180,34 @@ internal fun credentialDetailSubtitle(credential: Credential): String {
 }
 
 internal fun expandedCredentialActionLabels(credential: Credential): List<String> {
+    return credentialPrimaryActionLabels(credential) + credentialSecondaryActionLabels(credential)
+}
+
+// Prominent, everyday actions shown inline on the credential card.
+internal fun credentialPrimaryActionLabels(credential: Credential): List<String> {
     return buildList {
         add("Details")
         if (credential.type == CredentialType.PrivateKey) add("Validate")
+        if (credential.secretBacked && credential.type == CredentialType.Password) add("Copy")
+        add("Edit")
+    }
+}
+
+// Secondary actions tucked behind a "More" overflow to keep the card uncluttered.
+internal fun credentialSecondaryActionLabels(credential: Credential): List<String> {
+    return buildList {
         if (credential.secretBacked) {
-            add("Copy")
-            if (credential.type == CredentialType.PrivateKey && VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview) != null) {
-                add("Copy Pub")
-                add("Export Pub")
+            if (credential.type == CredentialType.PrivateKey) {
+                add("Copy")
+                if (VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview) != null) {
+                    add("Copy Pub")
+                    add("Export Pub")
+                }
             }
             add("Export")
             add("Share")
         }
-        addAll(listOf("Rename", "Organize", "Unlink", "Edit", "Copy Link", "Share Link", "QR", "Remove"))
+        addAll(listOf("Rename", "Organize", "Unlink", "Copy Link", "Share Link", "QR", "Remove"))
     }
 }
 
