@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -95,10 +97,15 @@ fun DeckCard(
 ) {
     Column(
         modifier = modifier
-            .animateContentSize(animationSpec = tween(220, easing = LinearOutSlowInEasing))
             .clip(shape)
             .background(DeckColors.Surface)
             .border(1.dp, DeckColors.CardStroke.copy(alpha = 0.58f), shape)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
             .padding(padding),
         content = content
     )

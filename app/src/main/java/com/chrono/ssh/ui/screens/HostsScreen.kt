@@ -13,6 +13,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -762,7 +765,7 @@ private fun HostVaultCard(
                     Text("$liveSessions active session${if (liveSessions == 1) "" else "s"}", color = DeckColors.SecondaryText, fontSize = 12.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            SftpToolbarGlyph(if (expanded) "chevron-up" else "chevron-down", DeckColors.SecondaryText, Modifier.size(18.dp))
+            ExpandChevron(expanded, DeckColors.SecondaryText, Modifier.size(18.dp))
         }
         if (expanded) {
             Spacer(Modifier.height(10.dp))
@@ -2030,8 +2033,7 @@ private fun TransferSection(
     }
     DeckCard(
         modifier = modifier
-            .fillMaxWidth()
-            .then(if (fullPage) Modifier else Modifier.animateContentSize(tween(180))),
+            .fillMaxWidth(),
         radius = if (fullPage) 8.dp else 24.dp,
         padding = PaddingValues(if (fullPage) 12.dp else 14.dp)
     ) {
@@ -3580,8 +3582,12 @@ private fun SftpEntryActionSheet(
         },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(DeckColors.SurfaceMuted)
+                    .padding(vertical = 4.dp)
             ) {
                 if (!entry.navigable && SftpTextFilePolicy.canEdit(entry)) {
                     SftpSheetAction("Open text", DeckColors.Cyan, onOpenText, icon = "open-text")
@@ -3626,19 +3632,83 @@ private fun SftpSheetAction(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(DeckColors.SurfaceMuted)
-            .border(1.dp, DeckColors.CardStroke, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 13.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         if (icon != null) {
-            SftpToolbarGlyph(icon, color, Modifier.size(19.dp))
+            SftpToolbarGlyph(icon, color, Modifier.size(20.dp))
         }
-        Text(label, color = DeckColors.PrimaryText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text(
+            label,
+            color = if (color == DeckColors.Red) DeckColors.Red else DeckColors.PrimaryText,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
+        )
     }
+}
+
+private fun credentialActionIcon(action: String): String = when (action) {
+    "Copy", "Copy Pub" -> "copy"
+    "Export", "Export Pub" -> "download"
+    "Share" -> "upload"
+    "Rename" -> "rename"
+    "Organize" -> "permissions"
+    "Unlink" -> "remove"
+    "Copy Link" -> "link"
+    "Share Link" -> "upload"
+    "QR" -> "size"
+    "Remove" -> "delete"
+    else -> "chevron-right"
+}
+
+@Composable
+private fun CredentialActionSheet(
+    title: String,
+    subtitle: String,
+    actions: List<String>,
+    onDismiss: () -> Unit,
+    onAction: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = DeckColors.SecondaryText, fontWeight = FontWeight.Bold)
+            }
+        },
+        title = {
+            Column {
+                Text(title, color = DeckColors.PrimaryText, fontSize = 17.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = DeckColors.SecondaryText, fontSize = 12.sp)
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(DeckColors.SurfaceMuted)
+                    .padding(vertical = 4.dp)
+            ) {
+                actions.forEach { action ->
+                    SftpSheetAction(
+                        label = action,
+                        color = if (action == "Remove") DeckColors.Red else DeckColors.Cyan,
+                        onClick = { onAction(action) },
+                        icon = credentialActionIcon(action)
+                    )
+                }
+            }
+        },
+        containerColor = DeckColors.Surface,
+        titleContentColor = DeckColors.PrimaryText,
+        textContentColor = DeckColors.SecondaryText
+    )
 }
 
 @Composable
@@ -3690,6 +3760,16 @@ private val sftpGlyphSymbols = setOf(
     "chevron-up",
     "chevron-down"
 )
+
+@Composable
+private fun ExpandChevron(expanded: Boolean, color: Color = DeckColors.SecondaryText, modifier: Modifier = Modifier.size(18.dp)) {
+    val rotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = tween(260, easing = LinearOutSlowInEasing),
+        label = "expandChevron"
+    )
+    SftpToolbarGlyph("chevron-down", color, modifier.rotate(rotation))
+}
 
 @Composable
 private fun SftpToolbarGlyph(symbol: String, color: Color, modifier: Modifier = Modifier) {
@@ -4121,7 +4201,7 @@ private fun CredentialsSection(
                     Text(credential.label, color = DeckColors.PrimaryText, fontSize = 18.sp, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(credential.type.label(), color = DeckColors.SecondaryText, fontSize = 12.sp)
                 }
-                SftpToolbarGlyph(if (expanded) "chevron-up" else "chevron-down", DeckColors.SecondaryText, Modifier.size(18.dp))
+                ExpandChevron(expanded, DeckColors.SecondaryText, Modifier.size(18.dp))
             }
             if (expanded) {
                 Spacer(Modifier.height(10.dp))
@@ -4199,26 +4279,18 @@ private fun CredentialsSection(
                     val secondaryActions = credentialSecondaryActionLabels(credential)
                     if (secondaryActions.isNotEmpty()) {
                         var moreOpen by remember(credential.id) { mutableStateOf(false) }
-                        Box {
-                            HostAction("More") { moreOpen = true }
-                            SftpDropdownMenu(expanded = moreOpen, onDismissRequest = { moreOpen = false }) {
-                                secondaryActions.forEach { action ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                action,
-                                                color = if (action == "Remove") DeckColors.Red else DeckColors.PrimaryText,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                        },
-                                        onClick = {
-                                            moreOpen = false
-                                            runCredentialAction(action)
-                                        }
-                                    )
+                        HostAction("More") { moreOpen = true }
+                        if (moreOpen) {
+                            CredentialActionSheet(
+                                title = credential.label,
+                                subtitle = credential.type.label(),
+                                actions = secondaryActions,
+                                onDismiss = { moreOpen = false },
+                                onAction = {
+                                    moreOpen = false
+                                    runCredentialAction(it)
                                 }
-                            }
+                            )
                         }
                     }
                 }
@@ -5188,7 +5260,7 @@ private fun SnippetsSection(
                             Text(scopedServer.name, color = DeckColors.SecondaryText, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    SftpToolbarGlyph(if (expanded) "chevron-up" else "chevron-down", DeckColors.SecondaryText, Modifier.size(18.dp))
+                    ExpandChevron(expanded, DeckColors.SecondaryText, Modifier.size(18.dp))
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(snippet.command, color = DeckColors.SecondaryText, fontSize = 14.sp, lineHeight = 18.sp, maxLines = if (expanded) 5 else 1, overflow = TextOverflow.Ellipsis)
@@ -5874,7 +5946,7 @@ private fun TunnelRuleCard(
                 )
             }
             Spacer(Modifier.size(8.dp))
-            SftpToolbarGlyph(if (expanded) "chevron-up" else "chevron-down", DeckColors.SecondaryText, Modifier.size(18.dp))
+            ExpandChevron(expanded, DeckColors.SecondaryText, Modifier.size(18.dp))
             Spacer(Modifier.size(8.dp))
             TunnelActionButton(
                 text = if (active) "Stop" else if (starting) "Starting" else "Start",
@@ -6188,7 +6260,12 @@ internal fun credentialPrimaryActionLabels(credential: Credential): List<String>
     return buildList {
         add("Details")
         if (credential.type == CredentialType.PrivateKey) add("Validate")
-        if (credential.secretBacked && credential.type == CredentialType.Password) add("Copy")
+        if (credential.secretBacked) {
+            add("Copy")
+            if (credential.type == CredentialType.PrivateKey && VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview) != null) {
+                add("Copy Pub")
+            }
+        }
         add("Edit")
     }
 }
@@ -6197,12 +6274,8 @@ internal fun credentialPrimaryActionLabels(credential: Credential): List<String>
 internal fun credentialSecondaryActionLabels(credential: Credential): List<String> {
     return buildList {
         if (credential.secretBacked) {
-            if (credential.type == CredentialType.PrivateKey) {
-                add("Copy")
-                if (VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview) != null) {
-                    add("Copy Pub")
-                    add("Export Pub")
-                }
+            if (credential.type == CredentialType.PrivateKey && VaultPublicKeyPolicy.exportablePublicKey(credential.publicKeyPreview) != null) {
+                add("Export Pub")
             }
             add("Export")
             add("Share")

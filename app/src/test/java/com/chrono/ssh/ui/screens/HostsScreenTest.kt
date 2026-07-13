@@ -323,9 +323,9 @@ class HostsScreenTest {
             listOf(
                 "Details",
                 "Validate",
-                "Edit",
                 "Copy",
                 "Copy Pub",
+                "Edit",
                 "Export Pub",
                 "Export",
                 "Share",
