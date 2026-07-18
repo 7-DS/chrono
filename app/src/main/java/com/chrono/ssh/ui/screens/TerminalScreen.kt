@@ -1065,6 +1065,7 @@ fun TerminalScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(terminalBackground)
+            .imePadding()
     ) {
         TerminalTopBar(
             activeSessions = activeSessions,

@@ -53,6 +53,11 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var composingText = ""
     private var inputArmed = false
     private var inputGeneration = 0
+    private var lastAppliedColumns = -1
+    private var lastAppliedRows = -1
+    private var lastAppliedCellWidthPx = -1
+    private var lastAppliedCellHeightPx = -1
+    private var pendingResize: Runnable? = null
 
     private val gestureDetector = GestureDetector(
         context,
@@ -122,6 +127,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         scrollRemainder = 0f
         this.engine = engine
         this.onInput = engine::sendInput
+        invalidateResizeCache()
         updateTerminalSize()
         postInvalidateOnAnimation()
     }
@@ -242,6 +248,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val safePadding = paddingPx.coerceAtLeast(0)
         if (safePadding == contentLeftPaddingPx) return
         contentLeftPaddingPx = safePadding
+        invalidateResizeCache()
         updateTerminalSize()
         postInvalidateOnAnimation()
     }
@@ -250,6 +257,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val safePadding = paddingPx.coerceAtLeast(0)
         if (safePadding == contentRightPaddingPx) return
         contentRightPaddingPx = safePadding
+        invalidateResizeCache()
         updateTerminalSize()
         postInvalidateOnAnimation()
     }
@@ -264,6 +272,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         resetInputState()
         rendererTextSizePx = terminalZoomedTextSizePx(textSizePx, terminalZoom)
         renderer = terminalRendererOrFallback(rendererTextSizePx, terminalTypeface)
+        invalidateResizeCache()
         updateTerminalSize()
         postInvalidateOnAnimation()
     }
@@ -299,6 +308,13 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         if (hasFocus()) armInputForFocusedTerminal(showKeyboard = keyboardRequested)
+    }
+
+    override fun onDetachedFromWindow() {
+        pendingResize?.let(::removeCallbacks)
+        pendingResize = null
+        stopDirectionalSwipeRepeat()
+        super.onDetachedFromWindow()
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
@@ -511,8 +527,53 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         val cellWidthPx = scaledCellWidthPx()
         val cellHeightPx = scaledCellHeightPx()
         val contentWidth = (width - contentLeftPaddingPx - contentRightPaddingPx).coerceAtLeast(cellWidthPx)
-        current.resize(max(MIN_TERMINAL_COLUMNS, contentWidth / cellWidthPx), max(4, height / cellHeightPx), cellWidthPx, cellHeightPx)
-        clampTopRow()
+        val columns = max(MIN_TERMINAL_COLUMNS, contentWidth / cellWidthPx)
+        val rows = max(4, height / cellHeightPx)
+        // Dedupe: keyboard/inset animations fire onSizeChanged every frame, but most
+        // frames map to the same grid. Never reflow the PTY (remote SIGWINCH) for a
+        // grid we already applied — that is what makes TUIs like tmux/grok thrash.
+        if (columns == lastAppliedColumns &&
+            rows == lastAppliedRows &&
+            cellWidthPx == lastAppliedCellWidthPx &&
+            cellHeightPx == lastAppliedCellHeightPx
+        ) {
+            return
+        }
+        // First layout applies immediately so the shell starts at the right size;
+        // later changes debounce so an in-flight keyboard animation settles to a
+        // single resize instead of one per frame.
+        val immediate = lastAppliedColumns < 0
+        pendingResize?.let(::removeCallbacks)
+        pendingResize = null
+        val apply = Runnable {
+            pendingResize = null
+            val engineNow = engine ?: return@Runnable
+            if (width <= 0 || height <= 0) return@Runnable
+            val cw = scaledCellWidthPx()
+            val ch = scaledCellHeightPx()
+            val cols = max(MIN_TERMINAL_COLUMNS, (width - contentLeftPaddingPx - contentRightPaddingPx).coerceAtLeast(cw) / cw)
+            val rws = max(4, height / ch)
+            lastAppliedColumns = cols
+            lastAppliedRows = rws
+            lastAppliedCellWidthPx = cw
+            lastAppliedCellHeightPx = ch
+            engineNow.resize(cols, rws, cw, ch)
+            clampTopRow()
+            postInvalidateOnAnimation()
+        }
+        if (immediate) apply.run() else {
+            pendingResize = apply
+            postDelayed(apply, RESIZE_DEBOUNCE_MS)
+        }
+    }
+
+    private fun invalidateResizeCache() {
+        pendingResize?.let(::removeCallbacks)
+        pendingResize = null
+        lastAppliedColumns = -1
+        lastAppliedRows = -1
+        lastAppliedCellWidthPx = -1
+        lastAppliedCellHeightPx = -1
     }
 
     private fun clampTopRow() {
@@ -676,11 +737,33 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     private fun reactivateInputConnection(showKeyboard: Boolean) {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager ?: return
         post {
-            imm?.restartInput(this)
-            if (showKeyboard) imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
+            if (!isAttachedToWindow) return@post
+            imm.restartInput(this)
+            if (showKeyboard) requestSoftInput(imm, attempt = 0)
         }
+    }
+
+    // showSoftInput(SHOW_IMPLICIT) silently no-ops when the view is not yet the
+    // active input target (common right after focus/resize under edge-to-edge),
+    // which is how the keyboard ends up "hidden for good". Guarantee focus and
+    // retry a couple of times until the IME actually shows.
+    private fun requestSoftInput(imm: InputMethodManager, attempt: Int) {
+        if (!isAttachedToWindow || windowVisibility != VISIBLE || !keyboardRequested) return
+        if (!hasFocus()) requestFocus()
+        val receiver = object : android.os.ResultReceiver(handler) {
+            override fun onReceiveResult(resultCode: Int, resultData: android.os.Bundle?) {
+                val shown = resultCode == InputMethodManager.RESULT_SHOWN ||
+                    resultCode == InputMethodManager.RESULT_UNCHANGED_SHOWN
+                if (!shown && attempt < SOFT_INPUT_MAX_RETRIES) {
+                    postDelayed({
+                        if (keyboardRequested) requestSoftInput(imm, attempt + 1)
+                    }, SOFT_INPUT_RETRY_DELAY_MS)
+                }
+            }
+        }
+        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT, receiver)
     }
 
     private fun rearmInputAfterPaste(showKeyboard: Boolean) {
@@ -719,6 +802,9 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         const val MAX_TERMINAL_ZOOM = 2.4f
         const val DIRECTIONAL_SWIPE_HOLD_REPEAT_DELAY_MS = 650L
         const val DIRECTIONAL_SWIPE_REPEAT_INTERVAL_MS = 140L
+        const val RESIZE_DEBOUNCE_MS = 90L
+        const val SOFT_INPUT_MAX_RETRIES = 3
+        const val SOFT_INPUT_RETRY_DELAY_MS = 120L
     }
 }
 
