@@ -120,6 +120,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     fun bind(engine: ChronoSSHTerminalEngine) {
         if (this.engine === engine) return
+        this.engine?.clearOnRender(renderListener)
         resetInputState()
         inputGeneration += 1
         inputArmed = false
@@ -127,8 +128,18 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         scrollRemainder = 0f
         this.engine = engine
         this.onInput = engine::sendInput
+        engine.setOnRender(renderListener)
         invalidateResizeCache()
         updateTerminalSize()
+        postInvalidateOnAnimation()
+    }
+
+    // Coalesces bursts of PTY output into at most one repaint per display frame,
+    // fully off the Compose recomposition path. postInvalidateOnAnimation() is
+    // thread-safe and idempotent within a frame, so a flood of output from the
+    // engine's IO thread still yields a single draw. The scroll-position clamp
+    // happens in onDraw on the UI thread rather than here.
+    private val renderListener: () -> Unit = {
         postInvalidateOnAnimation()
     }
 
@@ -311,6 +322,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     override fun onDetachedFromWindow() {
+        engine?.clearOnRender(renderListener)
         pendingResize?.let(::removeCallbacks)
         pendingResize = null
         stopDirectionalSwipeRepeat()
@@ -326,6 +338,7 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
+        clampTopRow()
         canvas.drawColor(terminalBackground)
         runCatching {
             engine?.withTerminalState { emulator ->

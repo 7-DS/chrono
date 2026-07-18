@@ -38,6 +38,10 @@ class ChronoSSHTerminalEngine(
     private var terminalRows = DEFAULT_ROWS
     private var copyToClipboard: (String) -> Unit = {}
     private var clipboardTextProvider: () -> String? = { null }
+    // Direct, non-Compose repaint poke. High-frequency PTY output drives this so the
+    // View invalidates itself at display frame rate instead of recomposing the whole
+    // Compose tree (and re-running the AndroidView update lambda) on every output chunk.
+    @Volatile private var onRender: () -> Unit = {}
     private var oscEventSink: (TerminalOscEvent) -> Unit = {}
     private val oscHandler = TerminalOscHandler(
         onClipboardSet = { text ->
@@ -64,6 +68,14 @@ class ChronoSSHTerminalEngine(
     }
 
     fun emulator(): TerminalEmulator = emulator
+
+    fun setOnRender(listener: () -> Unit) {
+        onRender = listener
+    }
+
+    fun clearOnRender(listener: () -> Unit) {
+        if (onRender === listener) onRender = {}
+    }
 
     fun <T> withTerminalState(block: (TerminalEmulator) -> T): T = synchronized(terminalLock) {
         block(emulator)
@@ -105,7 +117,7 @@ class ChronoSSHTerminalEngine(
             }
             emulator.append(filtered, filtered.size)
         }
-        onChanged()
+        onRender()
     }
 
     override fun sendInput(input: String) {
@@ -219,7 +231,7 @@ class ChronoSSHTerminalEngine(
 
     override fun onTerminalDebug(message: String) = Unit
 
-    override fun onTextChanged(changedSession: TerminalSession) = onChanged()
+    override fun onTextChanged(changedSession: TerminalSession) = onRender()
 
     override fun onTitleChanged(changedSession: TerminalSession) = Unit
 

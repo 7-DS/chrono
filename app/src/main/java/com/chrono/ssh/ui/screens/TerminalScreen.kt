@@ -1200,14 +1200,22 @@ fun TerminalScreen(
                 .terminalPanelFrame(terminalSideMargin, terminalRightMargin)
                 .clipToBounds()
         ) {
-            val invalidationKey = workspace.invalidations
+            // Terminal output repaints the View directly via the engine's render
+            // listener (see ChronoSSHTerminalView.bind); it does NOT flow through
+            // Compose. So this AndroidView recomposes only when a terminal *setting*
+            // changes, not on every byte of PTY output. Loading the font is
+            // relatively expensive, so memoize it by family instead of reloading it
+            // on every recomposition.
+            val terminalTypeface = remember(terminalProfile.fontFamily, context) {
+                TerminalCatalog.typeface(context, terminalProfile.fontFamily)
+            }
             AndroidView(
                 modifier = Modifier
                     .fillMaxSize(),
-                factory = { context ->
-                    ChronoSSHTerminalView(context).apply {
+                factory = { ctx ->
+                    ChronoSSHTerminalView(ctx).apply {
                         setTerminalTextSizePx(terminalTextSizePx)
-                        setTerminalTypeface(TerminalCatalog.typeface(context, terminalProfile.fontFamily))
+                        setTerminalTypeface(terminalTypeface)
                         setTerminalBackground(terminalProfile.backgroundHex)
                         setContentLeftPaddingPx(terminalProfile.sideMarginDp.coerceIn(0, 8))
                         setContentRightPaddingPx(terminalProfile.rightMarginDp.coerceIn(0, 8))
@@ -1225,13 +1233,11 @@ fun TerminalScreen(
                     }
                 },
                 update = { view ->
-                    @Suppress("UNUSED_VARIABLE")
-                    val keepComposeObserving = invalidationKey
                     if (terminalView !== view) terminalView = view
                     configureEngineClipboard()
                     view.bind(workspace.engine)
                     view.setTerminalTextSizePx(terminalTextSizePx)
-                    view.setTerminalTypeface(TerminalCatalog.typeface(view.context, terminalProfile.fontFamily))
+                    view.setTerminalTypeface(terminalTypeface)
                     view.setTerminalBackground(terminalProfile.backgroundHex)
                     view.setContentLeftPaddingPx(terminalProfile.sideMarginDp.coerceIn(0, 8))
                     view.setContentRightPaddingPx(terminalProfile.rightMarginDp.coerceIn(0, 8))
