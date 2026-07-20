@@ -190,4 +190,27 @@ class TerminalTranscriptSearchTest {
         assertEquals(0 to 0, terminalViewportCellForPoint(x = -2f, y = -8f, cellWidthPx = 10, cellHeightPx = 10))
         assertEquals(5 to 7, terminalViewportCellForPoint(x = 5f, y = 7f, cellWidthPx = 0, cellHeightPx = 0))
     }
+
+    @Test
+    fun cursorKeySequenceHonoursApplicationMode() {
+        // Normal mode = CSI (ESC [), application mode (DECCKM) = SS3 (ESC O).
+        assertEquals("[A", terminalCursorKeySequence(up = true, applicationMode = false))
+        assertEquals("[B", terminalCursorKeySequence(up = false, applicationMode = false))
+        assertEquals("OA", terminalCursorKeySequence(up = true, applicationMode = true))
+        assertEquals("OB", terminalCursorKeySequence(up = false, applicationMode = true))
+    }
+
+    @Test
+    fun altBufferScrollAccumulatesAndClampsNotches() {
+        // Below one cell height: no notch, pixels carried forward.
+        assertEquals(0 to 12f, terminalAltBufferScrollNotches(accumulatedPx = 12f, cellHeightPx = 20, maxNotches = 6))
+        // Two-and-a-bit cells up: two notches, remainder carried.
+        assertEquals(2 to 5f, terminalAltBufferScrollNotches(accumulatedPx = 45f, cellHeightPx = 20, maxNotches = 6))
+        // Downward drag (negative) yields negative notches.
+        assertEquals(-2 to -5f, terminalAltBufferScrollNotches(accumulatedPx = -45f, cellHeightPx = 20, maxNotches = 6))
+        // Fast flick is clamped to maxNotches, but the full accumulator is still consumed.
+        assertEquals(6 to 0f, terminalAltBufferScrollNotches(accumulatedPx = 400f, cellHeightPx = 20, maxNotches = 6))
+        // Degenerate cell height is treated as 1px per notch (no divide-by-zero).
+        assertEquals(3 to 0f, terminalAltBufferScrollNotches(accumulatedPx = 3f, cellHeightPx = 0, maxNotches = 6))
+    }
 }

@@ -30,10 +30,12 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imeAnimationTarget
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -68,7 +70,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -1065,7 +1069,12 @@ fun TerminalScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(terminalBackground)
-            .imePadding()
+            // Squish fix: .imePadding() animates the terminal surface's height every frame
+            // as the keyboard slides in, so the last-drawn PTY grid gets scaled into the
+            // shrinking bounds (the "squished then snaps back" artifact). imeAnimationTarget
+            // reports the FINAL inset immediately, so the terminal reflows once to its
+            // settled size and the keyboard animates up over the reserved gap — no squish.
+            .padding(WindowInsets.imeAnimationTarget.asPaddingValues())
     ) {
         TerminalTopBar(
             activeSessions = activeSessions,
@@ -1369,10 +1378,23 @@ fun TerminalScreen(
                 ctrlLatched = ctrlLatched,
                 altLatched = altLatched,
                 shiftLatched = shiftLatched,
+                keyboardShown = keyboardOpen || imeVisible || terminalView?.isKeyboardRequested() == true,
                 onToggleDirectionalSwipe = {
                     directionalSwipeMode = !directionalSwipeMode
                     terminalView?.setDirectionalSwipeEnabled(directionalSwipeMode)
                     rearmTerminalInput(showKeyboard = false)
+                },
+                onToggleKeyboard = {
+                    val shown = keyboardOpen || imeVisible || terminalView?.isKeyboardRequested() == true
+                    if (shown) {
+                        keyboardController?.hide()
+                        terminalView?.clearKeyboardRequest()
+                        terminalView?.noteKeyboardHidden()
+                        keyboardOpen = false
+                    } else {
+                        terminalView?.requestKeyboard()
+                        keyboardOpen = true
+                    }
                 },
                 onOpenTmux = { openTmuxPicker() },
                 onEnterScroll = {
@@ -2455,13 +2477,15 @@ private fun ClickableTerminalActionRow(
     ctrlLatched: Boolean,
     altLatched: Boolean,
     shiftLatched: Boolean,
+    keyboardShown: Boolean,
     onToggleDirectionalSwipe: () -> Unit,
+    onToggleKeyboard: () -> Unit,
     onOpenTmux: () -> Unit,
     onEnterScroll: () -> Unit,
     onOpenScrollSettings: () -> Unit,
     onSend: (String, String) -> Unit
 ) {
-    val baseKeys = listOf("Pointer", "Tmux", "Scroll", "Esc", "Ctrl", "Alt", "AltGr", "Tab", "←", "↓", "↑", "→", "Enter", "Bksp")
+    val baseKeys = listOf("Pointer", "Keyboard", "Tmux", "Scroll", "Esc", "Ctrl", "Alt", "AltGr", "Tab", "←", "↓", "↑", "→", "Enter", "Bksp")
     val moreKeys = listOf(
         "Home", "End", "PgUp", "PgDn", "Ins", "Del", "Shift", "/", "\\", "-", "_", "|", "~", ".",
         ":", ";", "(", ")", "[", "]", "{", "}", "<", ">", "F1", "F2", "F3", "F4",
@@ -2473,6 +2497,7 @@ private fun ClickableTerminalActionRow(
     fun AccessoryButton(label: String) {
         when (label) {
             "Pointer" -> TerminalPointerToggle(directionalSwipeMode, terminalAccent, Modifier.widthIn(min = 42.dp), onToggleDirectionalSwipe)
+            "Keyboard" -> TerminalKeyboardToggle(keyboardShown, terminalAccent, Modifier.widthIn(min = 42.dp), onToggleKeyboard)
             "Tmux" -> TerminalSpecialActionKey("tm", terminalAccent = terminalAccent, onClick = onOpenTmux)
             "Scroll" -> TerminalSpecialActionKey("scr", terminalAccent = terminalAccent, onClick = onEnterScroll, onLongClick = onOpenScrollSettings)
             else -> TerminalActionKey(label, terminalProfile, ctrlLatched, altLatched, shiftLatched, terminalAccent = terminalAccent, onSend = onSend)
@@ -2482,8 +2507,12 @@ private fun ClickableTerminalActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .background(DeckColors.Terminal)
+            // NOTE: no .imePadding() here. This row is a descendant of the terminal root
+            // Column, which already reserves the IME inset via imeAnimationTarget padding —
+            // so the whole surface (this bar included) is lifted above the keyboard once.
+            // Adding .imePadding() here too double-applied the inset, leaving a
+            // keyboard-height gap above the keyboard at rest.
             .navigationBarsPadding()
-            .imePadding()
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -2532,6 +2561,62 @@ private fun TerminalPointerToggle(
             drawLine(strokeColor, Offset(x, size.height * 0.16f), Offset(size.width * 0.66f, size.height * 0.34f), strokeWidth, StrokeCap.Round)
             drawLine(strokeColor, Offset(size.width * 0.31f, size.height * 0.62f), Offset(x, size.height * 0.82f), strokeWidth, StrokeCap.Round)
             drawLine(strokeColor, Offset(size.width * 0.69f, size.height * 0.62f), Offset(x, size.height * 0.82f), strokeWidth, StrokeCap.Round)
+        }
+    }
+}
+
+@Composable
+private fun TerminalKeyboardToggle(
+    shown: Boolean,
+    terminalAccent: Color,
+    modifier: Modifier = Modifier,
+    onToggle: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (shown) terminalAccent.copy(alpha = 0.24f) else DeckColors.TerminalPanel)
+            .border(1.dp, if (shown) terminalAccent.copy(alpha = 0.5f) else DeckColors.CardStroke, RoundedCornerShape(12.dp))
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.size(18.dp)) {
+            val strokeColor = if (shown) DeckColors.PrimaryText else DeckColors.SecondaryText
+            val stroke = 1.8.dp.toPx()
+            // Keyboard outline.
+            val top = size.height * 0.28f
+            val bottom = size.height * 0.72f
+            val left = size.width * 0.08f
+            val right = size.width * 0.92f
+            drawRoundRect(
+                color = strokeColor,
+                topLeft = Offset(left, top),
+                size = Size(right - left, bottom - top),
+                cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx()),
+                style = Stroke(width = stroke)
+            )
+            // Two rows of keys as dots.
+            val cols = 4
+            val rowY = listOf(top + (bottom - top) * 0.34f, top + (bottom - top) * 0.62f)
+            val usable = (right - left) - stroke * 2
+            val step = usable / cols
+            val dot = 1.1.dp.toPx()
+            for (r in rowY) {
+                for (c in 0 until cols) {
+                    val x = left + stroke + step * (c + 0.5f)
+                    drawCircle(strokeColor, dot, Offset(x, r))
+                }
+            }
+            // Chevron below indicates hide direction when currently shown.
+            if (shown) {
+                val cy = size.height * 0.9f
+                val cx = size.width * 0.5f
+                val w = size.width * 0.16f
+                drawLine(strokeColor, Offset(cx - w, cy - w * 0.6f), Offset(cx, cy), stroke, StrokeCap.Round)
+                drawLine(strokeColor, Offset(cx + w, cy - w * 0.6f), Offset(cx, cy), stroke, StrokeCap.Round)
+            }
         }
     }
 }
