@@ -2765,7 +2765,7 @@ internal fun terminalActionRowLabels(
         "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"
     )
 ): List<String> {
-    val fixedKeys = listOf("Pointer", "Tmux", "Scroll")
+    val fixedKeys = listOf("Pointer", "Keyboard", "Tmux", "Scroll")
     val profileKeys = terminalProfile.keyRows.firstOrNull()?.keys.orEmpty().map { it.label }.filter { it.isNotBlank() }
     val editableKeys = if (expanded) (profileKeys + baseKeys + moreKeys) else profileKeys.ifEmpty { baseKeys }
     return (fixedKeys + editableKeys.filterNot { it in fixedKeys }).distinct()

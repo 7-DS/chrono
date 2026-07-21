@@ -535,8 +535,8 @@ class TerminalScreenTest {
             keyRows = listOf(TerminalKeyRow("custom", listOf(TerminalKey("Esc", "\u001B"), TerminalKey("F12", "\u001B[24~"))))
         )
 
-        assertEquals(listOf("Pointer", "Tmux", "Scroll", "Esc", "F12"), terminalActionRowLabels(profile, expanded = false))
-        assertTrue(terminalActionRowLabels(profile, expanded = true).take(5) == listOf("Pointer", "Tmux", "Scroll", "Esc", "F12"))
+        assertEquals(listOf("Pointer", "Keyboard", "Tmux", "Scroll", "Esc", "F12"), terminalActionRowLabels(profile, expanded = false))
+        assertTrue(terminalActionRowLabels(profile, expanded = true).take(6) == listOf("Pointer", "Keyboard", "Tmux", "Scroll", "Esc", "F12"))
     }
 
     @Test

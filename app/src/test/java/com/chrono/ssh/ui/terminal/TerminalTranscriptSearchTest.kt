@@ -208,8 +208,12 @@ class TerminalTranscriptSearchTest {
         assertEquals(2 to 5f, terminalAltBufferScrollNotches(accumulatedPx = 45f, cellHeightPx = 20, maxNotches = 6))
         // Downward drag (negative) yields negative notches.
         assertEquals(-2 to -5f, terminalAltBufferScrollNotches(accumulatedPx = -45f, cellHeightPx = 20, maxNotches = 6))
-        // Fast flick is clamped to maxNotches, but the full accumulator is still consumed.
-        assertEquals(6 to 0f, terminalAltBufferScrollNotches(accumulatedPx = 400f, cellHeightPx = 20, maxNotches = 6))
+        // Fast flick: emit at most maxNotches this frame, but carry the UNSENT motion forward
+        // (400px = 20 notches; send 6 = 120px, carry 280px) so a fast drag isn't silently
+        // truncated. Draining that remainder over the next frames is what removes the stutter.
+        assertEquals(6 to 280f, terminalAltBufferScrollNotches(accumulatedPx = 400f, cellHeightPx = 20, maxNotches = 6))
+        // Negative fast flick carries the unsent motion forward too.
+        assertEquals(-6 to -280f, terminalAltBufferScrollNotches(accumulatedPx = -400f, cellHeightPx = 20, maxNotches = 6))
         // Degenerate cell height is treated as 1px per notch (no divide-by-zero).
         assertEquals(3 to 0f, terminalAltBufferScrollNotches(accumulatedPx = 3f, cellHeightPx = 0, maxNotches = 6))
     }

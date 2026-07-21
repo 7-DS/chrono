@@ -80,6 +80,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var lastAppliedCellWidthPx = -1
     private var lastAppliedCellHeightPx = -1
     private var pendingResize: Runnable? = null
+    // Uptime (ms) of the last applied PTY reflow, for the leading-edge resize debounce.
+    private var lastResizeApplyUptimeMs = 0L
 
     // --- scrolling state -----------------------------------------------------------------
     // Kinetic transcript scrolling for the normal buffer. topRow is measured in rows above
@@ -782,10 +784,6 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         ) {
             return
         }
-        // First layout applies immediately so the shell starts at the right size;
-        // later changes debounce so an in-flight keyboard animation settles to a
-        // single resize instead of one per frame.
-        val immediate = lastAppliedColumns < 0
         pendingResize?.let(::removeCallbacks)
         pendingResize = null
         val apply = Runnable {
@@ -800,10 +798,24 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
             lastAppliedRows = rws
             lastAppliedCellWidthPx = cw
             lastAppliedCellHeightPx = ch
+            lastResizeApplyUptimeMs = SystemClock.uptimeMillis()
             engineNow.resize(cols, rws, cw, ch)
             clampTopRow()
             postInvalidateOnAnimation()
         }
+        // Leading-edge debounce. The old code applied the FIRST size immediately only on
+        // initial layout and delayed every later change by RESIZE_DEBOUNCE_MS. With the
+        // TerminalScreen IME inset now driven by imeAnimationTarget, the keyboard produces a
+        // SINGLE final-size change (not one per animation frame), so that trailing delay just
+        // desynced the grid from the already-resized view for 90ms — the "content shifts, then
+        // jumps" artifact. Now: apply immediately when this is the first layout OR enough time
+        // has passed since the last reflow (the common case: an isolated size change like the
+        // keyboard opening). Only coalesce a genuine BURST of distinct sizes arriving within
+        // the debounce window (rotation, split-screen drag) onto the trailing edge, which is
+        // what actually protects the remote PTY from a SIGWINCH storm.
+        val now = SystemClock.uptimeMillis()
+        val immediate = lastAppliedColumns < 0 ||
+            (now - lastResizeApplyUptimeMs) >= RESIZE_DEBOUNCE_MS
         if (immediate) apply.run() else {
             pendingResize = apply
             postDelayed(apply, RESIZE_DEBOUNCE_MS)
@@ -1106,8 +1118,15 @@ internal fun terminalAltBufferScrollNotches(
     val notchPx = cellHeightPx.coerceAtLeast(1).toFloat()
     val notches = (accumulatedPx / notchPx).toInt()
     if (notches == 0) return 0 to accumulatedPx
-    val remainder = accumulatedPx - notches * notchPx
     val clamped = notches.coerceIn(-maxNotches, maxNotches)
+    // Consume only the pixels for the notches we actually emit and carry the rest forward.
+    // Previously the remainder was computed from the UNclamped count, so a fast flick that
+    // produced more than maxNotches per frame silently discarded the excess motion — the
+    // scroll would "stick then jump", the tmux/grok stutter. Carrying the leftover forward
+    // means the next frame(s) drain it, so no drag distance is lost; the per-frame cap only
+    // paces how fast events reach the remote. The accumulator is reset on finger up/cancel,
+    // so this can never coast on its own.
+    val remainder = accumulatedPx - clamped * notchPx
     return clamped to remainder
 }
 
