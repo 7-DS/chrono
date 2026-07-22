@@ -56,6 +56,21 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     private var onKeyboardRequestChanged: (Boolean) -> Unit = {}
     private var onUrlTap: (String) -> Unit = {}
     private var onTextSizeChanged: (Int) -> Unit = {}
+    // Whether this session is attached to a tmux the app itself launched (definitive), and
+    // whether tmux was seen running on the host at connect time (heuristic). Copy-mode scroll
+    // is offered when either holds AND we are actually in the alternate buffer at scroll time,
+    // so a plain shell prompt (normal buffer) can never receive a stray copy-mode prefix.
+    private var tmuxLaunchedByApp = false
+    private var tmuxRunningOnHost = false
+    // Invoked when a scroll gesture in the alt buffer with mouse tracking off and tmux
+    // copy-mode is available. lines: signed scroll amount (negative = up into history).
+    // enterCopyMode: true on the first gesture after a quiet gap, so the host prepends the
+    // tmux prefix + '[' to switch the pane into copy-mode before navigating.
+    private var onRequestTmuxCopyScroll: (lines: Int, enterCopyMode: Boolean) -> Unit = { _, _ -> }
+    // Emitted when a scroll gesture in the alt buffer can't be routed anywhere safe (alt
+    // buffer, no mouse tracking, not a known tmux) so the UI can show a one-shot hint
+    // instead of silently corrupting the remote input line with synthesized arrow keys.
+    private var onAltScrollUnavailable: () -> Unit = {}
     private var keyboardRequested = false
     private var textSizePx = DEFAULT_TEXT_SIZE_PX
     private var terminalZoom = 1f
@@ -99,6 +114,11 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
     // Coalesces alt-buffer wheel motion into discrete "notches" so a smooth drag becomes a
     // sane number of arrow-key / wheel events instead of one per pixel.
     private var altScrollAccumulatorPx = 0f
+    // Uptime (ms) of the last tmux copy-mode scroll routed to the host, used to decide whether
+    // the next gesture must (re-)enter copy-mode. Copy-mode is entered on the first scroll
+    // after a quiet gap; contiguous scrolling keeps navigating without re-sending the prefix.
+    private var lastCopyModeScrollUptimeMs = 0L
+    private var altScrollHintShownUptimeMs = 0L
 
     private val gestureDetector = GestureDetector(
         context,
@@ -237,6 +257,33 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
 
     fun setOnTextSizeChanged(listener: (Int) -> Unit) {
         onTextSizeChanged = listener
+    }
+
+    /**
+     * Declares what we know about tmux for this session, used to decide whether an alt-buffer
+     * scroll can be routed to copy-mode.
+     * @param launchedByApp the app attached/created this tmux itself (definitive).
+     * @param runningOnHost tmux was seen running on the host at connect time (heuristic; only
+     *   acted on together with a live alternate-buffer check so a plain shell is never touched).
+     */
+    fun setTmuxCopyModeState(launchedByApp: Boolean, runningOnHost: Boolean) {
+        tmuxLaunchedByApp = launchedByApp
+        tmuxRunningOnHost = runningOnHost
+    }
+
+    // Copy-mode is a safe scroll target only when we're actually in the alternate buffer AND
+    // we have reason to believe the pane is tmux. app-launched tmux is definitive; the
+    // host-scan heuristic is gated behind the live alt-buffer check so a normal-buffer shell
+    // prompt can never receive a stray copy-mode prefix.
+    private fun tmuxCopyModeAvailable(): Boolean =
+        isAlternateBufferActive() && (tmuxLaunchedByApp || tmuxRunningOnHost)
+
+    fun setOnRequestTmuxCopyScroll(listener: (lines: Int, enterCopyMode: Boolean) -> Unit) {
+        onRequestTmuxCopyScroll = listener
+    }
+
+    fun setOnAltScrollUnavailable(listener: () -> Unit) {
+        onAltScrollUnavailable = listener
     }
 
     fun syncKeyboardRequestState() {
@@ -705,16 +752,19 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         return engine?.withTerminalState { it.isAlternateBufferActive } ?: false
     }
 
-    // Alternate buffer (tmux, grok, less, vim...) has no local scrollback: topRow is
-    // meaningless there. Forward the vertical drag to the remote. If the program enabled
-    // mouse tracking, send wheel-button mouse events at the cursor; otherwise translate to
-    // arrow-key presses (respecting cursor-keys application mode) so programs like tmux
-    // copy-mode / less / man actually scroll. Coalesce pixels into discrete notches so a
-    // smooth drag doesn't fire hundreds of events.
+    // Alternate buffer (tmux, grok, less, vim, htop...) has no local scrollback, so a scroll
+    // gesture must reach the remote. There is deliberately NO arrow-key synthesis here anymore:
+    // captured DECSET modes proved that "alt buffer + no mouse tracking" cannot distinguish an
+    // app where arrows scroll (less/man) from one where arrows edit an input line or move
+    // history (grok, fzf, any readline-in-alt-buffer) — the old arrow path dumped previous
+    // prompts into grok's input. Blind wheel events are just as unsafe: an app not in mouse
+    // mode receives the raw SGR bytes as literal input. So the routing is now:
+    //   1. mouse tracking on  -> SGR/legacy wheel events (the app asked for mouse; safe).
+    //   2. else, app-launched tmux attached -> tmux copy-mode navigation (scrolls the real
+    //      pane scrollback, i.e. grok's output), where arrow/PgUp keys ARE the correct input.
+    //   3. else -> nothing is sent; surface a one-shot hint. Never corrupt the remote input.
     private fun forwardAlternateBufferScroll(event: MotionEvent, distanceY: Float) {
         altScrollAccumulatorPx += distanceY
-        // distanceY > 0 means the finger moved up the screen (content should scroll up →
-        // wheel-up / cursor-up). Notches are clamped so a fast flick can't flood the remote.
         val (notches, remainder) = terminalAltBufferScrollNotches(
             accumulatedPx = altScrollAccumulatorPx,
             cellHeightPx = scaledCellHeightPx(),
@@ -722,12 +772,8 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         )
         altScrollAccumulatorPx = remainder
         if (notches == 0) return
-        // distanceY > 0 (finger moving up the screen) accumulates to positive notches. Natural
-        // touch scrolling — matching the normal-buffer path, which moves topRow toward the
-        // newest row on a finger-up drag — means a finger-up drag should reveal NEWER content,
-        // i.e. send cursor-DOWN / wheel-DOWN to the remote. So positive notches => scroll down.
-        // (Previously this sent cursor-UP, making the alt buffer scroll opposite to the normal
-        // buffer for the same gesture — the tmux/grok "backwards scroll" bug.)
+        // distanceY > 0 (finger up the screen) => positive notches => reveal NEWER content
+        // (scroll down), matching the normal-buffer gesture direction.
         val up = notches < 0
         val count = abs(notches)
         val current = engine ?: return
@@ -740,21 +786,28 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
                     emulator.sendMouseEvent(button, column + 1, row + 1, true, false, false, false)
                 }
             }
-        } else {
-            val appMode = current.withTerminalState { it.isCursorKeysApplicationMode }
-            val sequence = if (up) cursorUpSequence(appMode) else cursorDownSequence(appMode)
-            if (acceptTerminalInput()) {
-                val payload = sequence.repeat(count)
-                onInput(inputTransform(payload))
-            }
+            return
+        }
+        if (tmuxCopyModeAvailable()) {
+            // Positive notches = scroll down toward newer content; copy-mode scroll is expressed
+            // as signed lines (negative = up into history). Enter copy-mode only when this is the
+            // first scroll after a quiet gap — contiguous scrolling keeps navigating without
+            // re-sending the prefix (which would reset the copy-mode cursor).
+            val nowMs = SystemClock.uptimeMillis()
+            val enterCopyMode = (nowMs - lastCopyModeScrollUptimeMs) >= COPY_MODE_REENTRY_GAP_MS
+            lastCopyModeScrollUptimeMs = nowMs
+            val lines = if (up) -count else count
+            onRequestTmuxCopyScroll(lines, enterCopyMode)
+            return
+        }
+        // No safe target: do not synthesize keys. Tell the UI at most once per quiet gap so it
+        // can hint the user (e.g. enable tmux mouse) instead of eating their input.
+        val nowMs = SystemClock.uptimeMillis()
+        if (nowMs - altScrollHintShownUptimeMs >= ALT_SCROLL_HINT_GAP_MS) {
+            altScrollHintShownUptimeMs = nowMs
+            onAltScrollUnavailable()
         }
     }
-
-    private fun cursorUpSequence(applicationMode: Boolean): String =
-        terminalCursorKeySequence(up = true, applicationMode = applicationMode)
-
-    private fun cursorDownSequence(applicationMode: Boolean): String =
-        terminalCursorKeySequence(up = false, applicationMode = applicationMode)
 
     private fun pointerCell(event: MotionEvent): Pair<Int, Int> {
         return terminalViewportCellForPoint(
@@ -1083,6 +1136,11 @@ class ChronoSSHTerminalView(context: Context) : View(context) {
         const val SOFT_INPUT_MAX_RETRIES = 3
         const val SOFT_INPUT_RETRY_DELAY_MS = 120L
         const val ALT_SCROLL_MAX_NOTCHES_PER_EVENT = 6
+        // Gap after which a fresh alt-buffer scroll re-enters tmux copy-mode rather than
+        // assuming we are still in it (the user may have left copy-mode with q/Enter).
+        const val COPY_MODE_REENTRY_GAP_MS = 600L
+        // Rate-limit the "can't scroll here" hint so a drag doesn't spam it every notch.
+        const val ALT_SCROLL_HINT_GAP_MS = 2500L
     }
 }
 

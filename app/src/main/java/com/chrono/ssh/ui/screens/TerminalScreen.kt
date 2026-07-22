@@ -130,6 +130,7 @@ import com.chrono.ssh.core.service.TmuxAttachChoice
 import com.chrono.ssh.core.service.TmuxAttachExisting
 import com.chrono.ssh.core.service.TmuxAttachNew
 import com.chrono.ssh.core.service.TmuxCommandBuilder
+import com.chrono.ssh.core.service.TmuxCopyModeScroll
 import com.chrono.ssh.core.service.TmuxSessionInfo
 import com.chrono.ssh.core.service.TmuxSessionScanner
 import com.chrono.ssh.core.service.TmuxWindowInfo
@@ -1235,6 +1236,16 @@ fun TerminalScreen(
                         setInputTransform { routeTerminalInput(it) }
                         setBracketedPaste(terminalProfile.bracketedPaste)
                         setOnBeforePaste { clearTerminalModifiers() }
+                        setTmuxCopyModeState(
+                            launchedByApp = workspace.tmuxRestorableSessionName != null,
+                            runningOnHost = workspace.tmuxSessions.isNotEmpty()
+                        )
+                        setOnRequestTmuxCopyScroll { lines, enterCopyMode ->
+                            workspace.engine.sendInput(TmuxCopyModeScroll.sequence(lines, enterCopyMode))
+                        }
+                        setOnAltScrollUnavailable {
+                            workspace.lastAction = "Scrollback needs tmux mouse mode or copy-mode (Scroll ⤒)"
+                        }
                         configureEngineClipboard()
                         bind(workspace.engine)
                         syncKeyboardRequestState()
@@ -1257,6 +1268,16 @@ fun TerminalScreen(
                     view.setOnBeforePaste { clearTerminalModifiers() }
                     view.setOnKeyboardRequestChanged { keyboardOpen = it }
                     view.setOnUrlTap { url -> openTerminalUrl(url) }
+                    view.setTmuxCopyModeState(
+                        launchedByApp = workspace.tmuxRestorableSessionName != null,
+                        runningOnHost = workspace.tmuxSessions.isNotEmpty()
+                    )
+                    view.setOnRequestTmuxCopyScroll { lines, enterCopyMode ->
+                        workspace.engine.sendInput(TmuxCopyModeScroll.sequence(lines, enterCopyMode))
+                    }
+                    view.setOnAltScrollUnavailable {
+                        workspace.lastAction = "Scrollback needs tmux mouse mode or copy-mode (Scroll ⤒)"
+                    }
                     view.onTerminalUpdated()
                 }
             )

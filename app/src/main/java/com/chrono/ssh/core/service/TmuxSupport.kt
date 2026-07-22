@@ -49,6 +49,42 @@ object TmuxCommandBuilder {
     }
 }
 
+/**
+ * Builds the raw byte sequences that drive tmux copy-mode from a touch scroll gesture, sent
+ * straight to the attached session's PTY (not the tmux CLI). This is the safe alternative to
+ * synthesizing bare arrow keys in the alternate buffer: inside copy-mode, arrow/PgUp keys are
+ * the correct, expected input and cannot leak into a program's input line.
+ *
+ * The prefix defaults to C-b (0x02). Entering copy-mode is `prefix` then `[`. Navigation uses
+ * cursor Up/Down (one line per notch); the sequences are emitted `count` times. Whether the
+ * prefix must be sent (copy-mode not yet entered) is decided by the caller via [enterCopyMode].
+ */
+object TmuxCopyModeScroll {
+    const val DEFAULT_PREFIX: Char = '\u0002' // C-b
+    const val COPY_MODE_ENTER: Char = '['
+    private const val CURSOR_UP = "\u001B[A"
+    private const val CURSOR_DOWN = "\u001B[B"
+
+    /**
+     * @param lines signed scroll amount in cursor-line notches; negative = up into history,
+     *   positive = down toward newer content (matches the view's notch sign convention).
+     * @param enterCopyMode whether to prepend the `prefix [` that switches the pane into
+     *   copy-mode (true only on the gesture that first enters copy-mode).
+     * @param prefix the session's tmux prefix key (default C-b).
+     */
+    fun sequence(lines: Int, enterCopyMode: Boolean, prefix: Char = DEFAULT_PREFIX): String {
+        if (lines == 0 && !enterCopyMode) return ""
+        val sb = StringBuilder()
+        if (enterCopyMode) {
+            sb.append(prefix)
+            sb.append(COPY_MODE_ENTER)
+        }
+        val key = if (lines < 0) CURSOR_UP else CURSOR_DOWN
+        repeat(kotlin.math.abs(lines)) { sb.append(key) }
+        return sb.toString()
+    }
+}
+
 object TerminalSessionRestoreCommandBuilder {
     private const val UTF8_ENV = "env LANG='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' LC_ALL='en_US.UTF-8'"
 

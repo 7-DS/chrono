@@ -132,6 +132,26 @@ class TmuxSupportTest {
         assertTrue(session.commands[1].contains("/opt/bin/tmux list-sessions"))
         assertTrue(session.commands[3].contains("/opt/bin/tmux list-windows -t 'main'"))
     }
+
+    @Test
+    fun copyModeScrollEntersCopyModeThenNavigates() {
+        val esc = '\u001B'
+        val cb = '\u0002'
+        // First gesture (enterCopyMode = true) scrolling UP into history: prefix, '[', then
+        // one cursor-up per line. lines negative = up.
+        assertEquals("$cb[$esc[A$esc[A$esc[A", TmuxCopyModeScroll.sequence(lines = -3, enterCopyMode = true))
+        // Continued scroll (already in copy-mode) must NOT re-send the prefix.
+        assertEquals("$esc[A$esc[A", TmuxCopyModeScroll.sequence(lines = -2, enterCopyMode = false))
+        // Scrolling down toward newer content uses cursor-down.
+        assertEquals("$esc[B$esc[B", TmuxCopyModeScroll.sequence(lines = 2, enterCopyMode = false))
+        // Entering copy-mode with zero lines still sends the prefix so the pane switches.
+        assertEquals("$cb[", TmuxCopyModeScroll.sequence(lines = 0, enterCopyMode = true))
+        // Nothing to do: no entry, no lines.
+        assertEquals("", TmuxCopyModeScroll.sequence(lines = 0, enterCopyMode = false))
+        // Custom prefix (e.g. C-a) is honoured.
+        val ca = '\u0001'
+        assertEquals("$ca[$esc[A", TmuxCopyModeScroll.sequence(lines = -1, enterCopyMode = true, prefix = ca))
+    }
 }
 
 private class FakeSshSession(vararg private val responses: CommandResult) : SshSession {
